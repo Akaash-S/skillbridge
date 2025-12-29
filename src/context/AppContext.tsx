@@ -3,9 +3,13 @@ import { UserSkill, JobRole, RoadmapItem, ProficiencyLevel, skillsDatabase, lear
 
 interface UserProfile {
   name: string;
+  email: string;
+  avatar: string;
   education: string;
   experience: string;
   interests: string[];
+  notifications: boolean;
+  weeklyGoal: number;
 }
 
 interface SkillGapAnalysis {
@@ -28,6 +32,7 @@ interface AppContextType extends AppState {
   login: () => void;
   logout: () => void;
   setUserProfile: (profile: UserProfile) => void;
+  updateUserProfile: (updates: Partial<UserProfile>) => void;
   addSkill: (skillId: string, proficiency: ProficiencyLevel) => void;
   removeSkill: (skillId: string) => void;
   updateSkillProficiency: (skillId: string, proficiency: ProficiencyLevel) => void;
@@ -39,6 +44,17 @@ interface AppContextType extends AppState {
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+const defaultUser: UserProfile = {
+  name: "",
+  email: "user@example.com",
+  avatar: "",
+  education: "",
+  experience: "",
+  interests: [],
+  notifications: true,
+  weeklyGoal: 10,
+};
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>({
@@ -66,7 +82,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const setUserProfile = useCallback((profile: UserProfile) => {
-    setState((prev) => ({ ...prev, user: profile }));
+    setState((prev) => ({ ...prev, user: { ...defaultUser, ...profile } }));
+  }, []);
+
+  const updateUserProfile = useCallback((updates: Partial<UserProfile>) => {
+    setState((prev) => ({
+      ...prev,
+      user: prev.user ? { ...prev.user, ...updates } : null,
+    }));
   }, []);
 
   const addSkill = useCallback((skillId: string, proficiency: ProficiencyLevel) => {
@@ -153,7 +176,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     const roadmapItems: RoadmapItem[] = [];
 
-    // Add partial skills first (easier wins)
     analysis.partialSkills.forEach((partial) => {
       const resources = learningResourcesDatabase[partial.skill.id] || [];
       roadmapItems.push({
@@ -167,7 +189,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       });
     });
 
-    // Add missing skills
     analysis.missingSkills.forEach((missing) => {
       const resources = learningResourcesDatabase[missing.skillId] || [];
       roadmapItems.push({
@@ -209,6 +230,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         login,
         logout,
         setUserProfile,
+        updateUserProfile,
         addSkill,
         removeSkill,
         updateSkillProficiency,

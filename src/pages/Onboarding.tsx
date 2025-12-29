@@ -56,7 +56,13 @@ export const Onboarding = () => {
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
-      setUserProfile(formData);
+      setUserProfile({
+        ...formData,
+        email: "user@example.com",
+        avatar: "",
+        notifications: true,
+        weeklyGoal: 10,
+      });
       navigate("/skills");
     }
   };

@@ -13,6 +13,7 @@ import { Roles } from "@/pages/Roles";
 import { Analysis } from "@/pages/Analysis";
 import { Roadmap } from "@/pages/Roadmap";
 import { Dashboard } from "@/pages/Dashboard";
+import { Profile } from "@/pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/analysis" element={<Analysis />} />
               <Route path="/roadmap" element={<Roadmap />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/profile" element={<Profile />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
