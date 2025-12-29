@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, LayoutDashboard, Target, BookOpen, BarChart3, Briefcase } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 
 interface LayoutProps {
@@ -44,17 +45,20 @@ export const Layout = ({ children, showNav = true }: LayoutProps) => {
             <span className="font-semibold text-lg">SkillBridge</span>
           </Link>
 
-          {isAuthenticated && (
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground hidden sm:block">
-                {user?.name || "User"}
-              </span>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            {isAuthenticated && (
+              <>
+                <span className="text-sm text-muted-foreground hidden sm:block">
+                  {user?.name || "User"}
+                </span>
+                <Button variant="ghost" size="sm" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Navigation */}
