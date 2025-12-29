@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import { Layout } from "@/components/Layout";
 import { SkillChip } from "@/components/SkillChip";
+import { StepIndicator } from "@/components/StepIndicator";
 import { skillsDatabase, ProficiencyLevel } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,12 +71,11 @@ export const Skills = () => {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Step Indicator */}
+        <StepIndicator currentStep={1} />
+
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-            <Target className="h-4 w-4" />
-            Step 1 of 3
-          </div>
           <h1 className="text-3xl font-bold">Add Your Skills</h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
             Tell us what skills you already have. Be honest about your proficiency levels 

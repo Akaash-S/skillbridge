@@ -4,6 +4,7 @@ import { useApp } from "@/context/AppContext";
 import { Layout } from "@/components/Layout";
 import { ProgressCircle } from "@/components/ProgressCircle";
 import { SkillChip } from "@/components/SkillChip";
+import { StepIndicator } from "@/components/StepIndicator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, XCircle, AlertCircle, ArrowRight, BarChart3, RefreshCw } from "lucide-react";
@@ -57,12 +58,11 @@ export const Analysis = () => {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Step Indicator */}
+        <StepIndicator currentStep={3} />
+
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-            <BarChart3 className="h-4 w-4" />
-            Step 3 of 3
-          </div>
           <h1 className="text-3xl font-bold">Skill Gap Analysis</h1>
           <p className="text-muted-foreground">
             Here's how your skills match up against <span className="font-medium text-foreground">{selectedRole.title}</span>

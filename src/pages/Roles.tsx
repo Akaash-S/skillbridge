@@ -4,6 +4,7 @@ import { useApp } from "@/context/AppContext";
 import { Layout } from "@/components/Layout";
 import { RoleCard } from "@/components/RoleCard";
 import { SkillChip } from "@/components/SkillChip";
+import { StepIndicator } from "@/components/StepIndicator";
 import { jobRolesDatabase, skillsDatabase } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,12 +64,11 @@ export const Roles = () => {
   return (
     <Layout>
       <div className="max-w-6xl mx-auto space-y-8">
+        {/* Step Indicator */}
+        <StepIndicator currentStep={2} />
+
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-            <Briefcase className="h-4 w-4" />
-            Step 2 of 3
-          </div>
           <h1 className="text-3xl font-bold">Choose Your Target Role</h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
             Select the job role you want to work towards. We'll analyze your skills 

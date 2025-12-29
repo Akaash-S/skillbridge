@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import { Layout } from "@/components/Layout";
 import { SkillChip } from "@/components/SkillChip";
+import { StepIndicator } from "@/components/StepIndicator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -67,12 +68,11 @@ export const Roadmap = () => {
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-8">
+        {/* Step Indicator */}
+        <StepIndicator currentStep={4} />
+
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-medium">
-            <BookOpen className="h-4 w-4" />
-            Learning Roadmap
-          </div>
           <h1 className="text-3xl font-bold">Your Path to {selectedRole.title}</h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
             Follow this personalized roadmap to bridge your skill gaps. 
