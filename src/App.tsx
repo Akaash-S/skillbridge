@@ -14,6 +14,16 @@ import { Analysis } from "@/pages/Analysis";
 import { Roadmap } from "@/pages/Roadmap";
 import { Dashboard } from "@/pages/Dashboard";
 import { Profile } from "@/pages/Profile";
+import { CareerHub } from "@/pages/CareerHub";
+import { SkillIntelligence } from "@/pages/SkillIntelligence";
+import { LearningHistory } from "@/pages/LearningHistory";
+import { Assessments } from "@/pages/Assessments";
+import { Opportunities } from "@/pages/Opportunities";
+import { Readiness } from "@/pages/Readiness";
+import { ResumeIntelligence } from "@/pages/ResumeIntelligence";
+import { Insights } from "@/pages/Insights";
+import { RoadmapBuilder } from "@/pages/RoadmapBuilder";
+import { Activity } from "@/pages/Activity";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,11 +41,21 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/skills" element={<Skills />} />
+              <Route path="/skills/intelligence" element={<SkillIntelligence />} />
               <Route path="/roles" element={<Roles />} />
               <Route path="/analysis" element={<Analysis />} />
               <Route path="/roadmap" element={<Roadmap />} />
+              <Route path="/roadmap/custom" element={<RoadmapBuilder />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/career-hub" element={<CareerHub />} />
+              <Route path="/learning-history" element={<LearningHistory />} />
+              <Route path="/assessments" element={<Assessments />} />
+              <Route path="/opportunities" element={<Opportunities />} />
+              <Route path="/readiness" element={<Readiness />} />
+              <Route path="/resume-intelligence" element={<ResumeIntelligence />} />
+              <Route path="/insights" element={<Insights />} />
+              <Route path="/activity" element={<Activity />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

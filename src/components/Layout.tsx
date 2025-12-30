@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, LayoutDashboard, Target, BookOpen, BarChart3, Briefcase, User, Settings } from "lucide-react";
+import { LogOut, LayoutDashboard, Target, BookOpen, BarChart3, Briefcase, User, Settings, Compass, Brain, History, ClipboardCheck, Rocket, FileText, Map, Bell } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -22,10 +22,13 @@ interface LayoutProps {
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { path: "/skills", label: "My Skills", icon: Target },
-  { path: "/roles", label: "Job Roles", icon: Briefcase },
-  { path: "/analysis", label: "Analysis", icon: BarChart3 },
-  { path: "/roadmap", label: "Roadmap", icon: BookOpen },
+  { path: "/career-hub", label: "Career Hub", icon: Compass },
+  { path: "/skills", label: "Skills", icon: Target },
+  { path: "/skills/intelligence", label: "Skill Intel", icon: Brain },
+  { path: "/roadmap", label: "Roadmaps", icon: BookOpen },
+  { path: "/opportunities", label: "Opportunities", icon: Briefcase },
+  { path: "/insights", label: "Insights", icon: BarChart3 },
+  { path: "/activity", label: "Activity", icon: Bell },
 ];
 
 export const Layout = ({ children, showNav = true }: LayoutProps) => {
