@@ -24,6 +24,7 @@ import { ResumeIntelligence } from "@/pages/ResumeIntelligence";
 import { Insights } from "@/pages/Insights";
 import { RoadmapBuilder } from "@/pages/RoadmapBuilder";
 import { Activity } from "@/pages/Activity";
+import { Settings } from "@/pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ const App = () => (
               <Route path="/resume-intelligence" element={<ResumeIntelligence />} />
               <Route path="/insights" element={<Insights />} />
               <Route path="/activity" element={<Activity />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
