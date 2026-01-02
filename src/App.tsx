@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AppProvider } from "@/context/AppContext";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { Landing } from "@/pages/Landing";
 import { Login } from "@/pages/Login";
 import { Onboarding } from "@/pages/Onboarding";
@@ -25,6 +26,7 @@ import { Insights } from "@/pages/Insights";
 import { RoadmapBuilder } from "@/pages/RoadmapBuilder";
 import { Activity } from "@/pages/Activity";
 import { Settings } from "@/pages/Settings";
+import Help from "@/pages/Help";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,35 +35,38 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="skillbridge-theme">
       <AppProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/skills" element={<Skills />} />
-              <Route path="/skills/intelligence" element={<SkillIntelligence />} />
-              <Route path="/roles" element={<Roles />} />
-              <Route path="/analysis" element={<Analysis />} />
-              <Route path="/roadmap" element={<Roadmap />} />
-              <Route path="/roadmap/custom" element={<RoadmapBuilder />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/career-hub" element={<CareerHub />} />
-              <Route path="/learning-history" element={<LearningHistory />} />
-              <Route path="/assessments" element={<Assessments />} />
-              <Route path="/opportunities" element={<Opportunities />} />
-              <Route path="/readiness" element={<Readiness />} />
-              <Route path="/resume-intelligence" element={<ResumeIntelligence />} />
-              <Route path="/insights" element={<Insights />} />
-              <Route path="/activity" element={<Activity />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <ErrorBoundary>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/skills" element={<Skills />} />
+                <Route path="/skills/intelligence" element={<SkillIntelligence />} />
+                <Route path="/roles" element={<Roles />} />
+                <Route path="/analysis" element={<Analysis />} />
+                <Route path="/roadmap" element={<Roadmap />} />
+                <Route path="/roadmap/custom" element={<RoadmapBuilder />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/career-hub" element={<CareerHub />} />
+                <Route path="/learning-history" element={<LearningHistory />} />
+                <Route path="/assessments" element={<Assessments />} />
+                <Route path="/opportunities" element={<Opportunities />} />
+                <Route path="/readiness" element={<Readiness />} />
+                <Route path="/resume-intelligence" element={<ResumeIntelligence />} />
+                <Route path="/insights" element={<Insights />} />
+                <Route path="/activity" element={<Activity />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/help" element={<Help />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </ErrorBoundary>
       </AppProvider>
     </ThemeProvider>
   </QueryClientProvider>
