@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, LayoutDashboard, Target, BookOpen, BarChart3, Briefcase, User, Settings, Compass, Brain, History, ClipboardCheck, Rocket, FileText, Map, Bell } from "lucide-react";
+import { LogOut, LayoutDashboard, Target, BookOpen, BarChart3, Briefcase, User, Settings, Compass, Brain, Bell, HelpCircle } from "lucide-react";
 import { useApp } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -95,6 +95,12 @@ export const Layout = ({ children, showNav = true }: LayoutProps) => {
                     <Link to="/settings" className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" />
                       Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/help" className="cursor-pointer">
+                      <HelpCircle className="mr-2 h-4 w-4" />
+                      Help & Guide
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
