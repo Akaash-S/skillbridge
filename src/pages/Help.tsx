@@ -20,8 +20,11 @@ import {
   Route,
   Shield,
 } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 
 const Help = () => {
+  const prefersReducedMotion = useReducedMotion();
+
   const steps = [
     {
       icon: Layers,
@@ -73,6 +76,54 @@ const Help = () => {
     },
   ];
 
+  // Animation variants with proper typing
+  const sectionVariants = {
+    hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] as const }
+    }
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: prefersReducedMotion ? 0 : 0.1,
+        delayChildren: 0.1
+      }
+    }
+  };
+
+  const stepCardVariants = {
+    hidden: { 
+      opacity: 0, 
+      x: prefersReducedMotion ? 0 : -20 
+    },
+    visible: { 
+      opacity: 1, 
+      x: 0,
+      transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] as const }
+    }
+  };
+
+  const badgeVariants = {
+    hidden: { 
+      opacity: 0, 
+      scale: prefersReducedMotion ? 1 : 0.8 
+    },
+    visible: { 
+      opacity: 1, 
+      scale: 1,
+      transition: { 
+        duration: 0.3, 
+        ease: [0.34, 1.56, 0.64, 1] as [number, number, number, number]
+      }
+    }
+  };
+
   return (
     <Layout>
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 py-8 px-4 sm:px-6 lg:px-8">
@@ -91,35 +142,60 @@ const Help = () => {
             </p>
           </section>
 
-          {/* How SkillBridge Works */}
-          <section className="space-y-6">
-            <div className="flex items-center gap-3">
+          {/* How SkillBridge Works - Animated Section */}
+          <motion.section 
+            className="space-y-6"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={sectionVariants}
+          >
+            <motion.div 
+              className="flex items-center gap-3"
+              variants={sectionVariants}
+            >
               <Sparkles className="w-6 h-6 text-primary" />
               <h2 className="text-2xl font-semibold">How SkillBridge Works</h2>
-            </div>
-            <div className="grid gap-4">
+            </motion.div>
+            <motion.div 
+              className="grid gap-4"
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+            >
               {steps.map((step, index) => (
-                <Card key={index} className="border-border/50 bg-card/50 backdrop-blur-sm">
-                  <CardContent className="flex items-center gap-4 p-5">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold text-lg shrink-0">
-                      {index + 1}
-                    </div>
-                    <div className="flex items-center gap-3 flex-1">
-                      <step.icon className="w-5 h-5 text-primary shrink-0" />
-                      <div>
-                        <h3 className="font-medium">{step.title}</h3>
-                        <p className="text-sm text-muted-foreground">{step.description}</p>
+                <motion.div
+                  key={index}
+                  variants={stepCardVariants}
+                >
+                  <Card className="border-border/50 bg-card/50 backdrop-blur-sm group transition-all duration-200 hover:bg-card/80 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5">
+                    <CardContent className="flex items-center gap-4 p-5">
+                      <motion.div 
+                        className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold text-lg shrink-0 group-hover:shadow-md group-hover:shadow-primary/30 transition-shadow duration-200"
+                        variants={badgeVariants}
+                      >
+                        {index + 1}
+                      </motion.div>
+                      <div className="flex items-center gap-3 flex-1">
+                        <motion.div
+                          whileHover={prefersReducedMotion ? {} : { rotate: 5, y: -3 }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                        >
+                          <step.icon className="w-5 h-5 text-primary shrink-0" />
+                        </motion.div>
+                        <div>
+                          <h3 className="font-medium">{step.title}</h3>
+                          <p className="text-sm text-muted-foreground">{step.description}</p>
+                        </div>
                       </div>
-                    </div>
-                    {index < steps.length - 1 && (
-                      <ArrowRight className="w-4 h-4 text-muted-foreground/50 hidden sm:block" />
-                    )}
-                  </CardContent>
-                </Card>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground/50 hidden sm:block transition-transform duration-200 group-hover:translate-x-1 group-hover:text-primary/70" />
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))}
-            </div>
-          </section>
-
+            </motion.div>
+          </motion.section>
           {/* How Readiness Score Works */}
           <section className="space-y-6">
             <div className="flex items-center gap-3">
