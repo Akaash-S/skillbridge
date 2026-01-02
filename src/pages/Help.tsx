@@ -21,35 +21,42 @@ import {
   Shield,
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const Help = () => {
   const prefersReducedMotion = useReducedMotion();
+  const navigate = useNavigate();
 
   const steps = [
     {
       icon: Layers,
       title: "Add Your Skills",
       description: "Tell us what you already know. No experience is too small.",
+      link: "/guide/add-skills",
     },
     {
       icon: Target,
       title: "Choose a Career Goal",
       description: "Pick a role you're aiming for. You can always change it later.",
+      link: "/guide/career-goal",
     },
     {
       icon: BarChart3,
       title: "Analyze Skill Gaps",
       description: "See exactly what's missing between where you are and where you want to be.",
+      link: "/guide/skill-gap",
     },
     {
       icon: Route,
       title: "Follow Your Roadmap",
       description: "Get a personalized learning path built just for you.",
+      link: "/guide/roadmap",
     },
     {
       icon: TrendingUp,
       title: "Track Your Growth",
       description: "Watch your readiness improve as you learn new skills.",
+      link: "/guide/growth-tracking",
     },
   ];
 
@@ -169,7 +176,18 @@ const Help = () => {
                   key={index}
                   variants={stepCardVariants}
                 >
-                  <Card className="border-border/50 bg-card/50 backdrop-blur-sm group transition-all duration-200 hover:bg-card/80 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5">
+                  <Card 
+                    className="border-border/50 bg-card/50 backdrop-blur-sm group transition-all duration-200 hover:bg-card/80 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-0.5 cursor-pointer"
+                    onClick={() => navigate(step.link)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        navigate(step.link);
+                      }
+                    }}
+                    aria-label={`Learn more about: ${step.title}`}
+                  >
                     <CardContent className="flex items-center gap-4 p-5">
                       <motion.div 
                         className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold text-lg shrink-0 group-hover:shadow-md group-hover:shadow-primary/30 transition-shadow duration-200"

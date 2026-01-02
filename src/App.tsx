@@ -28,6 +28,11 @@ import { Activity } from "@/pages/Activity";
 import { Settings } from "@/pages/Settings";
 import Help from "@/pages/Help";
 import NotFound from "./pages/NotFound";
+import AddSkillsGuide from "@/pages/guide/AddSkills";
+import CareerGoalGuide from "@/pages/guide/CareerGoal";
+import SkillGapGuide from "@/pages/guide/SkillGap";
+import RoadmapGuide from "@/pages/guide/Roadmap";
+import GrowthTrackingGuide from "@/pages/guide/GrowthTracking";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +67,11 @@ const App = () => (
                 <Route path="/activity" element={<Activity />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/help" element={<Help />} />
+                <Route path="/guide/add-skills" element={<AddSkillsGuide />} />
+                <Route path="/guide/career-goal" element={<CareerGoalGuide />} />
+                <Route path="/guide/skill-gap" element={<SkillGapGuide />} />
+                <Route path="/guide/roadmap" element={<RoadmapGuide />} />
+                <Route path="/guide/growth-tracking" element={<GrowthTrackingGuide />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
