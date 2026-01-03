@@ -1,10 +1,12 @@
 import { WalkthroughLayout } from "@/components/WalkthroughLayout";
 import { Target, Search, Star, CheckCircle2 } from "lucide-react";
+import careerGoalExplore from "@/assets/guide/career-goal-explore.png";
+import careerGoalSet from "@/assets/guide/career-goal-set.png";
 
 const CareerGoal = () => {
   const steps = [
     {
-      icon: Search,
+      image: careerGoalExplore,
       title: "Explore Available Roles",
       description:
         "Browse through various career paths in the Career Hub. Each role shows required skills, typical responsibilities, and growth potential.",
@@ -16,7 +18,7 @@ const CareerGoal = () => {
         "Look for roles that align with your interests and existing skills. SkillBridge shows you match percentages to help you discover opportunities.",
     },
     {
-      icon: Target,
+      image: careerGoalSet,
       title: "Set Your Primary Goal",
       description:
         "Choose the career role you want to work toward. This becomes your target, and all recommendations will be optimized for this path.",

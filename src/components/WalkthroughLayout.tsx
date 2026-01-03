@@ -175,15 +175,15 @@ export const WalkthroughLayout = ({
                   <CardContent className="p-0">
                     <div className="flex flex-col sm:flex-row">
                       {/* Image/Icon Section */}
-                      <div className="sm:w-1/3 bg-muted/30 flex items-center justify-center p-8 min-h-[160px]">
-                        {step.icon ? (
-                          <step.icon className="w-16 h-16 text-primary/60" />
-                        ) : step.image ? (
+                      <div className="sm:w-2/5 bg-muted/30 flex items-center justify-center p-4 sm:p-6 min-h-[180px]">
+                        {step.image ? (
                           <img
                             src={step.image}
                             alt={step.title}
-                            className="max-w-full max-h-32 object-contain"
+                            className="w-full h-auto max-h-40 object-contain rounded-lg"
                           />
+                        ) : step.icon ? (
+                          <step.icon className="w-16 h-16 text-primary/60" />
                         ) : (
                           <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center">
                             <span className="text-2xl font-bold text-primary">
@@ -193,7 +193,7 @@ export const WalkthroughLayout = ({
                         )}
                       </div>
                       {/* Text Section */}
-                      <div className="sm:w-2/3 p-6 flex flex-col justify-center">
+                      <div className="sm:w-3/5 p-6 flex flex-col justify-center">
                         <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
                         <p className="text-muted-foreground">{step.description}</p>
                       </div>
