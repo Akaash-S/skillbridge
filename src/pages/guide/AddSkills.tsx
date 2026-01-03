@@ -1,10 +1,12 @@
 import { WalkthroughLayout } from "@/components/WalkthroughLayout";
 import { Layers, CheckSquare, Sliders, Save } from "lucide-react";
+import addSkillsBrowse from "@/assets/guide/add-skills-browse.png";
+import addSkillsProficiency from "@/assets/guide/add-skills-proficiency.png";
 
 const AddSkills = () => {
   const steps = [
     {
-      icon: Layers,
+      image: addSkillsBrowse,
       title: "Browse the Skill Library",
       description:
         "Start by exploring our comprehensive skill library. Search for skills you already have or browse by category to find relevant ones for your field.",
@@ -16,7 +18,7 @@ const AddSkills = () => {
         "Click on each skill you possess. Don't worry about being perfect — you can always add or remove skills later as you learn more.",
     },
     {
-      icon: Sliders,
+      image: addSkillsProficiency,
       title: "Set Your Proficiency Level",
       description:
         "For each skill, choose your comfort level: Beginner, Intermediate, or Advanced. Be honest — this helps us create accurate recommendations.",

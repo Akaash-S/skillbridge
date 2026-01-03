@@ -1,5 +1,6 @@
 import { WalkthroughLayout } from "@/components/WalkthroughLayout";
 import { Route, Layers, TrendingUp, RefreshCw } from "lucide-react";
+import roadmapPath from "@/assets/guide/roadmap-path.png";
 
 const RoadmapGuide = () => {
   const steps = [
@@ -10,7 +11,7 @@ const RoadmapGuide = () => {
         "Learn foundational skills first. Your roadmap is structured so each skill builds on what you've already learned.",
     },
     {
-      icon: TrendingUp,
+      image: roadmapPath,
       title: "Gradual Difficulty Progression",
       description:
         "Start with easier concepts and gradually move to advanced topics. This ensures steady, sustainable progress.",

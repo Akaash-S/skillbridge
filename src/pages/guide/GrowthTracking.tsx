@@ -1,10 +1,11 @@
 import { WalkthroughLayout } from "@/components/WalkthroughLayout";
 import { TrendingUp, Activity, Award, Target } from "lucide-react";
+import growthTracking from "@/assets/guide/growth-tracking.png";
 
 const GrowthTracking = () => {
   const steps = [
     {
-      icon: Activity,
+      image: growthTracking,
       title: "Monitor Your Readiness Score",
       description:
         "Your readiness score shows how prepared you are for your target role. Watch it grow as you complete your learning milestones.",

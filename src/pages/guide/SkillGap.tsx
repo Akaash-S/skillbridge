@@ -1,5 +1,6 @@
 import { WalkthroughLayout } from "@/components/WalkthroughLayout";
 import { BarChart3, CheckCircle2, AlertCircle, ArrowUpRight } from "lucide-react";
+import skillGapAnalysis from "@/assets/guide/skill-gap-analysis.png";
 
 const SkillGap = () => {
   const steps = [
@@ -16,7 +17,7 @@ const SkillGap = () => {
         "Skills required by your target role that you don't have yet are shown clearly. These are your learning priorities.",
     },
     {
-      icon: BarChart3,
+      image: skillGapAnalysis,
       title: "Understand Skill Importance",
       description:
         "Not all skills are equal. We show you which missing skills are most critical for your target role, so you can prioritize effectively.",
