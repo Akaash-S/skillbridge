@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
@@ -15,21 +15,27 @@ const features = [
 
 export const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { login, user } = useApp();
+  const { login, user, loading, error, clearError } = useApp();
   const navigate = useNavigate();
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    login();
-    setIsLoading(false);
-    
-    if (!user) {
-      navigate("/onboarding");
-    } else {
-      navigate("/dashboard");
+    try {
+      await login();
+      // Navigation will be handled by the auth state change in AppContext
+    } catch (error) {
+      console.error('Login failed:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -159,16 +165,24 @@ export const Login = () => {
                   <CardDescription className="text-base">
                     Sign in to continue your learning journey
                   </CardDescription>
+                  {error && (
+                    <div className="bg-destructive/10 text-destructive px-3 py-2 rounded-lg text-sm">
+                      {error}
+                      <Button variant="ghost" size="sm" onClick={clearError} className="ml-2 h-auto p-0 text-xs">
+                        Dismiss
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardHeader>
               <CardContent className="space-y-6 pt-4">
                 <Button
                   onClick={handleGoogleLogin}
-                  disabled={isLoading}
+                  disabled={isLoading || loading}
                   className="w-full h-14 text-base font-medium group"
                   variant="outline"
                 >
-                  {isLoading ? (
+                  {isLoading || loading ? (
                     <>
                       <Loader2 className="mr-3 h-5 w-5 animate-spin" />
                       Signing in...
@@ -182,7 +196,7 @@ export const Login = () => {
                   )}
                 </Button>
                 
-                <div className="relative">
+                {/* <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-border" />
                   </div>
@@ -197,7 +211,7 @@ export const Login = () => {
                   disabled
                 >
                   More sign-in options coming soon
-                </Button>
+                </Button> */}
                 
                 <p className="text-center text-sm text-muted-foreground leading-relaxed">
                   By continuing, you agree to our{" "}

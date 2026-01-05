@@ -5,12 +5,11 @@ import { Layout } from "@/components/Layout";
 import { RoleCard } from "@/components/RoleCard";
 import { SkillChip } from "@/components/SkillChip";
 import { StepIndicator } from "@/components/StepIndicator";
-import { jobRolesDatabase, skillsDatabase } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowRight, Briefcase, DollarSign, TrendingUp, X } from "lucide-react";
+import { Search, ArrowRight, Briefcase, DollarSign, TrendingUp, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export const Roles = () => {
@@ -18,28 +17,28 @@ export const Roles = () => {
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
   
-  const { selectedRole, selectRole } = useApp();
+  const { selectedRole, selectRole, jobRoles, masterSkills, loading, error, clearError } = useApp();
   const navigate = useNavigate();
 
   const categories = useMemo(() => {
-    return [...new Set(jobRolesDatabase.map((role) => role.category))];
-  }, []);
+    return [...new Set(jobRoles.map((role) => role.category))];
+  }, [jobRoles]);
 
   const filteredRoles = useMemo(() => {
-    return jobRolesDatabase.filter((role) => {
+    return jobRoles.filter((role) => {
       const matchesSearch = role.title.toLowerCase().includes(search.toLowerCase()) ||
         role.description.toLowerCase().includes(search.toLowerCase());
       const matchesCategory = !categoryFilter || role.category === categoryFilter;
       return matchesSearch && matchesCategory;
     });
-  }, [search, categoryFilter]);
+  }, [search, categoryFilter, jobRoles]);
 
   const detailRole = useMemo(() => {
-    return jobRolesDatabase.find((r) => r.id === selectedRoleId);
-  }, [selectedRoleId]);
+    return jobRoles.find((r) => r.id === selectedRoleId);
+  }, [selectedRoleId, jobRoles]);
 
   const handleSelectRole = (roleId: string) => {
-    const role = jobRolesDatabase.find((r) => r.id === roleId);
+    const role = jobRoles.find((r) => r.id === roleId);
     if (role) {
       selectRole(role);
       toast({
@@ -74,6 +73,14 @@ export const Roles = () => {
             Select the job role you want to work towards. We'll analyze your skills 
             and create a personalized roadmap.
           </p>
+          {error && (
+            <div className="bg-destructive/10 text-destructive px-4 py-2 rounded-lg">
+              {error}
+              <Button variant="ghost" size="sm" onClick={clearError} className="ml-2">
+                Dismiss
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Selected Role Banner */}
@@ -129,16 +136,22 @@ export const Roles = () => {
         </div>
 
         {/* Role Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredRoles.map((role) => (
-            <RoleCard
-              key={role.id}
-              role={role}
-              selected={selectedRole?.id === role.id}
-              onClick={() => setSelectedRoleId(role.id)}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredRoles.map((role) => (
+              <RoleCard
+                key={role.id}
+                role={role}
+                selected={selectedRole?.id === role.id}
+                onClick={() => setSelectedRoleId(role.id)}
+              />
+            ))}
+          </div>
+        )}
 
         {filteredRoles.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
@@ -184,7 +197,7 @@ export const Roles = () => {
                     <h4 className="font-semibold mb-3">Required Skills</h4>
                     <div className="flex flex-wrap gap-2">
                       {detailRole.requiredSkills.map((req) => {
-                        const skill = skillsDatabase.find((s) => s.id === req.skillId);
+                        const skill = masterSkills.find((s) => s.id === req.skillId);
                         return (
                           <SkillChip
                             key={req.skillId}

@@ -4,12 +4,12 @@ import { useApp } from "@/context/AppContext";
 import { Layout } from "@/components/Layout";
 import { SkillChip } from "@/components/SkillChip";
 import { StepIndicator } from "@/components/StepIndicator";
-import { skillsDatabase, ProficiencyLevel } from "@/data/mockData";
+import { ProficiencyLevel } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, ArrowRight, Target } from "lucide-react";
+import { Search, Plus, ArrowRight, Target, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export const Skills = () => {
@@ -17,16 +17,16 @@ export const Skills = () => {
   const [selectedSkill, setSelectedSkill] = useState("");
   const [proficiency, setProficiency] = useState<ProficiencyLevel>("intermediate");
   
-  const { userSkills, addSkill, removeSkill, updateSkillProficiency } = useApp();
+  const { userSkills, masterSkills, addSkill, removeSkill, updateSkillProficiency, loading, error, clearError } = useApp();
   const navigate = useNavigate();
 
   const availableSkills = useMemo(() => {
-    return skillsDatabase.filter(
+    return masterSkills.filter(
       (skill) =>
         !userSkills.some((s) => s.id === skill.id) &&
         skill.name.toLowerCase().includes(search.toLowerCase())
     );
-  }, [search, userSkills]);
+  }, [search, userSkills, masterSkills]);
 
   const groupedSkills = useMemo(() => {
     const groups: Record<string, typeof availableSkills> = {};
@@ -39,7 +39,7 @@ export const Skills = () => {
     return groups;
   }, [availableSkills]);
 
-  const handleAddSkill = () => {
+  const handleAddSkill = async () => {
     if (!selectedSkill) {
       toast({
         title: "Select a skill",
@@ -48,12 +48,21 @@ export const Skills = () => {
       });
       return;
     }
-    addSkill(selectedSkill, proficiency);
-    setSelectedSkill("");
-    toast({
-      title: "Skill added",
-      description: "Your skill has been added to your profile.",
-    });
+    
+    try {
+      await addSkill(selectedSkill, proficiency);
+      setSelectedSkill("");
+      toast({
+        title: "Skill added",
+        description: "Your skill has been added to your profile.",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to add skill",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleContinue = () => {
@@ -81,6 +90,14 @@ export const Skills = () => {
             Tell us what skills you already have. Be honest about your proficiency levels 
             for the most accurate analysis.
           </p>
+          {error && (
+            <div className="bg-destructive/10 text-destructive px-4 py-2 rounded-lg">
+              {error}
+              <Button variant="ghost" size="sm" onClick={clearError} className="ml-2">
+                Dismiss
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Add Skill Card */}
@@ -138,8 +155,12 @@ export const Skills = () => {
               </Select>
             </div>
 
-            <Button onClick={handleAddSkill} className="w-full sm:w-auto">
-              <Plus className="mr-2 h-4 w-4" />
+            <Button onClick={handleAddSkill} className="w-full sm:w-auto" disabled={loading}>
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="mr-2 h-4 w-4" />
+              )}
               Add Skill
             </Button>
           </CardContent>

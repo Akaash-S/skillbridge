@@ -170,11 +170,11 @@ export const Roadmap = () => {
                     <h4 className="text-sm font-medium mb-3">Learning Resources</h4>
                     {item.resources.length > 0 ? (
                       <div className="grid gap-2">
-                        {item.resources.map((resource) => {
+                        {item.resources.map((resource, resourceIndex) => {
                           const Icon = resourceTypeIcons[resource.type] || FileText;
                           return (
                             <a
-                              key={resource.id}
+                              key={`${item.id}-resource-${resource.id || resourceIndex}`}
                               href={resource.url}
                               target="_blank"
                               rel="noopener noreferrer"
