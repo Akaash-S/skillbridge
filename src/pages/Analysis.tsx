@@ -7,12 +7,13 @@ import { SkillChip } from "@/components/SkillChip";
 import { StepIndicator } from "@/components/StepIndicator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, XCircle, AlertCircle, ArrowRight, BarChart3, RefreshCw, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, AlertCircle, ArrowRight, BarChart3 } from "lucide-react";
 
 export const Analysis = () => {
   const { 
     selectedRole, 
     analysis, 
+    analysisProgress,
     userSkills, 
     roadmapProgress,
     isAuthenticated,
@@ -41,13 +42,14 @@ export const Analysis = () => {
     navigate("/roadmap");
   };
 
-  const handleReAnalyze = async () => {
-    try {
-      await analyzeSkillGap();
-    } catch (error) {
-      console.error('Failed to re-analyze:', error);
-    }
-  };
+  // Remove the manual re-analyze button - analysis updates automatically based on roadmap progress
+  // const handleReAnalyze = async () => {
+  //   try {
+  //     await analyzeSkillGap();
+  //   } catch (error) {
+  //     console.error('Failed to re-analyze:', error);
+  //   }
+  // };
 
   if (!selectedRole || !analysis) {
     return (
@@ -84,6 +86,12 @@ export const Analysis = () => {
           <p className="text-muted-foreground">
             Here's how your skills match up against <span className="font-medium text-foreground">{selectedRole.title}</span>
           </p>
+          {analysisProgress && analysisProgress.completedRoadmapItems > 0 && (
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-progress-high/10 text-progress-high rounded-full text-sm">
+              <CheckCircle2 className="h-4 w-4" />
+              Analysis updates automatically as you complete roadmap items
+            </div>
+          )}
           {error && (
             <div className="bg-destructive/10 text-destructive px-4 py-2 rounded-lg">
               {error}
@@ -107,6 +115,40 @@ export const Analysis = () => {
                 <p className="text-muted-foreground mt-2">
                   You have {analysis.matchedSkills.length} of {selectedRole.requiredSkills.length} required skills at the needed level.
                 </p>
+                
+                {/* Progress Comparison */}
+                {analysisProgress && analysisProgress.scoreImprovement !== 0 && (
+                  <div className="mt-4 p-4 bg-background/50 rounded-lg border">
+                    <h3 className="font-medium mb-2">Progress Since Initial Analysis</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Score Improvement:</span>
+                        <div className={`font-semibold ${analysisProgress.scoreImprovement > 0 ? 'text-progress-high' : 'text-muted-foreground'}`}>
+                          {analysisProgress.scoreImprovement > 0 ? '+' : ''}{analysisProgress.scoreImprovement}%
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Skills Gained:</span>
+                        <div className={`font-semibold ${analysisProgress.skillsImprovement > 0 ? 'text-progress-high' : 'text-muted-foreground'}`}>
+                          {analysisProgress.skillsImprovement > 0 ? '+' : ''}{analysisProgress.skillsImprovement}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Initial Score:</span>
+                        <div className="font-semibold">{analysisProgress.initialScore}%</div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Roadmap Items:</span>
+                        <div className="font-semibold">{analysisProgress.completedRoadmapItems} completed</div>
+                      </div>
+                    </div>
+                    {analysisProgress.lastUpdated && (
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        Last updated: {new Date(analysisProgress.lastUpdated).toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -324,14 +366,6 @@ export const Analysis = () => {
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button variant="outline" onClick={handleReAnalyze} disabled={loading}>
-            {loading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <RefreshCw className="mr-2 h-4 w-4" />
-            )}
-            Re-analyze
-          </Button>
           <Link to="/skills">
             <Button variant="outline">Update My Skills</Button>
           </Link>

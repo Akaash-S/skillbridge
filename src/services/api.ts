@@ -35,6 +35,31 @@ interface SkillGapAnalysis {
   partialSkills: { skill: UserSkill; required: ProficiencyLevel }[];
 }
 
+interface AnalysisProgress {
+  initialScore: number;
+  currentScore: number;
+  scoreImprovement: number;
+  initialMatchedSkills: number;
+  currentMatchedSkills: number;
+  skillsImprovement: number;
+  completedRoadmapItems: number;
+  progressHistory: Array<{
+    timestamp: string;
+    readinessScore: number;
+    completedSkills: number;
+    event: string;
+    skillId?: string;
+  }>;
+  lastUpdated?: string;
+  createdAt?: string;
+}
+
+interface AnalysisWithProgress {
+  analysis: SkillGapAnalysis;
+  progress: AnalysisProgress;
+  hasProgress: boolean;
+}
+
 // API Service Class
 class ApiService {
   private async getAuthHeaders(): Promise<HeadersInit> {
@@ -43,12 +68,14 @@ class ApiService {
     
     // Check if user is authenticated first
     if (!FirebaseAuthService.isAuthenticated()) {
+      console.log('🔒 User not authenticated, sending request without token');
       return {
         'Content-Type': 'application/json'
       };
     }
     
     const token = await FirebaseAuthService.getCurrentUserToken();
+    console.log('🔑 Got token for API request:', token ? `${token.substring(0, 20)}...` : 'null');
     
     return {
       'Content-Type': 'application/json',
@@ -79,13 +106,14 @@ class ApiService {
       if (!response.ok) {
         // Handle 401 errors by attempting token refresh
         if (response.status === 401) {
-          console.log('Token expired, attempting refresh...');
+          console.log('🔄 Token expired, attempting refresh...');
           
           // Try to refresh token and retry the request once
           const { FirebaseAuthService } = await import('./firebase');
           const newToken = await FirebaseAuthService.getCurrentUserToken();
           
           if (newToken) {
+            console.log('🔑 Got fresh token, retrying request...');
             // Retry the request with fresh token
             const retryConfig: RequestInit = {
               ...config,
@@ -97,7 +125,10 @@ class ApiService {
             
             const retryResponse = await fetch(url, retryConfig);
             if (retryResponse.ok) {
+              console.log('✅ Retry successful');
               return await retryResponse.json();
+            } else {
+              console.log('❌ Retry failed with status:', retryResponse.status);
             }
           }
           
@@ -192,8 +223,8 @@ class ApiService {
   }
 
   // Skill Gap Analysis
-  async analyzeSkillGaps(roleId: string): Promise<{ analysis: SkillGapAnalysis }> {
-    return this.request<{ analysis: SkillGapAnalysis }>(`/skills/analyze/${roleId}`);
+  async analyzeSkillGaps(roleId: string): Promise<AnalysisWithProgress> {
+    return this.request<AnalysisWithProgress>(`/skills/analyze/${roleId}`);
   }
 
   // Roadmap
@@ -295,5 +326,7 @@ export type {
   UserProfile, 
   LoginResponse, 
   SkillGapAnalysis,
+  AnalysisProgress,
+  AnalysisWithProgress,
   ApiResponse 
 };

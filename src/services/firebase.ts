@@ -62,18 +62,21 @@ export class FirebaseAuthService {
   static async getCurrentUserToken(): Promise<string | null> {
     const user = auth.currentUser;
     if (!user) {
-      console.log('No authenticated user found');
+      console.log('🔒 No authenticated user found');
       return null;
     }
     
     try {
+      // Check if user is still valid
+      await user.reload();
+      
       // Force refresh to ensure we get a valid token
       const idToken = await user.getIdToken(true);
       localStorage.setItem('firebase_token', idToken);
-      console.log('Token refreshed successfully');
+      console.log('🔑 Token refreshed successfully');
       return idToken;
     } catch (error) {
-      console.error('Error getting ID token:', error);
+      console.error('❌ Error getting ID token:', error);
       // Clear invalid token from storage
       localStorage.removeItem('firebase_token');
       return null;

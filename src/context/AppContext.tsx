@@ -22,6 +22,31 @@ interface SkillGapAnalysis {
   partialSkills: { skill: UserSkill; required: ProficiencyLevel }[];
 }
 
+interface AnalysisProgress {
+  initialScore: number;
+  currentScore: number;
+  scoreImprovement: number;
+  initialMatchedSkills: number;
+  currentMatchedSkills: number;
+  skillsImprovement: number;
+  completedRoadmapItems: number;
+  progressHistory: Array<{
+    timestamp: string;
+    readinessScore: number;
+    completedSkills: number;
+    event: string;
+    skillId?: string;
+  }>;
+  lastUpdated?: string;
+  createdAt?: string;
+}
+
+interface AnalysisWithProgress {
+  analysis: SkillGapAnalysis;
+  progress: AnalysisProgress;
+  hasProgress: boolean;
+}
+
 interface AppState {
   isAuthenticated: boolean;
   user: UserProfile | null;
@@ -31,6 +56,7 @@ interface AppState {
   jobRoles: JobRole[];
   selectedRole: JobRole | null;
   analysis: SkillGapAnalysis | null;
+  analysisProgress: AnalysisProgress | null;
   roadmap: RoadmapItem[];
   roadmapProgress: any | null;
   loading: boolean;
@@ -79,6 +105,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     jobRoles: [],
     selectedRole: null,
     analysis: null,
+    analysisProgress: null,
     roadmap: [],
     roadmapProgress: null,
     loading: false,
@@ -86,16 +113,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   const loadUserSkills = useCallback(async () => {
-    if (!state.isAuthenticated) return; // Don't load if not authenticated
+    if (!state.isAuthenticated) {
+      console.log('🔒 Not authenticated, skipping user skills load');
+      return; // Don't load if not authenticated
+    }
     
+    if (state.userSkills.length > 0) {
+      console.log('📚 User skills already loaded, skipping');
+      return; // Don't reload if already loaded
+    }
+    
+    console.log('📚 Loading user skills...');
     try {
       const userSkills = await apiService.getUserSkills();
+      console.log('✅ User skills loaded:', userSkills.length);
       setState(prev => ({ ...prev, userSkills }));
     } catch (error) {
-      console.error('Failed to load user skills:', error);
+      console.error('❌ Failed to load user skills:', error);
       
       // If it's an auth error, clear the authentication state
       if (error instanceof Error && error.message.includes('Authentication failed')) {
+        console.log('🔄 Clearing auth state due to auth error');
         setState(prev => ({
           ...prev,
           isAuthenticated: false,
@@ -105,7 +143,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         }));
       }
     }
-  }, [state.isAuthenticated]);
+  }, [state.isAuthenticated, state.userSkills.length]);
 
   const loadMasterSkills = useCallback(async () => {
     try {
@@ -135,10 +173,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Initialize Firebase auth listener
   useEffect(() => {
+    console.log('🔥 Setting up Firebase auth listener');
     const unsubscribe = FirebaseAuthService.onAuthStateChanged(async (firebaseUser) => {
+      console.log('🔄 Auth state changed:', firebaseUser ? `User: ${firebaseUser.email}` : 'No user');
+      
       if (firebaseUser) {
         try {
           setState(prev => ({ ...prev, loading: true, error: null }));
+          console.log('🔑 Getting fresh token...');
           
           // Get fresh token using our Firebase service (this ensures it's stored properly)
           const idToken = await FirebaseAuthService.getCurrentUserToken();
@@ -146,7 +188,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             throw new Error('Failed to get authentication token');
           }
           
+          console.log('🚀 Logging in with backend...');
           const loginResponse = await apiService.login(idToken);
+          console.log('✅ Backend login successful');
           
           setState(prev => ({
             ...prev,
@@ -156,10 +200,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             loading: false,
           }));
 
-          // Load user skills after authentication is complete
-          await loadUserSkills();
+          // Don't call loadUserSkills here - let the separate useEffect handle it
         } catch (error) {
-          console.error('Auth error:', error);
+          console.error('❌ Auth error:', error);
           setState(prev => ({
             ...prev,
             error: error instanceof Error ? error.message : 'Authentication failed',
@@ -167,6 +210,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }));
         }
       } else {
+        console.log('🔓 User logged out');
         setState(prev => ({
           ...prev,
           isAuthenticated: false,
@@ -179,7 +223,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
 
     return unsubscribe;
-  }, [loadUserSkills]);
+  }, []); // Remove loadUserSkills dependency
+
+  // Separate effect to load user skills when authentication state changes
+  useEffect(() => {
+    if (state.isAuthenticated && !state.loading && state.userSkills.length === 0) {
+      console.log('🔄 Auth state is ready and no skills loaded, loading user skills...');
+      loadUserSkills();
+    }
+  }, [state.isAuthenticated, state.loading, state.userSkills.length, loadUserSkills]);
 
   // Load initial data
   useEffect(() => {
@@ -214,6 +266,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         jobRoles: state.jobRoles, // Keep job roles
         selectedRole: null,
         analysis: null,
+        analysisProgress: null,
         roadmap: [],
         roadmapProgress: null,
         loading: false,
@@ -291,7 +344,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [loadUserSkills]);
 
   const selectRole = useCallback((role: JobRole) => {
-    setState((prev) => ({ ...prev, selectedRole: role, analysis: null, roadmap: [] }));
+    setState((prev) => ({ ...prev, selectedRole: role, analysis: null, analysisProgress: null, roadmap: [] }));
   }, []);
 
   const proficiencyValue = (level: ProficiencyLevel): number => {
@@ -309,11 +362,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       
-      // Use backend API for skill gap analysis
+      // Use backend API for skill gap analysis with progress tracking
       const response = await apiService.analyzeSkillGaps(selectedRole.id);
       setState(prev => ({
         ...prev,
         analysis: response.analysis,
+        analysisProgress: response.progress,
         loading: false,
       }));
     } catch (error) {
@@ -346,13 +400,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const partiallyMatched = partialSkills.length * 0.5;
       const readinessScore = Math.round(((fullyMatched + partiallyMatched) / totalRequired) * 100);
 
+      const fallbackAnalysis = { readinessScore, matchedSkills, missingSkills, partialSkills };
+      
       setState((prev) => ({
         ...prev,
-        analysis: { readinessScore, matchedSkills, missingSkills, partialSkills },
+        analysis: fallbackAnalysis,
+        analysisProgress: {
+          initialScore: readinessScore,
+          currentScore: readinessScore,
+          scoreImprovement: 0,
+          initialMatchedSkills: matchedSkills.length,
+          currentMatchedSkills: matchedSkills.length,
+          skillsImprovement: 0,
+          completedRoadmapItems: 0,
+          progressHistory: [],
+          lastUpdated: undefined,
+          createdAt: undefined
+        },
         loading: false,
       }));
     }
-  }, [state.selectedRole, state.userSkills, state.masterSkills, state.isAuthenticated]); // Fixed dependencies
+  }, [state.selectedRole, state.userSkills, state.masterSkills, state.isAuthenticated]);
 
   const generateRoadmap = useCallback(async () => {
     const { selectedRole } = state;
@@ -387,19 +455,52 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [state.selectedRole, state.isAuthenticated, state.userSkills.length]);
 
-  const markRoadmapItemComplete = useCallback((itemId: string) => {
+  const markRoadmapItemComplete = useCallback(async (itemId: string) => {
+    // Update local state immediately for responsive UI
     setState((prev) => ({
       ...prev,
       roadmap: prev.roadmap.map((item) =>
         item.id === itemId ? { ...item, completed: !item.completed } : item
       ),
     }));
-  }, []);
+
+    // Update backend if authenticated
+    if (state.isAuthenticated) {
+      try {
+        // Find the roadmap item to get skill details
+        const roadmapItem = state.roadmap.find(item => item.id === itemId);
+        if (roadmapItem) {
+          const isCompleted = !roadmapItem.completed; // Toggle state
+          
+          // Call backend to update progress (this will trigger analysis update)
+          await apiService.updateRoadmapProgress(0, roadmapItem.skillId, isCompleted);
+          
+          // Optionally refresh analysis to get updated progress
+          if (state.selectedRole && isCompleted) {
+            // Small delay to ensure backend processing is complete
+            setTimeout(() => {
+              analyzeSkillGap();
+            }, 1000);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to update roadmap progress:', error);
+        // Revert local state on error
+        setState((prev) => ({
+          ...prev,
+          roadmap: prev.roadmap.map((item) =>
+            item.id === itemId ? { ...item, completed: !item.completed } : item
+          ),
+        }));
+      }
+    }
+  }, [state.isAuthenticated, state.roadmap, state.selectedRole, analyzeSkillGap]);
 
   const resetProgress = useCallback(() => {
     setState((prev) => ({
       ...prev,
       analysis: null,
+      analysisProgress: null,
       roadmap: [],
       selectedRole: null,
     }));
