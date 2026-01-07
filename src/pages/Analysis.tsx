@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import { Layout } from "@/components/Layout";
@@ -31,26 +31,41 @@ export const Analysis = () => {
       navigate("/roles");
       return;
     }
+    
+    // Only analyze if we don't have analysis data and not currently loading
     if (!analysis && !loading) {
       analyzeSkillGap();
     }
-    // Load roadmap progress for display
-    loadRoadmapProgress();
-  }, [selectedRole, analysis, loading, navigate, analyzeSkillGap, loadRoadmapProgress]);
+  }, [selectedRole, navigate]); // Removed analysis and loading from dependencies to prevent loops
+
+  // Separate effect for loading roadmap progress - only run once when component mounts
+  useEffect(() => {
+    if (isAuthenticated && selectedRole) {
+      loadRoadmapProgress();
+    }
+  }, [isAuthenticated, selectedRole]); // Only depend on authentication and selected role
 
   const handleViewRoadmap = () => {
     navigate("/roadmap");
   };
 
-  // Remove the manual re-analyze button - analysis updates automatically based on roadmap progress
-  // const handleReAnalyze = async () => {
-  //   try {
-  //     await analyzeSkillGap();
-  //   } catch (error) {
-  //     console.error('Failed to re-analyze:', error);
-  //   }
-  // };
+  // Memoize expensive calculations
+  const scoreMessage = useMemo(() => {
+    if (!analysis) return "";
+    if (analysis.readinessScore >= 80) return "You're almost there!";
+    if (analysis.readinessScore >= 60) return "Good progress, keep learning!";
+    if (analysis.readinessScore >= 40) return "You're on your way!";
+    return "Time to start building skills!";
+  }, [analysis?.readinessScore]);
 
+  const scoreColor = useMemo(() => {
+    if (!analysis) return "text-muted-foreground";
+    if (analysis.readinessScore >= 70) return "text-progress-high";
+    if (analysis.readinessScore >= 40) return "text-progress-medium";
+    return "text-progress-low";
+  }, [analysis?.readinessScore]);
+
+  // Early return with loading state
   if (!selectedRole || !analysis) {
     return (
       <Layout>
@@ -60,19 +75,6 @@ export const Analysis = () => {
       </Layout>
     );
   }
-
-  const getScoreMessage = () => {
-    if (analysis.readinessScore >= 80) return "You're almost there!";
-    if (analysis.readinessScore >= 60) return "Good progress, keep learning!";
-    if (analysis.readinessScore >= 40) return "You're on your way!";
-    return "Time to start building skills!";
-  };
-
-  const getScoreColor = () => {
-    if (analysis.readinessScore >= 70) return "text-progress-high";
-    if (analysis.readinessScore >= 40) return "text-progress-medium";
-    return "text-progress-low";
-  };
 
   return (
     <Layout>
@@ -109,8 +111,8 @@ export const Analysis = () => {
               <ProgressCircle value={analysis.readinessScore} size="xl" />
               <div className="text-center md:text-left">
                 <h2 className="text-2xl font-bold mb-2">Role Readiness Score</h2>
-                <p className={`text-xl font-semibold ${getScoreColor()}`}>
-                  {getScoreMessage()}
+                <p className={`text-xl font-semibold ${scoreColor}`}>
+                  {scoreMessage}
                 </p>
                 <p className="text-muted-foreground mt-2">
                   You have {analysis.matchedSkills.length} of {selectedRole.requiredSkills.length} required skills at the needed level.

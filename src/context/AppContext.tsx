@@ -41,12 +41,6 @@ interface AnalysisProgress {
   createdAt?: string;
 }
 
-interface AnalysisWithProgress {
-  analysis: SkillGapAnalysis;
-  progress: AnalysisProgress;
-  hasProgress: boolean;
-}
-
 interface AppState {
   isAuthenticated: boolean;
   user: UserProfile | null;
@@ -112,45 +106,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     error: null,
   });
 
-  const loadUserSkills = useCallback(async () => {
-    if (!state.isAuthenticated) {
-      console.log('🔒 Not authenticated, skipping user skills load');
-      return; // Don't load if not authenticated
-    }
-    
-    if (state.userSkills.length > 0) {
-      console.log('📚 User skills already loaded, skipping');
-      return; // Don't reload if already loaded
-    }
-    
-    console.log('📚 Loading user skills...');
-    try {
-      const userSkills = await apiService.getUserSkills();
-      console.log('✅ User skills loaded:', userSkills.length);
-      setState(prev => ({ ...prev, userSkills }));
-    } catch (error) {
-      console.error('❌ Failed to load user skills:', error);
-      
-      // If it's an auth error, clear the authentication state
-      if (error instanceof Error && error.message.includes('Authentication failed')) {
-        console.log('🔄 Clearing auth state due to auth error');
-        setState(prev => ({
-          ...prev,
-          isAuthenticated: false,
-          user: null,
-          firebaseUser: null,
-          error: 'Session expired - please log in again'
-        }));
-      }
-    }
-  }, [state.isAuthenticated, state.userSkills.length]);
-
   const loadMasterSkills = useCallback(async () => {
+    console.log('🎯 Loading master skills...');
     try {
       const masterSkills = await apiService.getMasterSkills();
+      console.log('✅ Master skills loaded:', masterSkills.length);
       setState(prev => ({ ...prev, masterSkills }));
     } catch (error) {
-      console.error('Failed to load master skills:', error);
+      console.error('❌ Failed to load master skills:', error);
       setState(prev => ({
         ...prev,
         error: 'Failed to load skills database'
@@ -159,17 +122,60 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const loadJobRoles = useCallback(async () => {
+    console.log('💼 Loading job roles...');
     try {
       const jobRoles = await apiService.getJobRoles();
+      console.log('✅ Job roles loaded:', jobRoles.length);
       setState(prev => ({ ...prev, jobRoles }));
     } catch (error) {
-      console.error('Failed to load job roles:', error);
+      console.error('❌ Failed to load job roles:', error);
       setState(prev => ({
         ...prev,
         error: 'Failed to load job roles'
       }));
     }
   }, []);
+
+  // Load user state from backend
+  const loadUserState = useCallback(async () => {
+    if (!state.isAuthenticated) {
+      console.log('🔒 Not authenticated, skipping user state load');
+      return;
+    }
+    
+    console.log('📊 Loading user state from backend...');
+    try {
+      const { userState, hasData } = await apiService.getUserState();
+      
+      if (hasData && userState) {
+        console.log('✅ User state loaded from backend');
+        
+        // Update state with persisted data
+        setState(prev => ({
+          ...prev,
+          userSkills: userState.skills || [],
+          selectedRole: userState.targetRole || null,
+          analysis: userState.analysis || null,
+          analysisProgress: userState.analysisProgress || null,
+          roadmapProgress: userState.roadmapProgress || null,
+          // Convert roadmap items if they exist
+          roadmap: userState.roadmapProgress?.roadmapItems || [],
+        }));
+        
+        console.log('📈 User state applied:', {
+          skills: userState.skills?.length || 0,
+          hasTargetRole: !!userState.targetRole,
+          hasAnalysis: !!userState.analysis,
+          hasRoadmap: !!userState.roadmapProgress
+        });
+      } else {
+        console.log('📝 No existing user state found - new user');
+      }
+    } catch (error) {
+      console.error('❌ Failed to load user state:', error);
+      // Don't set error state for this - user can still use the app
+    }
+  }, [state.isAuthenticated]);
 
   // Initialize Firebase auth listener
   useEffect(() => {
@@ -200,7 +206,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             loading: false,
           }));
 
-          // Don't call loadUserSkills here - let the separate useEffect handle it
+          // Load master data and user state after successful authentication
+          console.log('📊 Loading application data after authentication...');
+          await Promise.all([
+            loadMasterSkills(),
+            loadJobRoles()
+          ]);
+          
+          // Load user state after master data is loaded
+          await loadUserState();
+          
         } catch (error) {
           console.error('❌ Auth error:', error);
           setState(prev => ({
@@ -217,27 +232,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           firebaseUser: null,
           user: null,
           userSkills: [],
+          masterSkills: [],
+          jobRoles: [],
+          selectedRole: null,
+          analysis: null,
+          analysisProgress: null,
+          roadmap: [],
+          roadmapProgress: null,
           loading: false,
         }));
       }
     });
 
     return unsubscribe;
-  }, []); // Remove loadUserSkills dependency
-
-  // Separate effect to load user skills when authentication state changes
-  useEffect(() => {
-    if (state.isAuthenticated && !state.loading && state.userSkills.length === 0) {
-      console.log('🔄 Auth state is ready and no skills loaded, loading user skills...');
-      loadUserSkills();
-    }
-  }, [state.isAuthenticated, state.loading, state.userSkills.length, loadUserSkills]);
-
-  // Load initial data
-  useEffect(() => {
-    loadMasterSkills();
-    loadJobRoles();
-  }, [loadMasterSkills, loadJobRoles]);
+  }, []); // Remove dependencies to prevent infinite loops
 
   const login = useCallback(async () => {
     try {
@@ -305,9 +313,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, []);
 
   const addSkill = useCallback(async (skillId: string, proficiency: ProficiencyLevel) => {
+    if (!state.isAuthenticated) {
+      setState(prev => ({
+        ...prev,
+        error: 'Please log in to add skills'
+      }));
+      return;
+    }
+    
     try {
-      await apiService.addSkill(skillId, proficiency);
-      await loadUserSkills(); // Reload user skills
+      console.log('🔄 Adding skill:', { skillId, proficiency });
+      await apiService.addSkill(skillId, proficiency, 'medium');
+      
+      // Reload user skills from backend
+      const userSkills = await apiService.getUserSkills();
+      setState(prev => ({ ...prev, userSkills }));
+      
+      // Update user state with new skills
+      await apiService.updateUserSkillsState(userSkills);
+      
+      console.log('✅ Skill added and state updated');
     } catch (error) {
       console.error('Failed to add skill:', error);
       setState(prev => ({
@@ -315,12 +340,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         error: error instanceof Error ? error.message : 'Failed to add skill'
       }));
     }
-  }, [loadUserSkills]);
+  }, [state.isAuthenticated]);
 
   const removeSkill = useCallback(async (skillId: string) => {
     try {
       await apiService.removeSkill(skillId);
-      await loadUserSkills(); // Reload user skills
+      
+      // Reload user skills from backend
+      const userSkills = await apiService.getUserSkills();
+      setState(prev => ({ ...prev, userSkills }));
+      
+      // Update user state with remaining skills
+      await apiService.updateUserSkillsState(userSkills);
     } catch (error) {
       console.error('Failed to remove skill:', error);
       setState(prev => ({
@@ -328,12 +359,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         error: error instanceof Error ? error.message : 'Failed to remove skill'
       }));
     }
-  }, [loadUserSkills]);
+  }, []);
 
   const updateSkillProficiency = useCallback(async (skillId: string, proficiency: ProficiencyLevel) => {
     try {
       await apiService.updateSkill(skillId, proficiency);
-      await loadUserSkills(); // Reload user skills
+      
+      // Reload user skills from backend
+      const userSkills = await apiService.getUserSkills();
+      setState(prev => ({ ...prev, userSkills }));
+      
+      // Update user state with updated skills
+      await apiService.updateUserSkillsState(userSkills);
     } catch (error) {
       console.error('Failed to update skill:', error);
       setState(prev => ({
@@ -341,10 +378,34 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         error: error instanceof Error ? error.message : 'Failed to update skill'
       }));
     }
-  }, [loadUserSkills]);
+  }, []);
 
-  const selectRole = useCallback((role: JobRole) => {
-    setState((prev) => ({ ...prev, selectedRole: role, analysis: null, analysisProgress: null, roadmap: [] }));
+  const selectRole = useCallback(async (role: JobRole) => {
+    try {
+      // Save target role to backend and user state
+      const response = await apiService.selectTargetRole(role.id);
+      await apiService.updateTargetRoleState(role);
+      
+      setState((prev) => ({ 
+        ...prev, 
+        selectedRole: role, 
+        analysis: null, 
+        analysisProgress: null, 
+        roadmap: [] 
+      }));
+      
+      console.log('✅ Target role selected and saved:', role.title);
+    } catch (error) {
+      console.error('❌ Failed to save target role:', error);
+      // Still update local state even if save fails
+      setState((prev) => ({ 
+        ...prev, 
+        selectedRole: role, 
+        analysis: null, 
+        analysisProgress: null, 
+        roadmap: [] 
+      }));
+    }
   }, []);
 
   const proficiencyValue = (level: ProficiencyLevel): number => {
@@ -370,6 +431,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         analysisProgress: response.progress,
         loading: false,
       }));
+      
+      // Save analysis to user state
+      await apiService.updateAnalysisState(response.analysis);
+      console.log('✅ Analysis completed and saved to state');
+      
     } catch (error) {
       console.error('Failed to analyze skill gap:', error);
       
@@ -445,6 +511,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         roadmap: roadmapItems,
         loading: false,
       }));
+      
+      // Save roadmap progress to user state
+      const roadmapProgressData = {
+        targetRole: selectedRole.id,
+        experienceLevel,
+        totalItems: roadmapItems.length,
+        completedItems: 0,
+        progress: 0,
+        roadmapItems: roadmapItems,
+        generatedAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+      };
+      
+      await apiService.updateRoadmapProgressState(roadmapProgressData);
+      console.log('✅ Roadmap generated and saved to user state');
+      
     } catch (error) {
       console.error('Failed to generate roadmap:', error);
       setState(prev => ({
@@ -474,6 +556,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           
           // Call backend to update progress (this will trigger analysis update)
           await apiService.updateRoadmapProgress(0, roadmapItem.skillId, isCompleted);
+          
+          // Update roadmap progress in user state
+          const updatedRoadmap = state.roadmap.map((item) =>
+            item.id === itemId ? { ...item, completed: isCompleted } : item
+          );
+          
+          const totalItems = updatedRoadmap.length;
+          const completedItems = updatedRoadmap.filter(item => item.completed).length;
+          const progress = (completedItems / totalItems * 100);
+          
+          const roadmapProgressData = {
+            targetRole: state.selectedRole?.id || '',
+            totalItems,
+            completedItems,
+            progress: Math.round(progress),
+            roadmapItems: updatedRoadmap,
+            lastUpdated: new Date().toISOString()
+          };
+          
+          await apiService.updateRoadmapProgressState(roadmapProgressData);
           
           // Optionally refresh analysis to get updated progress
           if (state.selectedRole && isCompleted) {
@@ -510,12 +612,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!state.isAuthenticated) return;
     
     try {
-      setState(prev => ({ ...prev, loading: true, error: null }));
       const progressData = await apiService.getRoadmapProgressStats();
       setState(prev => ({ 
         ...prev, 
-        roadmapProgress: progressData,
-        loading: false 
+        roadmapProgress: progressData
       }));
     } catch (error) {
       console.error('Failed to load roadmap progress:', error);
@@ -527,18 +627,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           isAuthenticated: false,
           user: null,
           firebaseUser: null,
-          error: 'Session expired - please log in again',
-          loading: false
+          error: 'Session expired - please log in again'
         }));
       } else {
         setState(prev => ({
           ...prev,
-          error: error instanceof Error ? error.message : 'Failed to load roadmap progress',
-          loading: false,
+          error: error instanceof Error ? error.message : 'Failed to load roadmap progress'
         }));
       }
     }
-  }, [state.isAuthenticated]);
+  }, []); // Remove state.isAuthenticated dependency to prevent recreation
 
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));

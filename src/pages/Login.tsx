@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +17,10 @@ export const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { login, user, loading, error, clearError } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get the intended destination from location state
+  const from = location.state?.from?.pathname || "/dashboard";
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
@@ -33,9 +37,16 @@ export const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate("/dashboard");
+      // Check if user has completed onboarding
+      if (!user.name || user.name === '') {
+        // New user - redirect to onboarding
+        navigate("/onboarding", { replace: true });
+      } else {
+        // Existing user - redirect to intended destination
+        navigate(from, { replace: true });
+      }
     }
-  }, [user, navigate]);
+  }, [user, navigate, from]);
 
   return (
     <div className="min-h-screen bg-background flex">

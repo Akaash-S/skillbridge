@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+</head>
+<body>
+    <h1>SkillBridge API Test</h1>
+    <div id="results"></div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000';
+        
+        async function testAPI() {
+            const results = document.getElementById('results');
+            
+            try {
+                // Test master skills
+                console.log('Testing master skills...');
+                const skillsResponse = await fetch(`${API_BASE_URL}/skills/master`);
+                const skills = await skillsResponse.json();
+                
+                results.innerHTML += `<h2>Master Skills (${skills.length})</h2>`;
+                results.innerHTML += `<pre>${JSON.stringify(skills.slice(0, 3), null, 2)}</pre>`;
+                
+                // Test job roles
+                console.log('Testing job roles...');
+                const rolesResponse = await fetch(`${API_BASE_URL}/roles`);
+                const roles = await rolesResponse.json();
+                
+                results.innerHTML += `<h2>Job Roles (${roles.length})</h2>`;
+                results.innerHTML += `<pre>${JSON.stringify(roles.slice(0, 2), null, 2)}</pre>`;
+                
+                console.log('API tests completed successfully!');
+                
+            } catch (error) {
+                console.error('API test failed:', error);
+                results.innerHTML += `<h2>Error</h2><pre>${error.message}</pre>`;
+            }
+        }
+        
+        // Run test when page loads
+        testAPI();
+    </script>
+</body>
+</html>

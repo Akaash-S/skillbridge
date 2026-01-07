@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AppProvider } from "@/context/AppContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { DebugInfo } from "@/components/DebugInfo";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Landing } from "@/pages/Landing";
 import { Login } from "@/pages/Login";
 import { Onboarding } from "@/pages/Onboarding";
@@ -51,37 +53,41 @@ const App = () => (
               }}
             >
               <Routes>
+                {/* Public Routes */}
                 <Route path="/" element={<Landing />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/skills" element={<Skills />} />
-                <Route path="/skills/intelligence" element={<SkillIntelligence />} />
-                <Route path="/roles" element={<Roles />} />
-                <Route path="/analysis" element={<Analysis />} />
-                <Route path="/roadmap" element={<Roadmap />} />
-                <Route path="/roadmap/custom" element={<RoadmapBuilder />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/career-hub" element={<CareerHub />} />
-                <Route path="/learning-history" element={<LearningHistory />} />
-                <Route path="/assessments" element={<Assessments />} />
-                <Route path="/opportunities" element={<Opportunities />} />
-                <Route path="/readiness" element={<Readiness />} />
-                <Route path="/resume-intelligence" element={<ResumeIntelligence />} />
-                <Route path="/insights" element={<Insights />} />
-                <Route path="/activity" element={<Activity />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/help" element={<Help />} />
-                <Route path="/guide/add-skills" element={<AddSkillsGuide />} />
-                <Route path="/guide/career-goal" element={<CareerGoalGuide />} />
-                <Route path="/guide/skill-gap" element={<SkillGapGuide />} />
-                <Route path="/guide/roadmap" element={<RoadmapGuide />} />
-                <Route path="/guide/growth-tracking" element={<GrowthTrackingGuide />} />
+                
+                {/* Protected Routes */}
+                <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+                <Route path="/skills" element={<ProtectedRoute><Skills /></ProtectedRoute>} />
+                <Route path="/skills/intelligence" element={<ProtectedRoute><SkillIntelligence /></ProtectedRoute>} />
+                <Route path="/roles" element={<ProtectedRoute><Roles /></ProtectedRoute>} />
+                <Route path="/analysis" element={<ProtectedRoute><Analysis /></ProtectedRoute>} />
+                <Route path="/roadmap" element={<ProtectedRoute><Roadmap /></ProtectedRoute>} />
+                <Route path="/roadmap/custom" element={<ProtectedRoute><RoadmapBuilder /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/career-hub" element={<ProtectedRoute><CareerHub /></ProtectedRoute>} />
+                <Route path="/learning-history" element={<ProtectedRoute><LearningHistory /></ProtectedRoute>} />
+                <Route path="/assessments" element={<ProtectedRoute><Assessments /></ProtectedRoute>} />
+                <Route path="/opportunities" element={<ProtectedRoute><Opportunities /></ProtectedRoute>} />
+                <Route path="/readiness" element={<ProtectedRoute><Readiness /></ProtectedRoute>} />
+                <Route path="/resume-intelligence" element={<ProtectedRoute><ResumeIntelligence /></ProtectedRoute>} />
+                <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
+                <Route path="/activity" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
+                <Route path="/guide/add-skills" element={<ProtectedRoute><AddSkillsGuide /></ProtectedRoute>} />
+                <Route path="/guide/career-goal" element={<ProtectedRoute><CareerGoalGuide /></ProtectedRoute>} />
+                <Route path="/guide/skill-gap" element={<ProtectedRoute><SkillGapGuide /></ProtectedRoute>} />
+                <Route path="/guide/roadmap" element={<ProtectedRoute><RoadmapGuide /></ProtectedRoute>} />
+                <Route path="/guide/growth-tracking" element={<ProtectedRoute><GrowthTrackingGuide /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
         </ErrorBoundary>
+        <DebugInfo />
       </AppProvider>
     </ThemeProvider>
   </QueryClientProvider>

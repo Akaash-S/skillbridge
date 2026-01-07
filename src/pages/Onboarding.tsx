@@ -28,7 +28,7 @@ export const Onboarding = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   
-  const { setUserProfile } = useApp();
+  const { updateUserProfile } = useApp();
   const navigate = useNavigate();
 
   const validateStep = () => {
@@ -51,20 +51,27 @@ export const Onboarding = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!validateStep()) return;
     
     if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     } else {
-      setUserProfile({
-        ...formData,
-        email: "user@example.com",
-        avatar: "",
-        notifications: true,
-        weeklyGoal: 10,
-      });
-      navigate("/skills");
+      try {
+        // Complete onboarding and save to backend
+        await updateUserProfile({
+          name: formData.name,
+          education: formData.education,
+          experience: formData.experience,
+          interests: formData.interests,
+        });
+        
+        // Navigate to skills page
+        navigate("/skills");
+      } catch (error) {
+        console.error('Failed to complete onboarding:', error);
+        setErrors({ general: 'Failed to save profile. Please try again.' });
+      }
     }
   };
 
@@ -327,6 +334,13 @@ export const Onboarding = () => {
                       {errors.interests && (
                         <p className="text-sm text-destructive">{errors.interests}</p>
                       )}
+                    </div>
+                  )}
+
+                  {/* General Error Display */}
+                  {errors.general && (
+                    <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-lg text-sm">
+                      {errors.general}
                     </div>
                   )}
 

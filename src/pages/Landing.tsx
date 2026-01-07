@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useApp } from "@/context/AppContext";
 import { 
   ArrowRight, 
   Target, 
@@ -116,7 +118,17 @@ const stagger = {
 };
 
 export const Landing = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useApp();
   const heroRef = useRef<HTMLDivElement>(null);
+  
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
+  
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"]

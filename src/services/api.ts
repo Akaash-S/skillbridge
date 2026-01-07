@@ -62,6 +62,24 @@ interface AnalysisWithProgress {
 
 // API Service Class
 class ApiService {
+  private cache: Map<string, { data: any; timestamp: number }> = new Map();
+  private readonly CACHE_DURATION = 30000; // 30 seconds cache
+
+  private getCacheKey(endpoint: string, params?: any): string {
+    return `${endpoint}${params ? JSON.stringify(params) : ''}`;
+  }
+
+  private getCachedData<T>(cacheKey: string): T | null {
+    const cached = this.cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_DURATION) {
+      return cached.data;
+    }
+    return null;
+  }
+
+  private setCachedData(cacheKey: string, data: any): void {
+    this.cache.set(cacheKey, { data, timestamp: Date.now() });
+  }
   private async getAuthHeaders(): Promise<HeadersInit> {
     // Get fresh token from Firebase Auth
     const { FirebaseAuthService } = await import('./firebase');
@@ -69,28 +87,37 @@ class ApiService {
     // Check if user is authenticated first
     if (!FirebaseAuthService.isAuthenticated()) {
       console.log('🔒 User not authenticated, sending request without token');
-      return {
-        'Content-Type': 'application/json'
-      };
+      throw new Error('User not authenticated - please log in');
     }
     
     const token = await FirebaseAuthService.getCurrentUserToken();
     console.log('🔑 Got token for API request:', token ? `${token.substring(0, 20)}...` : 'null');
     
+    if (!token) {
+      throw new Error('Failed to get authentication token - please log in again');
+    }
+    
     return {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      'Authorization': `Bearer ${token}`
+    };
+  }
+
+  private getPublicHeaders(): HeadersInit {
+    return {
+      'Content-Type': 'application/json'
     };
   }
 
   private async request<T>(
     endpoint: string, 
-    options: RequestInit = {}
+    options: RequestInit = {},
+    requireAuth: boolean = true
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     
     const config: RequestInit = {
-      headers: await this.getAuthHeaders(),
+      headers: requireAuth ? await this.getAuthHeaders() : this.getPublicHeaders(),
       ...options,
     };
 
@@ -168,10 +195,39 @@ class ApiService {
 
   // Skills
   async getMasterSkills(category?: string): Promise<UserSkill[]> {
+    const cacheKey = this.getCacheKey('/skills/master', { category });
+    const cached = this.getCachedData<UserSkill[]>(cacheKey);
+    
+    if (cached) {
+      console.log('📚 Using cached master skills');
+      return cached;
+    }
+    
     const params = new URLSearchParams();
     if (category) params.append('category', category);
     
-    return this.request<UserSkill[]>(`/skills/master?${params.toString()}`);
+    const result = await this.request<UserSkill[]>(`/skills/master?${params.toString()}`);
+    this.setCachedData(cacheKey, result);
+    console.log('📖 Loaded fresh master skills');
+    return result;
+  }
+
+  async getJobRoles(category?: string): Promise<JobRole[]> {
+    const cacheKey = this.getCacheKey('/roles', { category });
+    const cached = this.getCachedData<JobRole[]>(cacheKey);
+    
+    if (cached) {
+      console.log('💼 Using cached job roles');
+      return cached;
+    }
+    
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    
+    const result = await this.request<JobRole[]>(`/roles?${params.toString()}`);
+    this.setCachedData(cacheKey, result);
+    console.log('🎯 Loaded fresh job roles');
+    return result;
   }
 
   async getUserSkills(): Promise<UserSkill[]> {
@@ -179,6 +235,8 @@ class ApiService {
   }
 
   async addSkill(skillId: string, level: ProficiencyLevel, confidence: string = 'medium'): Promise<void> {
+    // Clear cache when adding skills
+    this.cache.clear();
     await this.request('/skills', {
       method: 'POST',
       body: JSON.stringify({ skillId, level, confidence })
@@ -190,6 +248,8 @@ class ApiService {
     if (level) updates.level = level;
     if (confidence) updates.confidence = confidence;
 
+    // Clear cache when updating skills
+    this.cache.clear();
     await this.request(`/skills/${skillId}`, {
       method: 'PUT',
       body: JSON.stringify(updates)
@@ -197,6 +257,8 @@ class ApiService {
   }
 
   async removeSkill(skillId: string): Promise<void> {
+    // Clear cache when removing skills
+    this.cache.clear();
     await this.request(`/skills/${skillId}`, {
       method: 'DELETE'
     });
@@ -204,14 +266,6 @@ class ApiService {
 
   async getSkillCategories(): Promise<{ categories: string[] }> {
     return this.request<{ categories: string[] }>('/skills/categories');
-  }
-
-  // Job Roles
-  async getJobRoles(category?: string): Promise<JobRole[]> {
-    const params = new URLSearchParams();
-    if (category) params.append('category', category);
-    
-    return this.request<JobRole[]>(`/roles?${params.toString()}`);
   }
 
   async getJobRole(roleId: string): Promise<JobRole> {
@@ -240,10 +294,25 @@ class ApiService {
   }
 
   async getRoadmapProgressStats(): Promise<{ hasRoadmap: boolean; progress: any }> {
-    return this.request<{ hasRoadmap: boolean; progress: any }>('/roadmap/progress/stats');
+    const cacheKey = this.getCacheKey('/roadmap/progress/stats');
+    const cached = this.getCachedData<{ hasRoadmap: boolean; progress: any }>(cacheKey);
+    
+    if (cached) {
+      console.log('📋 Using cached roadmap progress stats');
+      return cached;
+    }
+    
+    const result = await this.request<{ hasRoadmap: boolean; progress: any }>('/roadmap/progress/stats');
+    this.setCachedData(cacheKey, result);
+    console.log('📊 Loaded fresh roadmap progress stats');
+    return result;
   }
 
   async updateRoadmapProgress(milestoneIndex: number, skillId: string, completed: boolean): Promise<void> {
+    // Clear roadmap progress cache when updating
+    const cacheKey = this.getCacheKey('/roadmap/progress/stats');
+    this.cache.delete(cacheKey);
+    
     await this.request('/roadmap/progress', {
       method: 'PUT',
       body: JSON.stringify({ milestoneIndex, skillId, completed })
@@ -286,6 +355,50 @@ class ApiService {
 
   async getTrendingRoles(country: string = 'in'): Promise<{ trendingRoles: any[] }> {
     return this.request<{ trendingRoles: any[] }>(`/jobs/trending?country=${country}`);
+  }
+
+  // User State Management
+  async getUserState(): Promise<{ userState: any; hasData: boolean }> {
+    return this.request<{ userState: any; hasData: boolean }>('/user-state');
+  }
+
+  async getDashboardData(): Promise<{ dashboardData: any }> {
+    return this.request<{ dashboardData: any }>('/user-state/dashboard');
+  }
+
+  async updateUserSkillsState(skills: UserSkill[]): Promise<void> {
+    await this.request('/user-state/skills', {
+      method: 'PUT',
+      body: JSON.stringify({ skills })
+    });
+  }
+
+  async updateTargetRoleState(targetRole: JobRole): Promise<void> {
+    await this.request('/user-state/target-role', {
+      method: 'PUT',
+      body: JSON.stringify({ targetRole })
+    });
+  }
+
+  async updateAnalysisState(analysis: SkillGapAnalysis): Promise<void> {
+    await this.request('/user-state/analysis', {
+      method: 'PUT',
+      body: JSON.stringify({ analysis })
+    });
+  }
+
+  async updateRoadmapProgressState(roadmapProgress: any): Promise<void> {
+    await this.request('/user-state/roadmap-progress', {
+      method: 'PUT',
+      body: JSON.stringify({ roadmapProgress })
+    });
+  }
+
+  async selectTargetRole(roleId: string): Promise<{ targetRole: JobRole }> {
+    return this.request<{ targetRole: JobRole }>('/roles/select', {
+      method: 'POST',
+      body: JSON.stringify({ roleId })
+    });
   }
 
   // User Profile
