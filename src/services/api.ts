@@ -352,7 +352,7 @@ class ApiService {
       limit: limit.toString()
     });
     
-    return this.request(`/jobs/search?${params.toString()}`);
+    return this.request(`/jobs/search?${params.toString()}`, {}, false); // No auth required
   }
 
   async getJobRecommendations(): Promise<{ recommendations: any[] }> {
@@ -360,7 +360,7 @@ class ApiService {
   }
 
   async getTrendingRoles(country: string = 'in'): Promise<{ trendingRoles: any[] }> {
-    return this.request<{ trendingRoles: any[] }>(`/jobs/trending?country=${country}`);
+    return this.request<{ trendingRoles: any[] }>(`/jobs/trending?country=${country}`, {}, false); // No auth required
   }
 
   // User State Management

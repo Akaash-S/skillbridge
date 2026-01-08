@@ -28,6 +28,7 @@ import { Insights } from "@/pages/Insights";
 import { RoadmapBuilder } from "@/pages/RoadmapBuilder";
 import { Activity } from "@/pages/Activity";
 import { Settings } from "@/pages/Settings";
+import { TestJobs } from "@/pages/TestJobs";
 import Help from "@/pages/Help";
 import NotFound from "./pages/NotFound";
 import AddSkillsGuide from "@/pages/guide/AddSkills";
@@ -77,6 +78,7 @@ const App = () => (
                 <Route path="/activity" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
+                <Route path="/test-jobs" element={<TestJobs />} />
                 <Route path="/guide/add-skills" element={<ProtectedRoute><AddSkillsGuide /></ProtectedRoute>} />
                 <Route path="/guide/career-goal" element={<ProtectedRoute><CareerGoalGuide /></ProtectedRoute>} />
                 <Route path="/guide/skill-gap" element={<ProtectedRoute><SkillGapGuide /></ProtectedRoute>} />
