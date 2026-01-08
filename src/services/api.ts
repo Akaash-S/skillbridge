@@ -272,8 +272,14 @@ class ApiService {
     return this.request<JobRole>(`/roles/${roleId}`);
   }
 
-  async getRoleCategories(): Promise<{ categories: string[] }> {
-    return this.request<{ categories: string[] }>('/roles/categories');
+  async selectTargetRole(roleId: string): Promise<{ message: string; targetRole: any }> {
+    // Clear cache when selecting a role since this affects skill matching
+    this.clearUserDataCache();
+    
+    return this.request<{ message: string; targetRole: any }>('/roles/select', {
+      method: 'POST',
+      body: JSON.stringify({ roleId })
+    });
   }
 
   // Skill Gap Analysis
@@ -394,11 +400,134 @@ class ApiService {
     });
   }
 
-  async selectTargetRole(roleId: string): Promise<{ targetRole: JobRole }> {
-    return this.request<{ targetRole: JobRole }>('/roles/select', {
-      method: 'POST',
-      body: JSON.stringify({ roleId })
-    });
+  // Optimized Data Fetching Methods
+  async getInitialLoadData(): Promise<{
+    userState: any;
+    userSkills: UserSkill[];
+    masterSkills: UserSkill[];
+    jobRoles: JobRole[];
+    skillGapAnalysis: any;
+    hasData: boolean;
+  }> {
+    const cacheKey = this.getCacheKey('/user-state/initial-load');
+    const cached = this.getCachedData<any>(cacheKey);
+    
+    if (cached) {
+      console.log('🚀 Using cached initial load data');
+      return cached.initialData;
+    }
+    
+    const result = await this.request<{ initialData: any }>('/user-state/initial-load');
+    this.setCachedData(cacheKey, result.initialData);
+    console.log('⚡ Loaded fresh initial data');
+    return result.initialData;
+  }
+
+  async getOptimizedDashboardData(): Promise<{ dashboardData: any }> {
+    return this.request<{ dashboardData: any }>('/user-state/dashboard');
+  }
+
+  async getSkillsWithRoleAnalysis(roleId?: string): Promise<{
+    userSkills: UserSkill[];
+    skillsCount: number;
+    roleAnalysis?: any;
+  }> {
+    const params = new URLSearchParams();
+    if (roleId) params.append('roleId', roleId);
+    
+    return this.request<{
+      userSkills: UserSkill[];
+      skillsCount: number;
+      roleAnalysis?: any;
+    }>(`/skills/with-role-analysis?${params.toString()}`);
+  }
+
+  async getMasterSkillsPaginated(options: {
+    page?: number;
+    limit?: number;
+    category?: string;
+    search?: string;
+    excludeUserSkills?: boolean;
+  } = {}): Promise<{
+    skills: UserSkill[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  }> {
+    const params = new URLSearchParams();
+    if (options.page) params.append('page', options.page.toString());
+    if (options.limit) params.append('limit', options.limit.toString());
+    if (options.category) params.append('category', options.category);
+    if (options.search) params.append('search', options.search);
+    if (options.excludeUserSkills !== undefined) {
+      params.append('exclude_user_skills', options.excludeUserSkills.toString());
+    }
+    
+    return this.request<{
+      skills: UserSkill[];
+      pagination: any;
+    }>(`/skills/master/paginated?${params.toString()}`);
+  }
+
+  async getRolesWithSkillMatch(options: {
+    category?: string;
+    limit?: number;
+  } = {}): Promise<{
+    roles: (JobRole & { skillMatch: any })[];
+    userSkillsCount: number;
+  }> {
+    const cacheKey = this.getCacheKey('/roles/with-skill-match', options);
+    const cached = this.getCachedData<any>(cacheKey);
+    
+    if (cached) {
+      console.log('🎯 Using cached roles with skill match');
+      return cached;
+    }
+    
+    const params = new URLSearchParams();
+    if (options.category) params.append('category', options.category);
+    if (options.limit) params.append('limit', options.limit.toString());
+    
+    const result = await this.request<{
+      roles: (JobRole & { skillMatch: any })[];
+      userSkillsCount: number;
+    }>(`/roles/with-skill-match?${params.toString()}`);
+    
+    this.setCachedData(cacheKey, result);
+    console.log('🔥 Loaded fresh roles with skill matching');
+    return result;
+  }
+
+  async getRoleCategories(): Promise<{ categories: string[] }> {
+    const cacheKey = this.getCacheKey('/roles/categories');
+    const cached = this.getCachedData<{ categories: string[] }>(cacheKey);
+    
+    if (cached) {
+      console.log('📂 Using cached role categories');
+      return cached;
+    }
+    
+    const result = await this.request<{ categories: string[] }>('/roles/categories');
+    this.setCachedData(cacheKey, result);
+    console.log('📁 Loaded fresh role categories');
+    return result;
+  }
+
+  // Clear cache when user data changes
+  clearUserDataCache(): void {
+    const keysToDelete = Array.from(this.cache.keys()).filter(key => 
+      key.includes('/user-state/') || 
+      key.includes('/skills/with-role-analysis') ||
+      key.includes('/roles/with-skill-match')
+    );
+    
+    keysToDelete.forEach(key => this.cache.delete(key));
+    console.log('🧹 Cleared user data cache');
   }
 
   // User Profile
@@ -406,6 +535,18 @@ class ApiService {
     return this.request<{ profile: UserProfile }>('/users/profile', {
       method: 'PUT',
       body: JSON.stringify(updates)
+    });
+  }
+
+  async completeOnboarding(onboardingData: {
+    name: string;
+    education: string;
+    experience: string;
+    interests: string[];
+  }): Promise<{ profile: UserProfile }> {
+    return this.request<{ profile: UserProfile }>('/users/onboarding', {
+      method: 'POST',
+      body: JSON.stringify(onboardingData)
     });
   }
 

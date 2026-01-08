@@ -27,8 +27,9 @@ export const Onboarding = () => {
     interests: [] as string[],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { updateUserProfile } = useApp();
+  const { completeOnboarding } = useApp();
   const navigate = useNavigate();
 
   const validateStep = () => {
@@ -58,8 +59,11 @@ export const Onboarding = () => {
       setCurrentStep(currentStep + 1);
     } else {
       try {
+        setIsSubmitting(true);
+        setErrors({});
+        
         // Complete onboarding and save to backend
-        await updateUserProfile({
+        await completeOnboarding({
           name: formData.name,
           education: formData.education,
           experience: formData.experience,
@@ -71,6 +75,8 @@ export const Onboarding = () => {
       } catch (error) {
         console.error('Failed to complete onboarding:', error);
         setErrors({ general: 'Failed to save profile. Please try again.' });
+      } finally {
+        setIsSubmitting(false);
       }
     }
   };
@@ -355,10 +361,10 @@ export const Onboarding = () => {
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back
                     </Button>
-                    <Button onClick={handleNext} className="h-12 px-8 group shadow-lg shadow-primary/25">
+                    <Button onClick={handleNext} className="h-12 px-8 group shadow-lg shadow-primary/25" disabled={isSubmitting}>
                       {currentStep === 4 ? (
                         <>
-                          Complete Setup
+                          {isSubmitting ? 'Completing...' : 'Complete Setup'}
                           <Rocket className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                         </>
                       ) : (

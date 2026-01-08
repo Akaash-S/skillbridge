@@ -62,6 +62,12 @@ interface AppContextType extends AppState {
   logout: () => Promise<void>;
   setUserProfile: (profile: UserProfile) => void;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  completeOnboarding: (onboardingData: {
+    name: string;
+    education: string;
+    experience: string;
+    interests: string[];
+  }) => Promise<void>;
   addSkill: (skillId: string, proficiency: ProficiencyLevel) => Promise<void>;
   removeSkill: (skillId: string) => Promise<void>;
   updateSkillProficiency: (skillId: string, proficiency: ProficiencyLevel) => Promise<void>;
@@ -136,46 +142,75 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, []);
 
-  // Load user state from backend
-  const loadUserState = useCallback(async () => {
-    if (!state.isAuthenticated) {
+  // Load user state from backend with optimized initial load
+  const loadUserState = useCallback(async (isAuth: boolean) => {
+    if (!isAuth) {
       console.log('🔒 Not authenticated, skipping user state load');
       return;
     }
     
-    console.log('📊 Loading user state from backend...');
+    console.log('📊 Loading optimized initial data...');
+    setState(prev => ({ ...prev, loading: true }));
+    
     try {
-      const { userState, hasData } = await apiService.getUserState();
+      const initialData = await apiService.getInitialLoadData();
       
-      if (hasData && userState) {
-        console.log('✅ User state loaded from backend');
+      console.log('🔍 Initial data received:', {
+        hasData: initialData.hasData,
+        userSkillsCount: initialData.userSkills?.length || 0,
+        masterSkillsCount: initialData.masterSkills?.length || 0,
+        jobRolesCount: initialData.jobRoles?.length || 0,
+        hasTargetRole: !!initialData.userState?.targetRole,
+        hasAnalysis: !!initialData.skillGapAnalysis
+      });
+      
+      if (initialData.hasData || initialData.masterSkills?.length > 0) {
+        console.log('✅ Initial data loaded from backend');
         
-        // Update state with persisted data
+        // Update state with all data at once
         setState(prev => ({
           ...prev,
-          userSkills: userState.skills || [],
-          selectedRole: userState.targetRole || null,
-          analysis: userState.analysis || null,
-          analysisProgress: userState.analysisProgress || null,
-          roadmapProgress: userState.roadmapProgress || null,
-          // Convert roadmap items if they exist
-          roadmap: userState.roadmapProgress?.roadmapItems || [],
+          userSkills: initialData.userSkills || [],
+          masterSkills: initialData.masterSkills || [],
+          jobRoles: initialData.jobRoles || [],
+          selectedRole: initialData.userState?.targetRole || null,
+          analysis: initialData.skillGapAnalysis || null,
+          analysisProgress: initialData.userState?.analysisProgress || null,
+          roadmapProgress: initialData.userState?.roadmapProgress || null,
+          roadmap: initialData.userState?.roadmapProgress?.roadmapItems || [],
+          loading: false
         }));
         
-        console.log('📈 User state applied:', {
-          skills: userState.skills?.length || 0,
-          hasTargetRole: !!userState.targetRole,
-          hasAnalysis: !!userState.analysis,
-          hasRoadmap: !!userState.roadmapProgress
-        });
+        console.log('📈 Optimized data applied successfully');
       } else {
-        console.log('📝 No existing user state found - new user');
+        console.log('📝 No existing user state found - loading master data');
+        // For new users, still load master skills and job roles
+        await Promise.all([
+          loadMasterSkills(),
+          loadJobRoles()
+        ]);
+        setState(prev => ({ ...prev, loading: false }));
       }
     } catch (error) {
-      console.error('❌ Failed to load user state:', error);
-      // Don't set error state for this - user can still use the app
+      console.error('❌ Failed to load initial data:', error);
+      // Fallback to individual loading
+      console.log('🔄 Falling back to individual data loading...');
+      try {
+        await Promise.all([
+          loadMasterSkills(),
+          loadJobRoles()
+        ]);
+      } catch (fallbackError) {
+        console.error('❌ Fallback loading also failed:', fallbackError);
+        setState(prev => ({
+          ...prev,
+          error: 'Failed to load application data. Please refresh the page.',
+          loading: false
+        }));
+      }
+      setState(prev => ({ ...prev, loading: false }));
     }
-  }, [state.isAuthenticated]);
+  }, [loadMasterSkills, loadJobRoles]);
 
   // Initialize Firebase auth listener
   useEffect(() => {
@@ -206,15 +241,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             loading: false,
           }));
 
-          // Load master data and user state after successful authentication
+          // Load user state after successful authentication
           console.log('📊 Loading application data after authentication...');
-          await Promise.all([
-            loadMasterSkills(),
-            loadJobRoles()
-          ]);
-          
-          // Load user state after master data is loaded
-          await loadUserState();
+          await loadUserState(true);  // Pass authentication status directly
           
         } catch (error) {
           console.error('❌ Auth error:', error);
@@ -312,6 +341,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, []);
 
+  const completeOnboarding = useCallback(async (onboardingData: {
+    name: string;
+    education: string;
+    experience: string;
+    interests: string[];
+  }) => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      const response = await apiService.completeOnboarding(onboardingData);
+      setState((prev) => ({
+        ...prev,
+        user: response.profile,
+        loading: false,
+      }));
+    } catch (error) {
+      console.error('Failed to complete onboarding:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'Failed to complete onboarding',
+        loading: false,
+      }));
+      throw error; // Re-throw so the component can handle it
+    }
+  }, []);
+
   const addSkill = useCallback(async (skillId: string, proficiency: ProficiencyLevel) => {
     if (!state.isAuthenticated) {
       setState(prev => ({
@@ -324,6 +378,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       console.log('🔄 Adding skill:', { skillId, proficiency });
       await apiService.addSkill(skillId, proficiency, 'medium');
+      
+      // Clear user data cache since skills changed
+      apiService.clearUserDataCache();
       
       // Reload user skills from backend
       const userSkills = await apiService.getUserSkills();
@@ -346,6 +403,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       await apiService.removeSkill(skillId);
       
+      // Clear user data cache since skills changed
+      apiService.clearUserDataCache();
+      
       // Reload user skills from backend
       const userSkills = await apiService.getUserSkills();
       setState(prev => ({ ...prev, userSkills }));
@@ -364,6 +424,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const updateSkillProficiency = useCallback(async (skillId: string, proficiency: ProficiencyLevel) => {
     try {
       await apiService.updateSkill(skillId, proficiency);
+      
+      // Clear user data cache since skills changed
+      apiService.clearUserDataCache();
       
       // Reload user skills from backend
       const userSkills = await apiService.getUserSkills();
@@ -489,7 +552,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [state.selectedRole, state.userSkills, state.masterSkills, state.isAuthenticated]);
 
   const generateRoadmap = useCallback(async () => {
-    const { selectedRole } = state;
+    const { selectedRole, analysis } = state;
     
     // Check prerequisites before setting loading state
     if (!selectedRole || !state.isAuthenticated) {
@@ -499,12 +562,120 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       
-      // Determine experience level based on user's skills
-      const experienceLevel = state.userSkills.length >= 10 ? 'advanced' : 
-                             state.userSkills.length >= 5 ? 'intermediate' : 'beginner';
+      // Generate roadmap based on skill gap analysis
+      const roadmapItems: RoadmapItem[] = [];
+      let itemId = 1;
       
-      // Use fast template-based roadmap generation
-      const roadmapItems = await apiService.generateRoadmap(selectedRole.id, experienceLevel);
+      // Add items for missing skills
+      if (analysis?.missingSkills) {
+        analysis.missingSkills.forEach((missingSkill: any) => {
+          roadmapItems.push({
+            id: `missing-${itemId++}`,
+            skillId: missingSkill.skillId,
+            skillName: missingSkill.skillName,
+            difficulty: missingSkill.required,
+            estimatedTime: missingSkill.required === 'beginner' ? '2-4 weeks' : missingSkill.required === 'intermediate' ? '4-6 weeks' : '6-8 weeks',
+            completed: false,
+            resources: [
+              {
+                id: `resource-${missingSkill.skillId}-1`,
+                title: `${missingSkill.skillName} Fundamentals`,
+                type: 'course',
+                url: `#learn-${missingSkill.skillId}`,
+                duration: '2-4 weeks',
+                provider: 'Online Learning Platform'
+              }
+            ]
+          });
+        });
+      }
+      
+      // Add items for partial skills that need improvement
+      if (analysis?.partialSkills) {
+        analysis.partialSkills.forEach((partialSkill: any) => {
+          roadmapItems.push({
+            id: `improve-${itemId++}`,
+            skillId: partialSkill.skill?.id || partialSkill.skillId,
+            skillName: partialSkill.skill?.name || partialSkill.skillName,
+            difficulty: partialSkill.required,
+            estimatedTime: '2-3 weeks',
+            completed: false,
+            resources: [
+              {
+                id: `resource-${partialSkill.skill?.id || partialSkill.skillId}-1`,
+                title: `Advanced ${partialSkill.skill?.name || partialSkill.skillName}`,
+                type: 'course',
+                url: `#improve-${partialSkill.skill?.id || partialSkill.skillId}`,
+                duration: '2-3 weeks',
+                provider: 'Online Learning Platform'
+              }
+            ]
+          });
+        });
+      }
+      
+      // Add general milestones
+      if (roadmapItems.length > 0) {
+        roadmapItems.push({
+          id: `milestone-${itemId++}`,
+          skillId: 'portfolio',
+          skillName: 'Portfolio Project',
+          difficulty: 'intermediate',
+          estimatedTime: '4-6 weeks',
+          completed: false,
+          resources: [
+            {
+              id: 'resource-portfolio-1',
+              title: 'Portfolio Project Ideas',
+              type: 'documentation',
+              url: '#portfolio-ideas',
+              duration: '4-6 weeks',
+              provider: 'Career Guide'
+            }
+          ]
+        });
+        
+        roadmapItems.push({
+          id: `milestone-${itemId++}`,
+          skillId: 'job-search',
+          skillName: 'Job Application Process',
+          difficulty: 'advanced',
+          estimatedTime: '2-3 weeks',
+          completed: false,
+          resources: [
+            {
+              id: 'resource-job-search-1',
+              title: 'Job Search Strategy',
+              type: 'documentation',
+              url: '#job-search',
+              duration: '2-3 weeks',
+              provider: 'Career Guide'
+            }
+          ]
+        });
+      }
+      
+      // If no specific roadmap items, create a general learning path
+      if (roadmapItems.length === 0) {
+        roadmapItems.push({
+          id: 'general-1',
+          skillId: 'general',
+          skillName: 'Skill Development',
+          difficulty: 'intermediate',
+          estimatedTime: '4-6 weeks',
+          completed: false,
+          resources: [
+            {
+              id: 'resource-general-1',
+              title: 'Advanced Learning Resources',
+              type: 'course',
+              url: '#advanced-learning',
+              duration: '4-6 weeks',
+              provider: 'Online Learning Platform'
+            }
+          ]
+        });
+      }
       
       setState(prev => ({
         ...prev,
@@ -515,7 +686,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       // Save roadmap progress to user state
       const roadmapProgressData = {
         targetRole: selectedRole.id,
-        experienceLevel,
+        experienceLevel: state.userSkills.length >= 10 ? 'advanced' : 
+                        state.userSkills.length >= 5 ? 'intermediate' : 'beginner',
         totalItems: roadmapItems.length,
         completedItems: 0,
         progress: 0,
@@ -524,8 +696,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         lastUpdated: new Date().toISOString()
       };
       
-      await apiService.updateRoadmapProgressState(roadmapProgressData);
-      console.log('✅ Roadmap generated and saved to user state');
+      setState(prev => ({ ...prev, roadmapProgress: roadmapProgressData }));
+      
+      // Save to backend
+      try {
+        await apiService.updateRoadmapProgressState(roadmapProgressData);
+        console.log('✅ Roadmap generated and saved to user state');
+      } catch (saveError) {
+        console.warn('⚠️ Failed to save roadmap to backend, but local state updated:', saveError);
+      }
       
     } catch (error) {
       console.error('Failed to generate roadmap:', error);
@@ -535,7 +714,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         loading: false,
       }));
     }
-  }, [state.selectedRole, state.isAuthenticated, state.userSkills.length]);
+  }, [state.selectedRole, state.isAuthenticated, state.userSkills.length, state.analysis]);
 
   const markRoadmapItemComplete = useCallback(async (itemId: string) => {
     // Update local state immediately for responsive UI
@@ -650,6 +829,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         logout,
         setUserProfile,
         updateUserProfile,
+        completeOnboarding,
         addSkill,
         removeSkill,
         updateSkillProficiency,

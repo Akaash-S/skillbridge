@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import { Layout } from "@/components/Layout";
@@ -22,7 +22,8 @@ import {
   Target,
   Camera,
   Save,
-  Trash2
+  Trash2,
+  Loader2
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -37,28 +38,84 @@ const avatarOptions = [
 ];
 
 export const Profile = () => {
-  const { user, updateUserProfile, logout, resetProgress } = useApp();
+  const { user, updateUserProfile, logout, resetProgress, loading, error, clearError } = useApp();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    avatar: user?.avatar || avatarOptions[0],
-    education: user?.education || "",
-    experience: user?.experience || "",
-    interests: user?.interests || [],
-    notifications: user?.notifications ?? true,
-    weeklyGoal: user?.weeklyGoal || 10,
+    name: "",
+    email: "",
+    avatar: avatarOptions[0],
+    education: "",
+    experience: "",
+    interests: [] as string[],
+    notifications: true,
+    weeklyGoal: 10,
   });
 
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
-  const handleSave = () => {
-    updateUserProfile(formData);
-    toast({
-      title: "Profile updated",
-      description: "Your changes have been saved successfully.",
-    });
+  // Load user profile data when component mounts or user changes
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        avatar: user.avatar || avatarOptions[0],
+        education: user.education || "",
+        experience: user.experience || "",
+        interests: user.interests || [],
+        notifications: user.notifications ?? true,
+        weeklyGoal: user.weeklyGoal || 10,
+      });
+      setHasChanges(false);
+    }
+  }, [user]);
+
+  // Track changes to enable/disable save button
+  useEffect(() => {
+    if (user) {
+      const hasChanged = 
+        formData.name !== (user.name || "") ||
+        formData.email !== (user.email || "") ||
+        formData.avatar !== (user.avatar || avatarOptions[0]) ||
+        formData.education !== (user.education || "") ||
+        formData.experience !== (user.experience || "") ||
+        JSON.stringify(formData.interests) !== JSON.stringify(user.interests || []) ||
+        formData.notifications !== (user.notifications ?? true) ||
+        formData.weeklyGoal !== (user.weeklyGoal || 10);
+      
+      setHasChanges(hasChanged);
+    }
+  }, [formData, user]);
+
+  const handleSave = async () => {
+    if (!hasChanges) {
+      toast({
+        title: "No changes to save",
+        description: "Your profile is already up to date.",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await updateUserProfile(formData);
+      setHasChanges(false);
+      toast({
+        title: "Profile updated",
+        description: "Your changes have been saved successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to update profile",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLogout = () => {
@@ -92,6 +149,20 @@ export const Profile = () => {
       .slice(0, 2);
   };
 
+  // Show loading state while user data is being loaded
+  if (!user && loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            <span className="text-muted-foreground">Loading profile...</span>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto space-y-8">
@@ -103,11 +174,53 @@ export const Profile = () => {
               Manage your account and preferences
             </p>
           </div>
-          <Button onClick={handleSave} className="gap-2">
-            <Save className="h-4 w-4" />
-            Save Changes
+          <Button 
+            onClick={handleSave} 
+            className="gap-2" 
+            disabled={!hasChanges || isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" />
+                Save Changes
+              </>
+            )}
           </Button>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-destructive">
+                  <span className="font-medium">Error:</span>
+                  <span>{error}</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={clearError}>
+                  Dismiss
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Changes Indicator */}
+        {hasChanges && (
+          <Card className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                <span className="font-medium">Unsaved Changes:</span>
+                <span>You have unsaved changes. Click "Save Changes" to persist them.</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Avatar Section */}
         <Card>
