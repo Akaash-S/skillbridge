@@ -3,88 +3,199 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useApp } from "@/context/AppContext";
-import { Bell, CheckCircle, Target, TrendingUp, Award, Clock, Filter, CheckCheck, Star, Briefcase } from "lucide-react";
-import { useState } from "react";
+import { Bell, CheckCircle, Target, TrendingUp, Award, Clock, Filter, CheckCheck, Star, Briefcase, Loader2, User, Settings, BookOpen } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { apiService } from "@/services/api";
+import { toast } from "@/hooks/use-toast";
 
 interface Activity {
   id: string;
-  type: "skill" | "readiness" | "role" | "reminder" | "achievement";
+  type: string;
   title: string;
   description: string;
-  timestamp: string;
-  read: boolean;
+  createdAt: string;
+  metadata?: any;
+  read?: boolean;
+}
+
+interface ActivitySummary {
+  totalActivities: number;
+  activityCounts: Record<string, number>;
+  dailyCounts: Record<string, number>;
+  latestActivities: Activity[];
+  dateRange: {
+    days: number;
+    from: string;
+    to: string;
+  };
 }
 
 export const Activity = () => {
-  const { userSkills } = useApp();
+  const { userSkills, isAuthenticated } = useApp();
+  
+  // State for real activity data
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [activitySummary, setActivitySummary] = useState<ActivitySummary | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState<string>("all");
 
-  const [activities, setActivities] = useState<Activity[]>([
+  // Load user activity data
+  const loadUserActivity = async () => {
+    if (!isAuthenticated) return;
+    
+    setLoading(true);
+    try {
+      console.log('📊 Loading user activity...');
+      
+      // Load activity data and summary
+      const [activityResponse, summaryResponse] = await Promise.all([
+        apiService.getUserActivity(100), // Get last 100 activities
+        apiService.getUserActivity(30)   // Get last 30 days for summary
+      ]);
+      
+      const allActivities = activityResponse.activities || [];
+      const recentActivities = summaryResponse.activities || [];
+      
+      // Process activities to add user-friendly titles and descriptions
+      const processedActivities = allActivities.map((activity: any) => ({
+        id: activity.id || `${activity.type}-${Date.now()}`,
+        type: activity.type,
+        title: getActivityTitle(activity.type),
+        description: getActivityDescription(activity.type, activity.metadata),
+        createdAt: activity.createdAt,
+        metadata: activity.metadata,
+        read: activity.read || false
+      }));
+      
+      setActivities(processedActivities);
+      
+      // Create activity summary
+      const activityCounts: Record<string, number> = {};
+      const dailyCounts: Record<string, number> = {};
+      
+      recentActivities.forEach((activity: any) => {
+        const type = activity.type || 'UNKNOWN';
+        activityCounts[type] = (activityCounts[type] || 0) + 1;
+        
+        if (activity.createdAt) {
+          const date = new Date(activity.createdAt).toISOString().split('T')[0];
+          dailyCounts[date] = (dailyCounts[date] || 0) + 1;
+        }
+      });
+      
+      setActivitySummary({
+        totalActivities: recentActivities.length,
+        activityCounts,
+        dailyCounts,
+        latestActivities: processedActivities.slice(0, 10),
+        dateRange: {
+          days: 30,
+          from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+          to: new Date().toISOString()
+        }
+      });
+      
+      console.log('✅ User activity loaded successfully');
+      
+    } catch (error) {
+      console.error('❌ Failed to load user activity:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load activity data. Please try again.",
+        variant: "destructive",
+      });
+      
+      // Fallback to mock data for demo
+      setActivities(getMockActivities());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load data on component mount and when authentication changes
+  useEffect(() => {
+    loadUserActivity();
+  }, [isAuthenticated]);
+
+  // Helper function to get user-friendly activity titles
+  const getActivityTitle = (type: string): string => {
+    const titles: Record<string, string> = {
+      'LOGIN': 'Logged In',
+      'REGISTRATION': 'Account Created',
+      'PROFILE_UPDATED': 'Profile Updated',
+      'ONBOARDING_COMPLETED': 'Onboarding Completed',
+      'SKILL_ADDED': 'Skill Added',
+      'SKILL_UPDATED': 'Skill Updated',
+      'SKILL_REMOVED': 'Skill Removed',
+      'ROADMAP_GENERATED': 'Roadmap Generated',
+      'ROADMAP_PROGRESS': 'Roadmap Progress',
+      'ROADMAP_RESET': 'Roadmap Reset',
+      'LEARNING_COMPLETED': 'Learning Completed',
+      'SETTINGS_UPDATED': 'Settings Updated'
+    };
+    
+    return titles[type] || 'Activity';
+  };
+
+  // Helper function to get user-friendly activity descriptions
+  const getActivityDescription = (type: string, metadata?: any): string => {
+    const skillName = metadata?.skillName || metadata?.skillId || 'a skill';
+    const roleName = metadata?.roleName || metadata?.roleId || 'a role';
+    
+    const descriptions: Record<string, string> = {
+      'LOGIN': 'You signed in to your account',
+      'REGISTRATION': 'Welcome to SkillBridge! Your account has been created',
+      'PROFILE_UPDATED': 'Your profile information has been updated',
+      'ONBOARDING_COMPLETED': 'You completed the initial setup process',
+      'SKILL_ADDED': `You added ${skillName} to your skill set`,
+      'SKILL_UPDATED': `You updated your proficiency in ${skillName}`,
+      'SKILL_REMOVED': `You removed ${skillName} from your skills`,
+      'ROADMAP_GENERATED': `Learning roadmap generated for ${roleName}`,
+      'ROADMAP_PROGRESS': `You made progress on your learning roadmap`,
+      'ROADMAP_RESET': 'You reset your learning roadmap',
+      'LEARNING_COMPLETED': 'You completed a learning resource',
+      'SETTINGS_UPDATED': 'Your account settings have been updated'
+    };
+    
+    return descriptions[type] || 'Activity occurred';
+  };
+
+  // Mock activities for fallback
+  const getMockActivities = (): Activity[] => [
     {
       id: "1",
-      type: "skill",
-      title: "Skill Completed",
-      description: "You've marked React as advanced proficiency",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+      type: "SKILL_ADDED",
+      title: "Skill Added",
+      description: "You've added React to your skill set",
+      createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
       read: false,
     },
     {
       id: "2",
-      type: "readiness",
-      title: "Readiness Updated",
-      description: "Your Frontend Developer readiness is now 85%",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+      type: "ROADMAP_PROGRESS",
+      title: "Roadmap Progress",
+      description: "You completed a milestone in your learning roadmap",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
       read: false,
     },
     {
       id: "3",
-      type: "role",
-      title: "New Role Match",
-      description: "You now qualify for Full Stack Developer positions",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
+      type: "PROFILE_UPDATED",
+      title: "Profile Updated",
+      description: "Your profile information has been updated",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(),
       read: true,
     },
     {
       id: "4",
-      type: "reminder",
-      title: "Learning Reminder",
-      description: "Don't forget to complete your TypeScript roadmap item",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+      type: "LOGIN",
+      title: "Logged In",
+      description: "You signed in to your account",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
       read: true,
     },
-    {
-      id: "5",
-      type: "achievement",
-      title: "Achievement Unlocked",
-      description: "You've earned the 'Quick Learner' badge",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-      read: true,
-    },
-    {
-      id: "6",
-      type: "skill",
-      title: "New Skill Added",
-      description: "You've added Node.js to your skill set",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-      read: true,
-    },
-    {
-      id: "7",
-      type: "readiness",
-      title: "Portfolio Milestone",
-      description: "Added 3 projects to your portfolio",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 4).toISOString(),
-      read: true,
-    },
-    {
-      id: "8",
-      type: "achievement",
-      title: "Streak Achieved",
-      description: "7-day learning streak! Keep it up!",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
-      read: true,
-    },
-  ]);
+  ];
 
   const markAsRead = (id: string) => {
     setActivities(activities.map(a => a.id === id ? { ...a, read: true } : a));
@@ -94,14 +205,23 @@ export const Activity = () => {
     setActivities(activities.map(a => ({ ...a, read: true })));
   };
 
-  const getActivityIcon = (type: Activity["type"]) => {
-    switch (type) {
-      case "skill": return <CheckCircle className="h-5 w-5 text-accent" />;
-      case "readiness": return <TrendingUp className="h-5 w-5 text-primary" />;
-      case "role": return <Briefcase className="h-5 w-5 text-info" />;
-      case "reminder": return <Clock className="h-5 w-5 text-warning" />;
-      case "achievement": return <Award className="h-5 w-5 text-warning" />;
-    }
+  const getActivityIcon = (type: string) => {
+    const icons: Record<string, JSX.Element> = {
+      'SKILL_ADDED': <CheckCircle className="h-5 w-5 text-accent" />,
+      'SKILL_UPDATED': <TrendingUp className="h-5 w-5 text-primary" />,
+      'SKILL_REMOVED': <Target className="h-5 w-5 text-muted-foreground" />,
+      'ROADMAP_GENERATED': <BookOpen className="h-5 w-5 text-info" />,
+      'ROADMAP_PROGRESS': <Award className="h-5 w-5 text-warning" />,
+      'ROADMAP_RESET': <Clock className="h-5 w-5 text-muted-foreground" />,
+      'PROFILE_UPDATED': <User className="h-5 w-5 text-primary" />,
+      'SETTINGS_UPDATED': <Settings className="h-5 w-5 text-muted-foreground" />,
+      'LOGIN': <CheckCircle className="h-5 w-5 text-accent" />,
+      'REGISTRATION': <Star className="h-5 w-5 text-warning" />,
+      'ONBOARDING_COMPLETED': <Award className="h-5 w-5 text-warning" />,
+      'LEARNING_COMPLETED': <BookOpen className="h-5 w-5 text-info" />
+    };
+    
+    return icons[type] || <Bell className="h-5 w-5 text-muted-foreground" />;
   };
 
   const formatTimestamp = (timestamp: string) => {
@@ -123,8 +243,25 @@ export const Activity = () => {
   const filterActivities = (type: string) => {
     if (type === "all") return activities;
     if (type === "unread") return activities.filter(a => !a.read);
+    if (type === "skills") return activities.filter(a => a.type.includes('SKILL'));
+    if (type === "roadmap") return activities.filter(a => a.type.includes('ROADMAP'));
+    if (type === "profile") return activities.filter(a => ['PROFILE_UPDATED', 'SETTINGS_UPDATED', 'ONBOARDING_COMPLETED'].includes(a.type));
     return activities.filter(a => a.type === type);
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
+            <h3 className="text-lg font-semibold mb-2">Loading Activity</h3>
+            <p className="text-muted-foreground">Fetching your recent activities...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -172,7 +309,7 @@ export const Activity = () => {
                   <CheckCircle className="h-5 w-5 text-accent" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{activities.filter(a => a.type === "skill").length}</p>
+                  <p className="text-2xl font-bold">{activitySummary?.activityCounts['SKILL_ADDED'] || activities.filter(a => a.type.includes('SKILL')).length}</p>
                   <p className="text-sm text-muted-foreground">Skills</p>
                 </div>
               </div>
@@ -185,8 +322,8 @@ export const Activity = () => {
                   <Award className="h-5 w-5 text-warning" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{activities.filter(a => a.type === "achievement").length}</p>
-                  <p className="text-sm text-muted-foreground">Achievements</p>
+                  <p className="text-2xl font-bold">{activitySummary?.activityCounts['ROADMAP_PROGRESS'] || activities.filter(a => a.type.includes('ROADMAP')).length}</p>
+                  <p className="text-sm text-muted-foreground">Progress</p>
                 </div>
               </div>
             </CardContent>
@@ -195,11 +332,11 @@ export const Activity = () => {
             <CardContent className="pt-4">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-info/10 flex items-center justify-center">
-                  <Briefcase className="h-5 w-5 text-info" />
+                  <User className="h-5 w-5 text-info" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{activities.filter(a => a.type === "role").length}</p>
-                  <p className="text-sm text-muted-foreground">Role Matches</p>
+                  <p className="text-2xl font-bold">{activitySummary?.totalActivities || activities.length}</p>
+                  <p className="text-sm text-muted-foreground">Total</p>
                 </div>
               </div>
             </CardContent>
@@ -219,12 +356,12 @@ export const Activity = () => {
                 <TabsTrigger value="unread">
                   Unread {unreadCount > 0 && <Badge className="ml-1 h-5 w-5 p-0 text-xs">{unreadCount}</Badge>}
                 </TabsTrigger>
-                <TabsTrigger value="skill">Skills</TabsTrigger>
-                <TabsTrigger value="achievement">Achievements</TabsTrigger>
-                <TabsTrigger value="reminder">Reminders</TabsTrigger>
+                <TabsTrigger value="skills">Skills</TabsTrigger>
+                <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
+                <TabsTrigger value="profile">Profile</TabsTrigger>
               </TabsList>
 
-              {["all", "unread", "skill", "achievement", "reminder"].map(tab => (
+              {["all", "unread", "skills", "roadmap", "profile"].map(tab => (
                 <TabsContent key={tab} value={tab} className="space-y-2">
                   {filterActivities(tab).length > 0 ? (
                     filterActivities(tab).map(activity => (
@@ -240,7 +377,7 @@ export const Activity = () => {
                           <div className="flex items-center justify-between">
                             <h4 className="font-medium">{activity.title}</h4>
                             <span className="text-xs text-muted-foreground">
-                              {formatTimestamp(activity.timestamp)}
+                              {formatTimestamp(activity.createdAt)}
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground">{activity.description}</p>

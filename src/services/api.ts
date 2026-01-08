@@ -559,6 +559,10 @@ class ApiService {
     return this.request<{ activities: any[] }>(`/activity?limit=${limit}`);
   }
 
+  async getActivitySummary(days: number = 30): Promise<{ summary: any }> {
+    return this.request<{ summary: any }>(`/activity/summary?days=${days}`);
+  }
+
   // Settings
   async getUserSettings(): Promise<{ settings: any }> {
     return this.request<{ settings: any }>('/settings');
