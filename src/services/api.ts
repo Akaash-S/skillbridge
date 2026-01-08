@@ -568,11 +568,21 @@ class ApiService {
     return this.request<{ settings: any }>('/settings');
   }
 
-  async updateUserSettings(settings: any): Promise<{ settings: any }> {
-    return this.request<{ settings: any }>('/settings', {
+  async updateUserSettings(settings: any): Promise<{ message: string; settings: any }> {
+    return this.request<{ message: string; settings: any }>('/settings', {
       method: 'PUT',
       body: JSON.stringify(settings)
     });
+  }
+
+  async resetUserSettings(): Promise<{ message: string; settings: any }> {
+    return this.request<{ message: string; settings: any }>('/settings/reset', {
+      method: 'POST'
+    });
+  }
+
+  async exportUserSettings(): Promise<any> {
+    return this.request<any>('/settings/export');
   }
 }
 
