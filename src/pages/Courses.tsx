@@ -44,6 +44,7 @@ import {
 
 interface Course {
   id: string;
+  course_id?: string; // For saved courses from backend
   title: string;
   description: string;
   thumbnail: string;
@@ -256,7 +257,7 @@ export const Courses = () => {
       
       // Update local state
       setSavedCourses(prev => prev.map(course => 
-        course.id === courseId 
+        (course.course_id || course.id) === courseId 
           ? { ...course, progress, completed: progress >= 100 }
           : course
       ));
@@ -281,7 +282,7 @@ export const Courses = () => {
   const removeCourse = useCallback(async (courseId: string) => {
     try {
       await apiService.removeSavedCourse(courseId);
-      setSavedCourses(prev => prev.filter(course => course.id !== courseId));
+      setSavedCourses(prev => prev.filter(course => (course.course_id || course.id) !== courseId));
       
       toast({
         title: "Course removed",
@@ -299,7 +300,7 @@ export const Courses = () => {
 
   // Check if course is saved
   const isSaved = useCallback((courseId: string) => {
-    return savedCourses.some(course => course.id === courseId);
+    return savedCourses.some(course => (course.course_id || course.id) === courseId);
   }, [savedCourses]);
 
   // Load data on component mount
@@ -418,8 +419,9 @@ export const Courses = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => {
+                    const courseId = course.course_id || course.id;
                     const newProgress = course.completed ? 0 : 100;
-                    updateProgress(course.id, newProgress);
+                    updateProgress(courseId, newProgress);
                   }}
                 >
                   {course.completed ? (
@@ -445,7 +447,7 @@ export const Courses = () => {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => removeCourse(course.id)}>
+                    <AlertDialogAction onClick={() => removeCourse(course.course_id || course.id)}>
                       Remove
                     </AlertDialogAction>
                   </AlertDialogFooter>
@@ -673,7 +675,7 @@ export const Courses = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {savedCourses.map((course) => (
                   <CourseCard 
-                    key={course.id} 
+                    key={course.course_id || course.id} 
                     course={course} 
                     showProgress={true}
                     showRemove={true}
