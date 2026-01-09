@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Chrome, Loader2, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { MFAVerification } from "@/components/MFAVerification";
 
 const features = [
   "Personalized skill gap analysis",
@@ -15,7 +16,7 @@ const features = [
 
 export const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { login, user, loading, error, clearError } = useApp();
+  const { login, user, loading, error, clearError, mfaRequired, mfaToken } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -26,12 +27,20 @@ export const Login = () => {
     setIsLoading(true);
     try {
       await login();
-      // Navigation will be handled by the auth state change in AppContext
+      // MFA state will be handled by context state changes
     } catch (error) {
       console.error('Login failed:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleMFAComplete = () => {
+    // Navigation will be handled by auth state change
+  };
+
+  const handleMFACancel = () => {
+    // Could add logout logic here if needed
   };
 
   // Redirect if already logged in
@@ -47,6 +56,19 @@ export const Login = () => {
       }
     }
   }, [user, navigate, from]);
+
+  // Show MFA verification if required
+  if (mfaRequired && mfaToken) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <MFAVerification
+          mfaToken={mfaToken}
+          onVerificationComplete={handleMFAComplete}
+          onCancel={handleMFACancel}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex">

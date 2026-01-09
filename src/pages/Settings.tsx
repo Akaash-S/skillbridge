@@ -46,6 +46,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { MFAManagement } from "@/components/MFAManagement";
 
 // Types based on backend API
 interface UserSettings {
@@ -800,6 +801,9 @@ export const Settings = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* MFA Security Card */}
+            <MFAManagement />
           </TabsContent>
 
           {/* Account Tab */}

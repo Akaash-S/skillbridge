@@ -28,6 +28,7 @@ import { Insights } from "@/pages/Insights";
 import { RoadmapBuilder } from "@/pages/RoadmapBuilder";
 import { Activity } from "@/pages/Activity";
 import { Settings } from "@/pages/Settings";
+import { Courses } from "@/pages/Courses";
 import Help from "@/pages/Help";
 import NotFound from "./pages/NotFound";
 import AddSkillsGuide from "@/pages/guide/AddSkills";
@@ -46,12 +47,7 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter
-              future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true,
-              }}
-            >
+            <BrowserRouter>
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Landing />} />
@@ -75,6 +71,7 @@ const App = () => (
                 <Route path="/resume-intelligence" element={<ProtectedRoute><ResumeIntelligence /></ProtectedRoute>} />
                 <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
                 <Route path="/activity" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
+                <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
                 <Route path="/guide/add-skills" element={<ProtectedRoute><AddSkillsGuide /></ProtectedRoute>} />
@@ -84,10 +81,10 @@ const App = () => (
                 <Route path="/guide/growth-tracking" element={<ProtectedRoute><GrowthTrackingGuide /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <DebugInfo />
             </BrowserRouter>
           </TooltipProvider>
         </ErrorBoundary>
-        <DebugInfo />
       </AppProvider>
     </ThemeProvider>
   </QueryClientProvider>

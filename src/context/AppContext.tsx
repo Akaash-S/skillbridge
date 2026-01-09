@@ -55,11 +55,14 @@ interface AppState {
   roadmapProgress: any | null;
   loading: boolean;
   error: string | null;
+  mfaRequired: boolean;
+  mfaToken: string | null;
 }
 
 interface AppContextType extends AppState {
   login: () => Promise<void>;
   logout: () => Promise<void>;
+  completeMFALogin: (mfaToken: string, code: string, isRecoveryCode?: boolean) => Promise<void>;
   setUserProfile: (profile: UserProfile) => void;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   completeOnboarding: (onboardingData: {
@@ -110,6 +113,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     roadmapProgress: null,
     loading: false,
     error: null,
+    mfaRequired: false,
+    mfaToken: null,
   });
 
   const loadMasterSkills = useCallback(async () => {
@@ -231,6 +236,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           
           console.log('🚀 Logging in with backend...');
           const loginResponse = await apiService.login(idToken);
+          
+          // Check if MFA is required
+          if (loginResponse.mfa_required) {
+            console.log('🔐 MFA verification required');
+            setState(prev => ({
+              ...prev,
+              mfaRequired: true,
+              mfaToken: loginResponse.mfa_token,
+              loading: false,
+            }));
+            return; // Don't proceed with full login until MFA is verified
+          }
+          
           console.log('✅ Backend login successful');
           
           setState(prev => ({
@@ -238,6 +256,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             isAuthenticated: true,
             firebaseUser,
             user: loginResponse.user,
+            mfaRequired: false,
+            mfaToken: null,
             loading: false,
           }));
 
@@ -280,7 +300,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
       await FirebaseAuthService.signInWithGoogle();
-      // Auth state change will handle the rest
+      // Auth state change will handle the backend login and MFA check
+      // Return value will be set by the auth state change handler
     } catch (error) {
       console.error('Login error:', error);
       setState(prev => ({
@@ -288,8 +309,38 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         error: error instanceof Error ? error.message : 'Login failed',
         loading: false,
       }));
+      throw error;
     }
   }, []);
+
+  const completeMFALogin = useCallback(async (mfaToken: string, code: string, isRecoveryCode: boolean = false) => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      
+      const loginResponse = await apiService.completeMFALogin(mfaToken, code, isRecoveryCode);
+      
+      setState(prev => ({
+        ...prev,
+        isAuthenticated: true,
+        user: loginResponse.user,
+        mfaRequired: false,
+        mfaToken: null,
+        loading: false,
+      }));
+
+      // Load user state after successful MFA login
+      await loadUserState(true);
+      
+    } catch (error) {
+      console.error('MFA login error:', error);
+      setState(prev => ({
+        ...prev,
+        error: error instanceof Error ? error.message : 'MFA verification failed',
+        loading: false,
+      }));
+      throw error;
+    }
+  }, [loadUserState]);
 
   const logout = useCallback(async () => {
     try {
@@ -308,6 +359,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         roadmapProgress: null,
         loading: false,
         error: null,
+        mfaRequired: false,
+        mfaToken: null,
       });
     } catch (error) {
       console.error('Logout error:', error);
@@ -827,6 +880,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         ...state,
         login,
         logout,
+        completeMFALogin,
         setUserProfile,
         updateUserProfile,
         completeOnboarding,

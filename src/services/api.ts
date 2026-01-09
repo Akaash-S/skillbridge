@@ -584,6 +584,192 @@ class ApiService {
   async exportUserSettings(): Promise<any> {
     return this.request<any>('/settings/export');
   }
+
+  // Courses
+  async searchCourses(options: {
+    query: string;
+    skillLevel?: 'beginner' | 'intermediate' | 'advanced';
+    duration?: 'short' | 'medium' | 'long';
+    maxResults?: number;
+    order?: 'relevance' | 'date' | 'rating' | 'viewCount' | 'title';
+  }): Promise<{
+    courses: any[];
+    total: number;
+    query: string;
+    filters: any;
+  }> {
+    const params = new URLSearchParams();
+    params.append('q', options.query);
+    if (options.skillLevel) params.append('skill_level', options.skillLevel);
+    if (options.duration) params.append('duration', options.duration);
+    if (options.maxResults) params.append('max_results', options.maxResults.toString());
+    if (options.order) params.append('order', options.order);
+
+    return this.request<{
+      courses: any[];
+      total: number;
+      query: string;
+      filters: any;
+    }>(`/courses/search?${params.toString()}`);
+  }
+
+  async getCourseRecommendations(): Promise<{ recommendations: any[]; total: number }> {
+    return this.request<{ recommendations: any[]; total: number }>('/courses/recommendations');
+  }
+
+  async saveCourse(courseData: {
+    course_id: string;
+    title: string;
+    url: string;
+    thumbnail?: string;
+    channel?: any;
+    duration?: any;
+    skill?: string;
+  }): Promise<{ message: string; course: any }> {
+    return this.request<{ message: string; course: any }>('/courses/save', {
+      method: 'POST',
+      body: JSON.stringify(courseData)
+    });
+  }
+
+  async getSavedCourses(): Promise<{ courses: any[]; total: number }> {
+    return this.request<{ courses: any[]; total: number }>('/courses/saved');
+  }
+
+  async updateCourseProgress(courseId: string, progress: number, completed?: boolean): Promise<{
+    message: string;
+    progress: number;
+    completed: boolean;
+  }> {
+    return this.request<{
+      message: string;
+      progress: number;
+      completed: boolean;
+    }>('/courses/progress', {
+      method: 'PUT',
+      body: JSON.stringify({
+        course_id: courseId,
+        progress,
+        completed
+      })
+    });
+  }
+
+  async removeSavedCourse(courseId: string): Promise<{ message: string }> {
+    return this.request<{ message: string }>(`/courses/remove?course_id=${courseId}`, {
+      method: 'DELETE'
+    });
+  }
+
+  // MFA (Multi-Factor Authentication)
+  async getMFAStatus(): Promise<{
+    enabled: boolean;
+    setup_required: boolean;
+    recovery_codes_count: number;
+    setup_date?: string;
+    last_used?: string;
+  }> {
+    return this.request<{
+      enabled: boolean;
+      setup_required: boolean;
+      recovery_codes_count: number;
+      setup_date?: string;
+      last_used?: string;
+    }>('/mfa/status');
+  }
+
+  async setupMFA(): Promise<{
+    message: string;
+    qr_code: string;
+    recovery_codes: string[];
+    setup_token: string;
+  }> {
+    return this.request<{
+      message: string;
+      qr_code: string;
+      recovery_codes: string[];
+      setup_token: string;
+    }>('/mfa/setup', {
+      method: 'POST'
+    });
+  }
+
+  async verifyMFASetup(setupToken: string, totpCode: string): Promise<{
+    message: string;
+    enabled: boolean;
+  }> {
+    return this.request<{
+      message: string;
+      enabled: boolean;
+    }>('/mfa/verify-setup', {
+      method: 'POST',
+      body: JSON.stringify({
+        setup_token: setupToken,
+        totp_code: totpCode
+      })
+    }, false); // No auth required for setup verification
+  }
+
+  async verifyMFA(mfaToken: string, code: string, isRecoveryCode: boolean = false): Promise<{
+    message: string;
+    verified: boolean;
+    remaining_recovery_codes: number;
+  }> {
+    return this.request<{
+      message: string;
+      verified: boolean;
+      remaining_recovery_codes: number;
+    }>('/mfa/verify', {
+      method: 'POST',
+      body: JSON.stringify({
+        mfa_token: mfaToken,
+        code: code,
+        is_recovery_code: isRecoveryCode
+      })
+    }, false); // No auth required for MFA verification
+  }
+
+  async completeMFALogin(mfaToken: string, code: string, isRecoveryCode: boolean = false): Promise<LoginResponse> {
+    return this.request<LoginResponse>('/auth/login/mfa', {
+      method: 'POST',
+      body: JSON.stringify({
+        mfa_token: mfaToken,
+        code: code,
+        is_recovery_code: isRecoveryCode
+      })
+    }, false); // No auth required for login
+  }
+
+  async disableMFA(verificationCode: string, isRecoveryCode: boolean = false): Promise<{
+    message: string;
+    enabled: boolean;
+  }> {
+    return this.request<{
+      message: string;
+      enabled: boolean;
+    }>('/mfa/disable', {
+      method: 'POST',
+      body: JSON.stringify({
+        verification_code: verificationCode,
+        is_recovery_code: isRecoveryCode
+      })
+    });
+  }
+
+  async regenerateRecoveryCodes(totpCode: string): Promise<{
+    message: string;
+    recovery_codes: string[];
+  }> {
+    return this.request<{
+      message: string;
+      recovery_codes: string[];
+    }>('/mfa/regenerate-recovery-codes', {
+      method: 'POST',
+      body: JSON.stringify({
+        totp_code: totpCode
+      })
+    });
+  }
 }
 
 // Export singleton instance
