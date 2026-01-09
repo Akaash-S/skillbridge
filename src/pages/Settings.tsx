@@ -1,38 +1,39 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Layout } from "@/components/Layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
+import { useApp } from "@/context/AppContext";
+import { apiService } from "@/services/api";
 import { 
   Palette, 
-  BookOpen, 
-  Target, 
   Bell, 
   Shield, 
-  Accessibility, 
   User,
   Sun,
   Moon,
   Monitor,
   Download,
-  Trash2,
   RotateCcw,
   LogOut,
-  Eye,
-  EyeOff,
-  Volume2,
-  VolumeX,
-  Keyboard,
-  Contrast
+  Loader2,
+  Save,
+  RefreshCw,
+  Settings as SettingsIcon,
+  Globe,
+  Brain,
+  Target,
+  AlertTriangle,
+  CheckCircle,
+  Upload
 } from "lucide-react";
 import {
   AlertDialog,
@@ -46,125 +47,397 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+// Types based on backend API
+interface UserSettings {
+  theme: 'light' | 'dark' | 'system';
+  learningPace: 'slow' | 'balanced' | 'fast';
+  notifications: boolean;
+  jobCountries: string[];
+  emailNotifications: {
+    roadmapUpdates: boolean;
+    jobRecommendations: boolean;
+    learningReminders: boolean;
+    weeklyProgress: boolean;
+  };
+  privacy: {
+    profileVisibility: 'public' | 'private';
+    skillsVisibility: 'public' | 'private';
+    progressVisibility: 'public' | 'private';
+  };
+  preferences: {
+    language: string;
+    timezone: string;
+    weeklyGoal: number;
+    difficultyPreference: 'easy' | 'adaptive' | 'challenging';
+  };
+}
+
+const countries = [
+  { code: 'in', name: '🇮🇳 India' },
+  { code: 'us', name: '🇺🇸 United States' },
+  { code: 'gb', name: '🇬🇧 United Kingdom' },
+  { code: 'ca', name: '🇨🇦 Canada' },
+  { code: 'au', name: '🇦🇺 Australia' },
+  { code: 'de', name: '🇩🇪 Germany' },
+];
+
+const languages = [
+  { code: 'en', name: '🇺🇸 English' },
+  { code: 'es', name: '🇪🇸 Spanish' },
+  { code: 'fr', name: '🇫🇷 French' },
+  { code: 'de', name: '🇩🇪 German' },
+  { code: 'hi', name: '🇮🇳 Hindi' },
+  { code: 'zh', name: '🇨🇳 Chinese' },
+  { code: 'ja', name: '🇯🇵 Japanese' },
+  { code: 'pt', name: '🇧🇷 Portuguese' },
+];
+
+const timezones = [
+  { value: 'UTC', label: 'UTC (Coordinated Universal Time)' },
+  { value: 'America/New_York', label: 'Eastern Time (ET)' },
+  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
+  { value: 'Europe/London', label: 'Greenwich Mean Time (GMT)' },
+  { value: 'Europe/Berlin', label: 'Central European Time (CET)' },
+  { value: 'Asia/Kolkata', label: 'India Standard Time (IST)' },
+  { value: 'Asia/Tokyo', label: 'Japan Standard Time (JST)' },
+  { value: 'Asia/Shanghai', label: 'China Standard Time (CST)' },
+];
+
 export const Settings = () => {
   const { toast } = useToast();
+  const { isAuthenticated, logout } = useApp();
   
-  // Appearance settings
-  const [theme, setTheme] = useState("system");
-  const [accentColor, setAccentColor] = useState("blue");
-  const [fontSize, setFontSize] = useState("medium");
-  const [density, setDensity] = useState("comfortable");
-  const [animationLevel, setAnimationLevel] = useState("full");
+  // Loading states
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState(false);
   
-  // Learning preferences
-  const [learningPace, setLearningPace] = useState("balanced");
-  const [roadmapStyle, setRoadmapStyle] = useState("milestone");
-  const [difficultyPref, setDifficultyPref] = useState("balanced");
-  const [dailyTarget, setDailyTarget] = useState([30]);
-  const [resourceType, setResourceType] = useState("mixed");
-  
-  // Career focus
-  const [primaryGoal, setPrimaryGoal] = useState("Frontend Developer");
-  const [targetTimeline, setTargetTimeline] = useState("6-12");
-  const [careerPriority, setCareerPriority] = useState("job-ready");
-  const [opportunityTypes, setOpportunityTypes] = useState(["full-time", "internships"]);
-  
-  // Notifications
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [skillReminders, setSkillReminders] = useState(true);
-  const [roadmapUpdates, setRoadmapUpdates] = useState(true);
-  const [readinessAlerts, setReadinessAlerts] = useState(true);
-  const [opportunityAlerts, setOpportunityAlerts] = useState(true);
-  const [notificationFrequency, setNotificationFrequency] = useState("daily");
-  const [quietHoursEnabled, setQuietHoursEnabled] = useState(false);
-  const [quietStart, setQuietStart] = useState("22:00");
-  const [quietEnd, setQuietEnd] = useState("08:00");
-  
-  // Privacy
-  const [profileVisibility, setProfileVisibility] = useState("private");
-  const [dataUsage, setDataUsage] = useState("recommendations");
-  const [activityTracking, setActivityTracking] = useState(true);
-  
-  // Accessibility
-  const [highContrast, setHighContrast] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const [screenReader, setScreenReader] = useState(false);
-  const [keyboardNav, setKeyboardNav] = useState(false);
-  const [colorBlindMode, setColorBlindMode] = useState(false);
+  // Settings state
+  const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  const accentColors = [
-    { value: "blue", color: "hsl(220 90% 56%)", label: "Blue" },
-    { value: "indigo", color: "hsl(239 84% 67%)", label: "Indigo" },
-    { value: "green", color: "hsl(160 84% 39%)", label: "Green" },
-    { value: "purple", color: "hsl(280 65% 60%)", label: "Purple" },
-  ];
-
-  const handleSave = () => {
-    toast({
-      title: "Settings saved",
-      description: "Your preferences have been updated successfully.",
-    });
-  };
-
-  const handleExportData = () => {
-    toast({
-      title: "Data export started",
-      description: "You'll receive a download link in your email shortly.",
-    });
-  };
-
-  const handleResetProgress = () => {
-    toast({
-      title: "Progress reset",
-      description: "All your learning progress has been reset.",
-      variant: "destructive",
-    });
-  };
-
-  const handleDeleteAccount = () => {
-    toast({
-      title: "Account deletion requested",
-      description: "Your account will be deleted within 30 days.",
-      variant: "destructive",
-    });
-  };
-
-  const toggleOpportunityType = (type: string) => {
-    if (opportunityTypes.includes(type)) {
-      setOpportunityTypes(opportunityTypes.filter(t => t !== type));
-    } else {
-      setOpportunityTypes([...opportunityTypes, type]);
+  // Load user settings from backend
+  const loadSettings = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
+    setLoading(true);
+    try {
+      console.log('📊 Loading user settings...');
+      const response = await apiService.getUserSettings();
+      setSettings(response.settings);
+      setHasUnsavedChanges(false);
+      console.log('✅ Settings loaded successfully');
+    } catch (error) {
+      console.error('❌ Failed to load settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load settings. Using defaults.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [isAuthenticated, toast]);
+
+  // Save settings to backend
+  const saveSettings = useCallback(async () => {
+    if (!settings || !isAuthenticated) return;
+    
+    setSaving(true);
+    try {
+      console.log('💾 Saving settings...');
+      await apiService.updateUserSettings(settings);
+      
+      setLastSaved(new Date());
+      setHasUnsavedChanges(false);
+      
+      toast({
+        title: "Settings saved",
+        description: "Your preferences have been updated successfully.",
+      });
+      
+      console.log('✅ Settings saved successfully');
+    } catch (error) {
+      console.error('❌ Failed to save settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  }, [settings, isAuthenticated, toast]);
+
+  // Reset settings to defaults
+  const resetSettings = useCallback(async () => {
+    if (!isAuthenticated) return;
+    
+    setResetting(true);
+    try {
+      console.log('🔄 Resetting settings...');
+      const response = await apiService.resetUserSettings();
+      setSettings(response.settings);
+      setHasUnsavedChanges(false);
+      
+      toast({
+        title: "Settings reset",
+        description: "All settings have been reset to defaults.",
+      });
+      
+      console.log('✅ Settings reset successfully');
+    } catch (error) {
+      console.error('❌ Failed to reset settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reset settings. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setResetting(false);
+    }
+  }, [isAuthenticated, toast]);
+
+  // Update setting helper
+  const updateSetting = useCallback((path: string, value: any) => {
+    if (!settings) return;
+    
+    const keys = path.split('.');
+    const newSettings = { ...settings };
+    let current: any = newSettings;
+    
+    // Navigate to the nested property
+    for (let i = 0; i < keys.length - 1; i++) {
+      if (!current[keys[i]]) {
+        current[keys[i]] = {};
+      }
+      current = current[keys[i]];
+    }
+    
+    // Set the value
+    current[keys[keys.length - 1]] = value;
+    
+    setSettings(newSettings);
+    setHasUnsavedChanges(true);
+  }, [settings]);
+
+  // Toggle job country
+  const toggleJobCountry = useCallback((countryCode: string) => {
+    if (!settings) return;
+    
+    const currentCountries = settings.jobCountries || [];
+    const newCountries = currentCountries.includes(countryCode)
+      ? currentCountries.filter(c => c !== countryCode)
+      : [...currentCountries, countryCode];
+    
+    updateSetting('jobCountries', newCountries);
+  }, [settings, updateSetting]);
+
+  // Export settings
+  const handleExportSettings = useCallback(async () => {
+    try {
+      const response = await apiService.exportUserSettings();
+      const blob = new Blob([JSON.stringify(response, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `skillbridge-settings-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Settings exported",
+        description: "Your settings have been downloaded as a JSON file.",
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export failed",
+        description: "Failed to export your settings. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  // Import settings
+  const handleImportSettings = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      const text = await file.text();
+      const importedData = JSON.parse(text);
+      
+      // Validate imported settings structure
+      if (importedData.settings) {
+        setSettings(importedData.settings);
+        setHasUnsavedChanges(true);
+        
+        toast({
+          title: "Settings imported",
+          description: "Settings have been imported successfully. Click Save to apply them.",
+        });
+      } else {
+        throw new Error('Invalid settings file format');
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      toast({
+        title: "Import failed",
+        description: "Failed to import settings. Please check the file format.",
+        variant: "destructive",
+      });
+    }
+    
+    // Reset file input
+    event.target.value = '';
+  }, [toast]);
+
+  // Load settings on component mount
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadSettings();
+    }
+  }, [isAuthenticated, loadSettings]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.metaKey) {
+        switch (event.key) {
+          case 's':
+            event.preventDefault();
+            if (hasUnsavedChanges) {
+              saveSettings();
+            }
+            break;
+          case 'r':
+            event.preventDefault();
+            loadSettings();
+            break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [hasUnsavedChanges, saveSettings, loadSettings]);
+
+  // Warn before leaving with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
+            <h3 className="text-lg font-semibold mb-2">Loading Settings</h3>
+            <p className="text-muted-foreground">Fetching your preferences...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <SettingsIcon className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-semibold mb-2">Authentication Required</h3>
+            <p className="text-muted-foreground">Please log in to access your settings.</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
       <div className="container mx-auto py-8 px-4 max-w-4xl">
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
-          <p className="text-muted-foreground">Customize your SkillBridge experience</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+              <p className="text-muted-foreground">Customize your SkillBridge experience</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {hasUnsavedChanges && (
+                <Badge variant="outline" className="text-orange-600 border-orange-600">
+                  <AlertTriangle className="h-3 w-3 mr-1" />
+                  Unsaved Changes
+                </Badge>
+              )}
+              {lastSaved && (
+                <span className="text-xs text-muted-foreground">
+                  Last saved: {lastSaved.toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
-        <Accordion type="multiple" defaultValue={["appearance"]} className="space-y-4">
-          {/* 1. Appearance & Interface */}
-          <AccordionItem value="appearance" className="border rounded-lg bg-card px-4">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Palette className="h-5 w-5 text-primary" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-foreground">Appearance & Interface</h3>
-                  <p className="text-sm text-muted-foreground">Customize how the app looks and feels</p>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-4 pb-6">
-              <div className="space-y-6">
+        <Tabs defaultValue="general" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="general" className="flex items-center gap-2">
+              <SettingsIcon className="h-4 w-4" />
+              General
+            </TabsTrigger>
+            <TabsTrigger value="learning" className="flex items-center gap-2">
+              <Brain className="h-4 w-4" />
+              Learning
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <Bell className="h-4 w-4" />
+              Notifications
+            </TabsTrigger>
+            <TabsTrigger value="privacy" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Privacy
+            </TabsTrigger>
+            <TabsTrigger value="account" className="flex items-center gap-2">
+              <User className="h-4 w-4" />
+              Account
+            </TabsTrigger>
+          </TabsList>
+
+          {/* General Settings Tab */}
+          <TabsContent value="general" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Appearance
+                </CardTitle>
+                <CardDescription>
+                  Customize how the application looks and feels
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 {/* Theme Mode */}
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Theme Mode</Label>
-                  <RadioGroup value={theme} onValueChange={setTheme} className="flex gap-4">
+                  <RadioGroup 
+                    value={settings?.theme || 'system'} 
+                    onValueChange={(value) => updateSetting('theme', value)} 
+                    className="flex gap-4"
+                  >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="light" id="light" />
                       <Label htmlFor="light" className="flex items-center gap-2 cursor-pointer">
@@ -185,111 +458,93 @@ export const Settings = () => {
                     </div>
                   </RadioGroup>
                 </div>
+              </CardContent>
+            </Card>
 
-                <Separator />
+            {/* Language & Region */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Language & Region
+                </CardTitle>
+                <CardDescription>
+                  Set your language and regional preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Language</Label>
+                    <Select 
+                      value={settings?.preferences?.language || 'en'} 
+                      onValueChange={(value) => updateSetting('preferences.language', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {languages.map((lang) => (
+                          <SelectItem key={lang.code} value={lang.code}>
+                            {lang.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                {/* Accent Color */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Accent Color</Label>
-                  <div className="flex gap-3">
-                    {accentColors.map((color) => (
-                      <button
-                        key={color.value}
-                        onClick={() => setAccentColor(color.value)}
-                        className={`w-10 h-10 rounded-full border-2 transition-transform hover:scale-110 ${
-                          accentColor === color.value ? "border-foreground scale-110" : "border-transparent"
-                        }`}
-                        style={{ backgroundColor: color.color }}
-                        title={color.label}
-                      />
-                    ))}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Timezone</Label>
+                    <Select 
+                      value={settings?.preferences?.timezone || 'UTC'} 
+                      onValueChange={(value) => updateSetting('preferences.timezone', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {timezones.map((tz) => (
+                          <SelectItem key={tz.value} value={tz.value}>
+                            {tz.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                <Separator />
-
-                {/* Font Size */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Font Size</Label>
-                  <Select value={fontSize} onValueChange={setFontSize}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="small">Small</SelectItem>
-                      <SelectItem value="medium">Medium (Default)</SelectItem>
-                      <SelectItem value="large">Large</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Separator />
-
-                {/* Interface Density */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Interface Density</Label>
-                  <RadioGroup value={density} onValueChange={setDensity} className="flex gap-4">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="compact" id="compact" />
-                      <Label htmlFor="compact" className="cursor-pointer">Compact</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="comfortable" id="comfortable" />
-                      <Label htmlFor="comfortable" className="cursor-pointer">Comfortable</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="spacious" id="spacious" />
-                      <Label htmlFor="spacious" className="cursor-pointer">Spacious</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                <Separator />
-
-                {/* Animation Level */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Animation Level</Label>
-                  <Select value={animationLevel} onValueChange={setAnimationLevel}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="full">Full Animations</SelectItem>
-                      <SelectItem value="reduced">Reduced Motion</SelectItem>
-                      <SelectItem value="none">No Animations</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* 2. Learning Preferences */}
-          <AccordionItem value="learning" className="border rounded-lg bg-card px-4">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-accent/10">
-                  <BookOpen className="h-5 w-5 text-accent" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-foreground">Learning Preferences</h3>
-                  <p className="text-sm text-muted-foreground">Adapt the platform to how you learn best</p>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-4 pb-6">
-              <div className="space-y-6">
+          {/* Learning Settings Tab */}
+          <TabsContent value="learning" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-5 w-5" />
+                  Learning Preferences
+                </CardTitle>
+                <CardDescription>
+                  Customize how you learn and track progress
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 {/* Learning Pace */}
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Learning Pace</Label>
-                  <RadioGroup value={learningPace} onValueChange={setLearningPace} className="flex gap-4">
+                  <p className="text-xs text-muted-foreground">Affects roadmap timelines and recommendations</p>
+                  <RadioGroup 
+                    value={settings?.learningPace || 'balanced'} 
+                    onValueChange={(value) => updateSetting('learningPace', value)} 
+                    className="flex gap-4"
+                  >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="relaxed" id="relaxed" />
-                      <Label htmlFor="relaxed" className="cursor-pointer">Relaxed</Label>
+                      <RadioGroupItem value="slow" id="slow" />
+                      <Label htmlFor="slow" className="cursor-pointer">Relaxed</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="balanced" id="balanced-pace" />
-                      <Label htmlFor="balanced-pace" className="cursor-pointer">Balanced</Label>
+                      <RadioGroupItem value="balanced" id="balanced" />
+                      <Label htmlFor="balanced" className="cursor-pointer">Balanced</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="fast" id="fast" />
@@ -300,19 +555,25 @@ export const Settings = () => {
 
                 <Separator />
 
-                {/* Roadmap Style */}
+                {/* Weekly Goal */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">Roadmap Style</Label>
-                  <Select value={roadmapStyle} onValueChange={setRoadmapStyle}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="step-by-step">Step-by-step</SelectItem>
-                      <SelectItem value="milestone">Milestone-based</SelectItem>
-                      <SelectItem value="flexible">Flexible</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex justify-between">
+                    <Label className="text-sm font-medium">Weekly Learning Goal</Label>
+                    <span className="text-sm font-medium text-primary">{settings?.preferences?.weeklyGoal || 10} hours</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Target hours per week for skill development</p>
+                  <Slider
+                    value={[settings?.preferences?.weeklyGoal || 10]}
+                    onValueChange={(value) => updateSetting('preferences.weeklyGoal', value[0])}
+                    min={2}
+                    max={40}
+                    step={2}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>2 hours</span>
+                    <span>40 hours</span>
+                  </div>
                 </div>
 
                 <Separator />
@@ -320,557 +581,344 @@ export const Settings = () => {
                 {/* Difficulty Preference */}
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Skill Difficulty Preference</Label>
-                  <RadioGroup value={difficultyPref} onValueChange={setDifficultyPref} className="flex gap-4">
+                  <p className="text-xs text-muted-foreground">How challenging should new skills be?</p>
+                  <RadioGroup 
+                    value={settings?.preferences?.difficultyPreference || 'adaptive'} 
+                    onValueChange={(value) => updateSetting('preferences.difficultyPreference', value)} 
+                    className="flex gap-4"
+                  >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="easy" id="easy" />
                       <Label htmlFor="easy" className="cursor-pointer">Start Easy</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="balanced" id="balanced-diff" />
-                      <Label htmlFor="balanced-diff" className="cursor-pointer">Balanced</Label>
+                      <RadioGroupItem value="adaptive" id="adaptive" />
+                      <Label htmlFor="adaptive" className="cursor-pointer">Adaptive</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="advanced" id="advanced" />
-                      <Label htmlFor="advanced" className="cursor-pointer">Jump to Advanced</Label>
+                      <RadioGroupItem value="challenging" id="challenging" />
+                      <Label htmlFor="challenging" className="cursor-pointer">Challenging</Label>
                     </div>
                   </RadioGroup>
                 </div>
+              </CardContent>
+            </Card>
 
-                <Separator />
-
-                {/* Daily Learning Target */}
+            {/* Career Focus */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Career Focus & Goals
+                </CardTitle>
+                <CardDescription>
+                  Set your career objectives and job search preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Job Countries */}
                 <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <Label className="text-sm font-medium">Daily Learning Target</Label>
-                    <span className="text-sm font-medium text-primary">{dailyTarget[0]} min</span>
-                  </div>
-                  <Slider
-                    value={dailyTarget}
-                    onValueChange={setDailyTarget}
-                    min={15}
-                    max={120}
-                    step={15}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>15 min</span>
-                    <span>2 hours</span>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Preferred Resource Type */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Preferred Resource Type</Label>
-                  <Select value={resourceType} onValueChange={setResourceType}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="video">Video</SelectItem>
-                      <SelectItem value="reading">Reading</SelectItem>
-                      <SelectItem value="practice">Practice-based</SelectItem>
-                      <SelectItem value="mixed">Mixed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* 3. Career Focus & Goals */}
-          <AccordionItem value="career" className="border rounded-lg bg-card px-4">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-warning/10">
-                  <Target className="h-5 w-5 text-[hsl(var(--warning))]" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-foreground">Career Focus & Goals</h3>
-                  <p className="text-sm text-muted-foreground">Fine-tune what SkillBridge optimizes for</p>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-4 pb-6">
-              <div className="space-y-6">
-                {/* Primary Career Goal */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Primary Career Goal</Label>
-                  <Input
-                    value={primaryGoal}
-                    onChange={(e) => setPrimaryGoal(e.target.value)}
-                    placeholder="e.g., Frontend Developer"
-                    className="max-w-sm"
-                  />
-                </div>
-
-                <Separator />
-
-                {/* Target Timeline */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Target Timeline</Label>
-                  <RadioGroup value={targetTimeline} onValueChange={setTargetTimeline} className="flex gap-4">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="asap" id="asap" />
-                      <Label htmlFor="asap" className="cursor-pointer">ASAP</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="3-6" id="3-6" />
-                      <Label htmlFor="3-6" className="cursor-pointer">3–6 months</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="6-12" id="6-12" />
-                      <Label htmlFor="6-12" className="cursor-pointer">6–12 months</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                <Separator />
-
-                {/* Career Priority */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Career Priority</Label>
-                  <Select value={careerPriority} onValueChange={setCareerPriority}>
-                    <SelectTrigger className="w-64">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="job-ready">Job-ready ASAP</SelectItem>
-                      <SelectItem value="fundamentals">Strong Fundamentals</SelectItem>
-                      <SelectItem value="mastery">Long-term Mastery</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Separator />
-
-                {/* Opportunity Type Preference */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Opportunity Type Preference</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {["internships", "full-time", "freelance", "open-source"].map((type) => (
-                      <Badge
-                        key={type}
-                        variant={opportunityTypes.includes(type) ? "default" : "outline"}
-                        className="cursor-pointer capitalize"
-                        onClick={() => toggleOpportunityType(type)}
-                      >
-                        {type.replace("-", " ")}
-                      </Badge>
+                  <Label className="text-sm font-medium">Job Search Countries</Label>
+                  <p className="text-xs text-muted-foreground">Countries to search for job opportunities</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {countries.map((country) => (
+                      <div key={country.code} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={country.code}
+                          checked={settings?.jobCountries?.includes(country.code) || false}
+                          onChange={() => toggleJobCountry(country.code)}
+                          className="rounded border-gray-300"
+                        />
+                        <Label htmlFor={country.code} className="cursor-pointer text-sm">
+                          {country.name}
+                        </Label>
+                      </div>
                     ))}
                   </div>
                 </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          {/* 4. Notifications & Activity Control */}
-          <AccordionItem value="notifications" className="border rounded-lg bg-card px-4">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-info/10">
-                  <Bell className="h-5 w-5 text-[hsl(var(--info))]" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-foreground">Notifications & Activity</h3>
-                  <p className="text-sm text-muted-foreground">Control when and how you are notified</p>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-4 pb-6">
-              <div className="space-y-6">
+          {/* Notifications Tab */}
+          <TabsContent value="notifications" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Notification Preferences
+                </CardTitle>
+                <CardDescription>
+                  Control when and how you receive notifications
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 {/* Master Toggle */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {notificationsEnabled ? <Volume2 className="h-5 w-5 text-primary" /> : <VolumeX className="h-5 w-5 text-muted-foreground" />}
-                    <div>
-                      <Label className="text-sm font-medium">Enable Notifications</Label>
-                      <p className="text-xs text-muted-foreground">Master toggle for all notifications</p>
-                    </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <Label className="text-sm font-medium">Enable Notifications</Label>
+                    <p className="text-xs text-muted-foreground">Master toggle for all notifications</p>
                   </div>
                   <Switch
-                    checked={notificationsEnabled}
-                    onCheckedChange={setNotificationsEnabled}
+                    checked={settings?.notifications || false}
+                    onCheckedChange={(checked) => updateSetting('notifications', checked)}
                   />
                 </div>
 
                 <Separator />
 
-                {/* Notification Types */}
+                {/* Email Notifications */}
                 <div className="space-y-4">
-                  <Label className="text-sm font-medium">Notification Types</Label>
+                  <Label className="text-sm font-medium">Email Notifications</Label>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm cursor-pointer" htmlFor="skill-reminders">Skill completion reminders</Label>
+                      <div>
+                        <Label className="text-sm">Roadmap Updates</Label>
+                        <p className="text-xs text-muted-foreground">When your roadmap progress changes</p>
+                      </div>
                       <Switch
-                        id="skill-reminders"
-                        checked={skillReminders}
-                        onCheckedChange={setSkillReminders}
-                        disabled={!notificationsEnabled}
+                        checked={settings?.emailNotifications?.roadmapUpdates || false}
+                        onCheckedChange={(checked) => updateSetting('emailNotifications.roadmapUpdates', checked)}
+                        disabled={!settings?.notifications}
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm cursor-pointer" htmlFor="roadmap-updates">Roadmap updates</Label>
+                      <div>
+                        <Label className="text-sm">Job Recommendations</Label>
+                        <p className="text-xs text-muted-foreground">New job opportunities matching your skills</p>
+                      </div>
                       <Switch
-                        id="roadmap-updates"
-                        checked={roadmapUpdates}
-                        onCheckedChange={setRoadmapUpdates}
-                        disabled={!notificationsEnabled}
+                        checked={settings?.emailNotifications?.jobRecommendations || false}
+                        onCheckedChange={(checked) => updateSetting('emailNotifications.jobRecommendations', checked)}
+                        disabled={!settings?.notifications}
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm cursor-pointer" htmlFor="readiness-alerts">Readiness improvements</Label>
+                      <div>
+                        <Label className="text-sm">Learning Reminders</Label>
+                        <p className="text-xs text-muted-foreground">Daily and weekly learning reminders</p>
+                      </div>
                       <Switch
-                        id="readiness-alerts"
-                        checked={readinessAlerts}
-                        onCheckedChange={setReadinessAlerts}
-                        disabled={!notificationsEnabled}
+                        checked={settings?.emailNotifications?.learningReminders || false}
+                        onCheckedChange={(checked) => updateSetting('emailNotifications.learningReminders', checked)}
+                        disabled={!settings?.notifications}
                       />
                     </div>
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm cursor-pointer" htmlFor="opportunity-alerts">New opportunities</Label>
+                      <div>
+                        <Label className="text-sm">Weekly Progress</Label>
+                        <p className="text-xs text-muted-foreground">Weekly progress summaries</p>
+                      </div>
                       <Switch
-                        id="opportunity-alerts"
-                        checked={opportunityAlerts}
-                        onCheckedChange={setOpportunityAlerts}
-                        disabled={!notificationsEnabled}
+                        checked={settings?.emailNotifications?.weeklyProgress || false}
+                        onCheckedChange={(checked) => updateSetting('emailNotifications.weeklyProgress', checked)}
+                        disabled={!settings?.notifications}
                       />
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                <Separator />
-
-                {/* Notification Frequency */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Notification Frequency</Label>
-                  <Select value={notificationFrequency} onValueChange={setNotificationFrequency} disabled={!notificationsEnabled}>
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="realtime">Real-time</SelectItem>
-                      <SelectItem value="daily">Daily Digest</SelectItem>
-                      <SelectItem value="weekly">Weekly Summary</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <Separator />
-
-                {/* Quiet Hours */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-sm font-medium">Quiet Hours</Label>
-                      <p className="text-xs text-muted-foreground">Do not disturb time window</p>
-                    </div>
-                    <Switch
-                      checked={quietHoursEnabled}
-                      onCheckedChange={setQuietHoursEnabled}
-                      disabled={!notificationsEnabled}
-                    />
-                  </div>
-                  {quietHoursEnabled && notificationsEnabled && (
-                    <div className="flex gap-4 items-center">
-                      <div className="flex items-center gap-2">
-                        <Label className="text-sm">From</Label>
-                        <Input
-                          type="time"
-                          value={quietStart}
-                          onChange={(e) => setQuietStart(e.target.value)}
-                          className="w-32"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-sm">To</Label>
-                        <Input
-                          type="time"
-                          value={quietEnd}
-                          onChange={(e) => setQuietEnd(e.target.value)}
-                          className="w-32"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* 5. Privacy & Data Control */}
-          <AccordionItem value="privacy" className="border rounded-lg bg-card px-4">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-destructive/10">
-                  <Shield className="h-5 w-5 text-destructive" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-foreground">Privacy & Data Control</h3>
-                  <p className="text-sm text-muted-foreground">Manage your data and privacy settings</p>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-4 pb-6">
-              <div className="space-y-6">
+          {/* Privacy Tab */}
+          <TabsContent value="privacy" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Privacy & Data Control
+                </CardTitle>
+                <CardDescription>
+                  Manage your data and privacy settings
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
                 {/* Profile Visibility */}
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Profile Visibility</Label>
-                  <RadioGroup value={profileVisibility} onValueChange={setProfileVisibility} className="flex gap-4">
+                  <p className="text-xs text-muted-foreground">Control who can see your profile information</p>
+                  <RadioGroup 
+                    value={settings?.privacy?.profileVisibility || 'private'} 
+                    onValueChange={(value) => updateSetting('privacy.profileVisibility', value)} 
+                    className="flex gap-4"
+                  >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="private" id="private" />
-                      <Label htmlFor="private" className="flex items-center gap-2 cursor-pointer">
-                        <EyeOff className="h-4 w-4" /> Private
-                      </Label>
+                      <RadioGroupItem value="private" id="profile-private" />
+                      <Label htmlFor="profile-private" className="cursor-pointer">Private</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="limited" id="limited" />
-                      <Label htmlFor="limited" className="flex items-center gap-2 cursor-pointer">
-                        <Eye className="h-4 w-4" /> Limited
-                      </Label>
+                      <RadioGroupItem value="public" id="profile-public" />
+                      <Label htmlFor="profile-public" className="cursor-pointer">Public</Label>
                     </div>
                   </RadioGroup>
                 </div>
 
                 <Separator />
 
-                {/* Skill Data Usage */}
+                {/* Skills Visibility */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">Skill Data Usage</Label>
-                  <Select value={dataUsage} onValueChange={setDataUsage}>
-                    <SelectTrigger className="w-64">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="recommendations">Use for recommendations only</SelectItem>
-                      <SelectItem value="insights">Allow anonymized insights</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-sm font-medium">Skills Visibility</Label>
+                  <p className="text-xs text-muted-foreground">Control who can see your skills and progress</p>
+                  <RadioGroup 
+                    value={settings?.privacy?.skillsVisibility || 'private'} 
+                    onValueChange={(value) => updateSetting('privacy.skillsVisibility', value)} 
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="private" id="skills-private" />
+                      <Label htmlFor="skills-private" className="cursor-pointer">Private</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="public" id="skills-public" />
+                      <Label htmlFor="skills-public" className="cursor-pointer">Public</Label>
+                    </div>
+                  </RadioGroup>
                 </div>
 
                 <Separator />
 
-                {/* Activity Tracking */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-sm font-medium">Activity Tracking</Label>
-                    <p className="text-xs text-muted-foreground">Enable learning analytics</p>
-                  </div>
-                  <Switch
-                    checked={activityTracking}
-                    onCheckedChange={setActivityTracking}
-                  />
-                </div>
-
-                <Separator />
-
-                {/* Data Actions */}
+                {/* Progress Visibility */}
                 <div className="space-y-3">
+                  <Label className="text-sm font-medium">Progress Visibility</Label>
+                  <p className="text-xs text-muted-foreground">Control who can see your learning progress</p>
+                  <RadioGroup 
+                    value={settings?.privacy?.progressVisibility || 'private'} 
+                    onValueChange={(value) => updateSetting('privacy.progressVisibility', value)} 
+                    className="flex gap-4"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="private" id="progress-private" />
+                      <Label htmlFor="progress-private" className="cursor-pointer">Private</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="public" id="progress-public" />
+                      <Label htmlFor="progress-public" className="cursor-pointer">Public</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Account Tab */}
+          <TabsContent value="account" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5" />
+                  Data Management
+                </CardTitle>
+                <CardDescription>
+                  Export, import, and manage your account data
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
                   <Label className="text-sm font-medium">Data Actions</Label>
                   <div className="flex flex-wrap gap-3">
-                    <Button variant="outline" onClick={handleExportData}>
+                    <Button variant="outline" onClick={handleExportSettings}>
                       <Download className="h-4 w-4 mr-2" />
-                      Export My Data
+                      Export Settings
                     </Button>
+                    
+                    <div>
+                      <input
+                        type="file"
+                        accept=".json"
+                        onChange={handleImportSettings}
+                        className="hidden"
+                        id="import-settings"
+                      />
+                      <Button variant="outline" asChild>
+                        <label htmlFor="import-settings" className="cursor-pointer">
+                          <Upload className="h-4 w-4 mr-2" />
+                          Import Settings
+                        </label>
+                      </Button>
+                    </div>
                     
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="outline">
-                          <RotateCcw className="h-4 w-4 mr-2" />
-                          Reset Progress
+                        <Button variant="outline" disabled={resetting}>
+                          {resetting ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <RotateCcw className="h-4 w-4 mr-2" />
+                          )}
+                          Reset Settings
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Reset all progress?</AlertDialogTitle>
+                          <AlertDialogTitle>Reset all settings?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This will permanently delete all your learning progress, completed skills, and roadmap data. This action cannot be undone.
+                            This will reset all your preferences to default values. Your learning progress and skills will not be affected. This action cannot be undone.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleResetProgress} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Reset Progress
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Account
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This will permanently delete your account and all associated data. You will have 30 days to cancel this request. This action cannot be undone after that period.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Delete Account
+                          <AlertDialogAction onClick={resetSettings} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Reset Settings
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
                   </div>
                 </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* 6. Accessibility Settings */}
-          <AccordionItem value="accessibility" className="border rounded-lg bg-card px-4">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-success/10">
-                  <Accessibility className="h-5 w-5 text-[hsl(var(--success))]" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-foreground">Accessibility</h3>
-                  <p className="text-sm text-muted-foreground">Make the platform more accessible</p>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-4 pb-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Contrast className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <Label className="text-sm font-medium">High Contrast Mode</Label>
-                      <p className="text-xs text-muted-foreground">Increase contrast for better visibility</p>
-                    </div>
-                  </div>
-                  <Switch checked={highContrast} onCheckedChange={setHighContrast} />
-                </div>
 
                 <Separator />
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-sm font-medium">Reduced Motion</Label>
-                    <p className="text-xs text-muted-foreground">Minimize animations and transitions</p>
-                  </div>
-                  <Switch checked={reducedMotion} onCheckedChange={setReducedMotion} />
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-sm font-medium">Screen Reader Optimization</Label>
-                    <p className="text-xs text-muted-foreground">Improve compatibility with screen readers</p>
-                  </div>
-                  <Switch checked={screenReader} onCheckedChange={setScreenReader} />
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Keyboard className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <Label className="text-sm font-medium">Keyboard Navigation Mode</Label>
-                      <p className="text-xs text-muted-foreground">Enhanced focus indicators for keyboard users</p>
-                    </div>
-                  </div>
-                  <Switch checked={keyboardNav} onCheckedChange={setKeyboardNav} />
-                </div>
-
-                <Separator />
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label className="text-sm font-medium">Color-blind Friendly Palette</Label>
-                    <p className="text-xs text-muted-foreground">Use colors optimized for color blindness</p>
-                  </div>
-                  <Switch checked={colorBlindMode} onCheckedChange={setColorBlindMode} />
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* 7. Account Management */}
-          <AccordionItem value="account" className="border rounded-lg bg-card px-4">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-secondary">
-                  <User className="h-5 w-5 text-secondary-foreground" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-foreground">Account Management</h3>
-                  <p className="text-sm text-muted-foreground">Manage your account and sessions</p>
-                </div>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-4 pb-6">
-              <div className="space-y-6">
-                {/* Linked Account */}
-                <div className="p-4 bg-secondary/50 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-background rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6" viewBox="0 0 24 24">
-                          <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                          <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                          <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                          <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium">Google Account</p>
-                        <p className="text-xs text-muted-foreground">user@gmail.com</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm">Re-authenticate</Button>
+                {/* Account Actions */}
+                <div className="space-y-4">
+                  <Label className="text-sm font-medium">Account Actions</Label>
+                  <div className="flex gap-3">
+                    <Button variant="outline" onClick={logout}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </Button>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
-                <Separator />
-
-                {/* Session Management */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Session Management</Label>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
-                      <div>
-                        <p className="text-sm font-medium">Current Session</p>
-                        <p className="text-xs text-muted-foreground">Chrome on macOS • Active now</p>
-                      </div>
-                      <Badge variant="secondary">Current</Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Logout Options */}
-                <div className="flex gap-3">
-                  <Button variant="outline">
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
-                  </Button>
-                  <Button variant="outline">
-                    Logout from all devices
-                  </Button>
-                </div>
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-
-        {/* Save Button */}
-        <div className="mt-8 flex justify-end">
-          <Button onClick={handleSave} size="lg" className="px-8">
+        {/* Action Buttons */}
+        <div className="mt-8 flex justify-between items-center">
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={loadSettings} disabled={loading}>
+              {loading ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-2" />
+              )}
+              Refresh
+            </Button>
+          </div>
+          <Button onClick={saveSettings} size="lg" className="px-8" disabled={saving || !settings || !hasUnsavedChanges}>
+            {saving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
             Save Settings
           </Button>
+        </div>
+
+        {/* Help Text */}
+        <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+          <div className="flex items-start gap-3">
+            <CheckCircle className="h-5 w-5 text-muted-foreground mt-0.5" />
+            <div className="text-sm text-muted-foreground">
+              <p className="font-medium mb-1">Keyboard Shortcuts</p>
+              <ul className="space-y-1 text-xs">
+                <li>• <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Ctrl+S</kbd> - Save settings</li>
+                <li>• <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Ctrl+R</kbd> - Refresh settings</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </Layout>
