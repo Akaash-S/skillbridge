@@ -28,7 +28,7 @@ const resourceTypeIcons = {
 };
 
 export const Roadmap = () => {
-  const { selectedRole, roadmap, analysis, markRoadmapItemComplete, generateRoadmap } = useAppData();
+  const { selectedRole, roadmap, analysis, markRoadmapItemComplete, generateRoadmap, loadRoadmapProgress } = useAppData();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -40,10 +40,29 @@ export const Roadmap = () => {
       navigate("/analysis");
       return;
     }
-    if (roadmap.length === 0) {
-      generateRoadmap();
-    }
-  }, [selectedRole, analysis, roadmap, generateRoadmap, navigate]);
+    
+    // First try to load existing roadmap progress
+    const initializeRoadmap = async () => {
+      try {
+        await loadRoadmapProgress();
+        
+        // If no roadmap was loaded, generate a new one
+        if (roadmap.length === 0) {
+          await generateRoadmap();
+        }
+      } catch (error) {
+        console.error('Failed to initialize roadmap:', error);
+        // Fallback to generating new roadmap
+        try {
+          await generateRoadmap();
+        } catch (generateError) {
+          console.error('Failed to generate fallback roadmap:', generateError);
+        }
+      }
+    };
+    
+    initializeRoadmap();
+  }, [selectedRole, analysis, loadRoadmapProgress, generateRoadmap, navigate]);
 
   const completedCount = roadmap.filter((item) => item.completed).length;
   const progressPercent = roadmap.length > 0 ? Math.round((completedCount / roadmap.length) * 100) : 0;
@@ -158,8 +177,16 @@ export const Roadmap = () => {
                     <div className="flex items-center gap-2">
                       <Checkbox
                         checked={item.completed}
-                        onCheckedChange={() => markRoadmapItemComplete(item.id)}
+                        onCheckedChange={async () => {
+                          try {
+                            await markRoadmapItemComplete(item.id);
+                          } catch (error) {
+                            console.error('Failed to update roadmap item:', error);
+                            // You might want to show a toast notification here
+                          }
+                        }}
                         className="h-6 w-6"
+                        disabled={false} // Could add loading state here
                       />
                     </div>
                   </div>

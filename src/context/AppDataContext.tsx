@@ -76,7 +76,7 @@ interface AppDataContextType extends AppDataState {
   // Analysis methods
   analyzeSkillGap: () => Promise<void>;
   generateRoadmap: () => Promise<void>;
-  markRoadmapItemComplete: (itemId: string) => void;
+  markRoadmapItemComplete: (itemId: string) => Promise<void>;
   resetProgress: () => void;
   loadRoadmapProgress: () => Promise<void>;
   
@@ -346,16 +346,59 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     }
   }, [state.selectedRole]);
 
-  // Mark roadmap item complete
-  const markRoadmapItemComplete = useCallback((itemId: string) => {
-    setState(prev => ({
-      ...prev,
-      roadmap: prev.roadmap.map(item =>
-        item.id === itemId ? { ...item, completed: true } : item
-      )
-    }));
-    console.log('✅ Roadmap item marked complete:', itemId);
-  }, []);
+  // Mark roadmap item complete - FIXED to persist to database
+  const markRoadmapItemComplete = useCallback(async (itemId: string) => {
+    try {
+      // Find the roadmap item to get skillId
+      const roadmapItem = state.roadmap.find(item => item.id === itemId);
+      if (!roadmapItem) {
+        console.error('❌ Roadmap item not found:', itemId);
+        return;
+      }
+
+      const skillId = roadmapItem.skillId;
+      const newCompletedState = !roadmapItem.completed;
+
+      // Optimistically update local state first for immediate UI feedback
+      setState(prev => ({
+        ...prev,
+        roadmap: prev.roadmap.map(item =>
+          item.id === itemId ? { ...item, completed: newCompletedState } : item
+        )
+      }));
+
+      // Call backend API to persist the change
+      // Note: Backend expects milestoneIndex, but we'll use 0 as the service finds the correct milestone
+      await apiClient.put('/roadmap/progress', {
+        milestoneIndex: 0, // Backend service will find the correct milestone
+        skillId: skillId,
+        completed: newCompletedState
+      });
+
+      console.log('✅ Roadmap item completion persisted to database:', {
+        itemId,
+        skillId,
+        completed: newCompletedState
+      });
+
+    } catch (error) {
+      console.error('❌ Failed to persist roadmap completion:', error);
+      
+      // Revert optimistic update on error
+      const roadmapItem = state.roadmap.find(item => item.id === itemId);
+      if (roadmapItem) {
+        setState(prev => ({
+          ...prev,
+          roadmap: prev.roadmap.map(item =>
+            item.id === itemId ? { ...item, completed: roadmapItem.completed } : item
+          )
+        }));
+      }
+
+      // Re-throw error so UI can handle it
+      throw error;
+    }
+  }, [state.roadmap]);
 
   // Reset progress
   const resetProgress = useCallback(() => {
@@ -370,48 +413,74 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     console.log('✅ Progress reset');
   }, []);
 
-  // Load roadmap progress
+  // Load roadmap progress - ENHANCED to fetch from database
   const loadRoadmapProgress = useCallback(async () => {
     try {
+      setState(prev => ({ ...prev, loading: true }));
+      
+      // First try to get existing roadmap from backend
       const response = await apiClient.get<{
-        roadmap: any & { 
-          milestones?: any[];
-          progress?: {
-            skillProgress: number;
-            milestoneProgress: number;
-            totalSkills: number;
-            completedSkills: number;
-          };
-        };
+        roadmap: any;
+        hasRoadmap: boolean;
       }>('/roadmap');
       
-      // Convert roadmap milestones to roadmap items format if needed
-      const roadmapItems: RoadmapItem[] = [];
-      if (response.roadmap?.milestones) {
-        for (const milestone of response.roadmap.milestones) {
-          for (const skill of milestone.skills || []) {
-            roadmapItems.push({
-              id: `roadmap-${skill.skillId}`,
-              skillId: skill.skillId,
-              skillName: skill.skillName || skill.skillId,
-              resources: skill.resources || [],
-              difficulty: skill.targetLevel || 'intermediate',
-              estimatedTime: `${skill.estimatedHours || 20} hours`,
-              completed: skill.completed || false
-            });
-          }
+      if (response.hasRoadmap && response.roadmap) {
+        // Convert backend roadmap format to frontend format
+        const backendRoadmap = response.roadmap;
+        const roadmapItems: RoadmapItem[] = [];
+        
+        // Extract roadmap items from milestones
+        if (backendRoadmap.milestones) {
+          backendRoadmap.milestones.forEach((milestone: any, milestoneIndex: number) => {
+            if (milestone.skills) {
+              milestone.skills.forEach((skill: any) => {
+                const roadmapItem: RoadmapItem = {
+                  id: `roadmap-${skill.skillId}`,
+                  skillId: skill.skillId,
+                  skillName: skill.skillName || skill.skillId,
+                  resources: skill.resources || [],
+                  difficulty: skill.targetLevel || 'intermediate',
+                  estimatedTime: `${skill.estimatedHours || 20} hours`,
+                  completed: skill.completed || false
+                };
+                roadmapItems.push(roadmapItem);
+              });
+            }
+          });
         }
+        
+        // Update state with loaded roadmap
+        setState(prev => ({
+          ...prev,
+          roadmap: roadmapItems,
+          roadmapProgress: {
+            targetRole: backendRoadmap.roleId,
+            totalItems: roadmapItems.length,
+            completedItems: roadmapItems.filter(item => item.completed).length,
+            progress: backendRoadmap.progress?.skillProgress || 0,
+            roadmapItems: roadmapItems
+          },
+          loading: false
+        }));
+        
+        console.log('✅ Roadmap progress loaded from database:', {
+          totalItems: roadmapItems.length,
+          completedItems: roadmapItems.filter(item => item.completed).length
+        });
+      } else {
+        // No existing roadmap found
+        setState(prev => ({
+          ...prev,
+          roadmap: [],
+          roadmapProgress: null,
+          loading: false
+        }));
+        console.log('ℹ️ No existing roadmap found');
       }
-      
-      setState(prev => ({
-        ...prev,
-        roadmapProgress: response.roadmap,
-        roadmap: roadmapItems
-      }));
-      console.log('✅ Roadmap progress loaded');
     } catch (error: any) {
       console.error('❌ Failed to load roadmap progress:', error);
-      throw error;
+      setState(prev => ({ ...prev, loading: false }));
+      // Don't throw error here as this is often called on page load
     }
   }, []);
 
