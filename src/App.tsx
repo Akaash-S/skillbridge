@@ -109,6 +109,12 @@ const App = () => (
                     </ProtectedRoute>
                   } />
                   
+                  <Route path="/skills/intelligence" element={
+                    <ProtectedRoute>
+                      <SkillIntelligence />
+                    </ProtectedRoute>
+                  } />
+                  
                   <Route path="/learning-history" element={
                     <ProtectedRoute>
                       <LearningHistory />
