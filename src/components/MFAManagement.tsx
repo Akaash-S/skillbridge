@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
-import { apiService } from "@/services/api";
+import { apiClient } from "@/services/apiClient";
 import { MFASetup } from "./MFASetup";
 import {
   Shield,
@@ -65,7 +65,7 @@ export const MFAManagement = () => {
   const loadMFAStatus = async () => {
     setLoading(true);
     try {
-      const status = await apiService.getMFAStatus();
+      const status = await apiClient.get('/mfa/status');
       setMfaStatus(status);
     } catch (error) {
       console.error('Failed to load MFA status:', error);
@@ -92,7 +92,9 @@ export const MFAManagement = () => {
 
     setActionLoading(true);
     try {
-      const response = await apiService.regenerateRecoveryCodes(verificationCode);
+      const response = await apiClient.post('/mfa/regenerate-codes', {
+        code: verificationCode
+      });
       setNewRecoveryCodes(response.recovery_codes);
       setVerificationCode('');
       setShowRegenerateDialog(false);
@@ -129,7 +131,10 @@ export const MFAManagement = () => {
 
     setActionLoading(true);
     try {
-      await apiService.disableMFA(verificationCode, isRecoveryCode);
+      await apiClient.post('/mfa/disable', {
+        code: verificationCode,
+        is_recovery_code: isRecoveryCode
+      });
       setVerificationCode('');
       setIsRecoveryCode(false);
       setShowDisableDialog(false);

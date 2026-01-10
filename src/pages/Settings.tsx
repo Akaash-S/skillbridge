@@ -11,8 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { useApp } from "@/context/AppContext";
-import { apiService } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
+import { apiClient } from "@/services/apiClient";
 import { 
   Palette, 
   Bell, 
@@ -106,7 +106,7 @@ const timezones = [
 
 export const Settings = () => {
   const { toast } = useToast();
-  const { isAuthenticated, logout } = useApp();
+  const { isAuthenticated, signOut } = useAuth();
   
   // Loading states
   const [loading, setLoading] = useState(false);
@@ -125,7 +125,7 @@ export const Settings = () => {
     setLoading(true);
     try {
       console.log('📊 Loading user settings...');
-      const response = await apiService.getUserSettings();
+      const response = await apiClient.get<{ settings: any }>('/settings');
       setSettings(response.settings);
       setHasUnsavedChanges(false);
       console.log('✅ Settings loaded successfully');
@@ -148,7 +148,7 @@ export const Settings = () => {
     setSaving(true);
     try {
       console.log('💾 Saving settings...');
-      await apiService.updateUserSettings(settings);
+      await apiClient.put('/settings', settings);
       
       setLastSaved(new Date());
       setHasUnsavedChanges(false);
@@ -178,7 +178,7 @@ export const Settings = () => {
     setResetting(true);
     try {
       console.log('🔄 Resetting settings...');
-      const response = await apiService.resetUserSettings();
+      const response = await apiClient.post<{ settings: any }>('/settings/reset');
       setSettings(response.settings);
       setHasUnsavedChanges(false);
       
@@ -238,7 +238,7 @@ export const Settings = () => {
   // Export settings
   const handleExportSettings = useCallback(async () => {
     try {
-      const response = await apiService.exportUserSettings();
+      const response = await apiClient.get('/settings/export');
       const blob = new Blob([JSON.stringify(response, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -878,7 +878,7 @@ export const Settings = () => {
                 <div className="space-y-4">
                   <Label className="text-sm font-medium">Account Actions</Label>
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => logout(true)}>
+                    <Button variant="outline" onClick={() => signOut()}>
                       <LogOut className="h-4 w-4 mr-2" />
                       Logout
                     </Button>

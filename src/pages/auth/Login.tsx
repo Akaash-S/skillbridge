@@ -38,17 +38,22 @@ export const Login: React.FC = () => {
 
   // Handle successful authentication
   useEffect(() => {
-    if (isAuthenticated && user && !mfaRequired) {
+    if (isAuthenticated && user && !mfaRequired && !isLoading) {
       console.log('✅ User authenticated, redirecting to:', from);
       
-      // Redirect to onboarding if user hasn't completed setup
-      if (!user.name || user.name.trim() === '') {
-        navigate('/onboarding', { replace: true });
-      } else {
-        navigate(from, { replace: true });
-      }
+      // Only redirect once
+      const timer = setTimeout(() => {
+        // Redirect to onboarding if user hasn't completed setup
+        if (!user.name || user.name.trim() === '') {
+          navigate('/onboarding', { replace: true });
+        } else {
+          navigate(from, { replace: true });
+        }
+      }, 100); // Small delay to prevent rapid redirects
+      
+      return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, user, mfaRequired, navigate, from]);
+  }, [isAuthenticated, user, mfaRequired, isLoading, navigate, from]);
 
   // Handle popup authentication
   const handlePopupAuth = async (): Promise<void> => {

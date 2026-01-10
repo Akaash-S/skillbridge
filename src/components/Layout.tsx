@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, LayoutDashboard, Target, BookOpen, BarChart3, Briefcase, User, Settings, Compass, Brain, Bell, HelpCircle, GraduationCap } from "lucide-react";
-import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -33,12 +33,12 @@ const navItems = [
 ];
 
 export const Layout = ({ children, showNav = true }: LayoutProps) => {
-  const { isAuthenticated, user, logout } = useApp();
+  const { isAuthenticated, user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout(true); // Require MFA for manual logout
+  const handleLogout = async () => {
+    await signOut();
     navigate("/");
   };
 

@@ -3,12 +3,13 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
+import { useAppData } from "@/context/AppDataContext";
 import { jobRolesDatabase, skillsDatabase } from "@/data/mockData";
 import { Target, TrendingUp, Clock, DollarSign, ArrowRight, Sparkles, Zap, Briefcase, ExternalLink, MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { apiService } from "@/services/api";
+import { apiClient } from "@/services/apiClient";
 
 interface Job {
   jobId: string;
@@ -32,7 +33,7 @@ interface Job {
 }
 
 export const CareerHub = () => {
-  const { userSkills, selectedRole } = useApp();
+  const { userSkills, selectedRole } = useAppData();
   const navigate = useNavigate();
   
   // State for target role jobs
@@ -47,7 +48,23 @@ export const CareerHub = () => {
     setLoadingJobs(true);
     try {
       console.log(`🎯 Loading jobs for target role: ${selectedRole.title}`);
-      const response = await apiService.searchJobs(selectedRole.title, 'in', 6);
+      const params = new URLSearchParams();
+      params.append('role', selectedRole.title);
+      params.append('location', 'in');
+      params.append('limit', '6');
+      
+      const response = await apiClient.get<{
+        query: {
+          role: string;
+          country: string;
+          location: string;
+          limit: number;
+        };
+        results: {
+          jobs: Job[];
+          total: number;
+        };
+      }>(`/jobs/search?${params.toString()}`);
       const jobsData = response.results?.jobs || [];
       
       // Calculate match scores for jobs based on user skills
@@ -87,7 +104,7 @@ export const CareerHub = () => {
   // Load job recommendations
   const loadJobRecommendations = async () => {
     try {
-      const response = await apiService.getJobRecommendations();
+      const response = await apiClient.get('/jobs/recommendations');
       setJobRecommendations(response.recommendations || []);
     } catch (error) {
       console.error('Failed to load job recommendations:', error);

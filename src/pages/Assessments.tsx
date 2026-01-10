@@ -2,7 +2,7 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useApp } from "@/context/AppContext";
+import { useAppData } from "@/context/AppDataContext";
 import { skillsDatabase } from "@/data/mockData";
 import { ClipboardCheck, Clock, Trophy, Target, Play, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,7 @@ interface Assessment {
 }
 
 export const Assessments = () => {
-  const { userSkills } = useApp();
+  const { userSkills } = useAppData();
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
 
   // Mock assessments based on skills

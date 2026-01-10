@@ -2,7 +2,7 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useApp } from "@/context/AppContext";
+import { useAppData } from "@/context/AppDataContext";
 import { jobRolesDatabase } from "@/data/mockData";
 import { CheckCircle2, Circle, AlertCircle, FileText, Users, Briefcase, Rocket, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ interface ReadinessItem {
 }
 
 export const Readiness = () => {
-  const { userSkills, selectedRole, analysis } = useApp();
+  const { userSkills, selectedRole, analysis } = useAppData();
   
   const [checklist, setChecklist] = useState<ReadinessItem[]>([
     { id: "skills-added", label: "Added all current skills", completed: userSkills.length > 0, category: "skills" },

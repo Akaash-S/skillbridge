@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useApp } from "@/context/AppContext";
+import { useAppData } from "@/context/AppDataContext";
 import { Layout } from "@/components/Layout";
 import { SkillChip } from "@/components/SkillChip";
 import { StepIndicator } from "@/components/StepIndicator";
@@ -28,7 +28,7 @@ const resourceTypeIcons = {
 };
 
 export const Roadmap = () => {
-  const { selectedRole, roadmap, analysis, markRoadmapItemComplete, generateRoadmap } = useApp();
+  const { selectedRole, roadmap, analysis, markRoadmapItemComplete, generateRoadmap } = useAppData();
   const navigate = useNavigate();
 
   useEffect(() => {

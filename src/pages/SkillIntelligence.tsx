@@ -2,13 +2,13 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useApp } from "@/context/AppContext";
+import { useAppData } from "@/context/AppDataContext";
 import { skillsDatabase, jobRolesDatabase } from "@/data/mockData";
 import { Brain, TrendingUp, TrendingDown, Minus, Briefcase, AlertTriangle, CheckCircle } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const SkillIntelligence = () => {
-  const { userSkills } = useApp();
+  const { userSkills } = useAppData();
 
   // Mock skill intelligence data
   const skillIntelligence = skillsDatabase.map(skill => {

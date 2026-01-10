@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
-import { apiService } from "@/services/api";
+import { apiClient } from "@/services/apiClient";
 import {
   Shield,
   Smartphone,
@@ -49,7 +49,7 @@ export const MFASetup = ({ onSetupComplete, onCancel }: MFASetupProps) => {
   const startSetup = async () => {
     setLoading(true);
     try {
-      const response = await apiService.setupMFA();
+      const response = await apiClient.post('/mfa/setup');
       
       setQrCode(response.qr_code);
       setRecoveryCodes(response.recovery_codes);
@@ -84,7 +84,10 @@ export const MFASetup = ({ onSetupComplete, onCancel }: MFASetupProps) => {
 
     setLoading(true);
     try {
-      await apiService.verifyMFASetup(setupToken, verificationCode);
+      await apiClient.post('/mfa/verify-setup', {
+        setup_token: setupToken,
+        code: verificationCode
+      });
       
       toast({
         title: "MFA Enabled Successfully",

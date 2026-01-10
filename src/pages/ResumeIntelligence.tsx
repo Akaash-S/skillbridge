@@ -2,13 +2,13 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { useApp } from "@/context/AppContext";
+import { useAppData } from "@/context/AppDataContext";
 import { FileText, Upload, CheckCircle, AlertTriangle, XCircle, Lightbulb, Target, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 export const ResumeIntelligence = () => {
-  const { userSkills, selectedRole } = useApp();
+  const { userSkills, selectedRole } = useAppData();
   const [resumeUploaded, setResumeUploaded] = useState(false);
 
   // Mock resume analysis data (would come from actual resume parsing)

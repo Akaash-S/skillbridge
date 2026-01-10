@@ -5,9 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/context/AuthContext";
-import { AppProvider } from "@/context/AppContext";
+import { AppDataProvider } from "@/context/AppDataContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { DebugInfo } from "@/components/DebugInfo";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Landing } from "@/pages/Landing";
 import { Login } from "@/pages/auth/Login";
@@ -44,17 +43,12 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="skillbridge-theme">
       <AuthProvider>
-        <AppProvider>
+        <AppDataProvider>
           <ErrorBoundary>
             <TooltipProvider>
               <Toaster />
               <Sonner />
-              <BrowserRouter
-                future={{
-                  v7_startTransition: true,
-                  v7_relativeSplatPath: true,
-                }}
-              >
+              <BrowserRouter>
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<Landing />} />
@@ -215,11 +209,10 @@ const App = () => (
                   {/* Catch all route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                <DebugInfo />
               </BrowserRouter>
             </TooltipProvider>
           </ErrorBoundary>
-        </AppProvider>
+        </AppDataProvider>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>

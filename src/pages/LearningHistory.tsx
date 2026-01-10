@@ -1,14 +1,14 @@
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useApp } from "@/context/AppContext";
+import { useAppData } from "@/context/AppDataContext";
 import { History, Calendar, Clock, Award, RefreshCw, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 
 export const LearningHistory = () => {
-  const { userSkills, roadmap } = useApp();
+  const { userSkills, roadmap } = useAppData();
   const [filterRole, setFilterRole] = useState<string>("all");
   const [filterDate, setFilterDate] = useState<string>("all");
 

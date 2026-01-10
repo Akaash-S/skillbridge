@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
+import { useAppData } from "@/context/AppDataContext";
 import { Layout } from "@/components/Layout";
 import { ProgressCircle } from "@/components/ProgressCircle";
 import { SkillChip } from "@/components/SkillChip";
@@ -8,7 +9,7 @@ import { StepIndicator } from "@/components/StepIndicator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, XCircle, AlertCircle, ArrowRight, BarChart3, Target, TrendingUp, Loader2 } from "lucide-react";
-import { apiService } from "@/services/api";
+import { apiClient } from "@/services/apiClient";
 
 export const Analysis = () => {
   const { 
@@ -16,13 +17,13 @@ export const Analysis = () => {
     analysis, 
     analysisProgress,
     roadmapProgress,
-    isAuthenticated,
     generateRoadmap, 
     loadRoadmapProgress,
     loading, 
     error, 
     clearError
-  } = useApp();
+  } = useAppData();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   
   const [detailedAnalysis, setDetailedAnalysis] = useState<any>(null);
@@ -44,7 +45,7 @@ export const Analysis = () => {
     
     setLoadingAnalysis(true);
     try {
-      const result = await apiService.getSkillsWithRoleAnalysis(selectedRole.id);
+      const result = await apiClient.get(`/skills/with-role-analysis?roleId=${selectedRole.id}`);
       if (result.roleAnalysis) {
         setDetailedAnalysis(result.roleAnalysis);
       }

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
-import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
 import { 
   ArrowRight, 
   Target, 
@@ -119,7 +119,7 @@ const stagger = {
 
 export const Landing = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useApp();
+  const { isAuthenticated, user } = useAuth();
   const heroRef = useRef<HTMLDivElement>(null);
   
   // Redirect authenticated users to dashboard

@@ -1,11 +1,12 @@
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
+import { useAppData } from "@/context/AppDataContext";
 import { BarChart3, TrendingUp, Target, Clock, Zap, Award, Calendar, Loader2 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, BarChart, Bar } from "recharts";
 import { useEffect, useState } from "react";
-import { apiService } from "@/services/api";
+import { apiClient } from "@/services/apiClient";
 import { toast } from "@/hooks/use-toast";
 
 interface UserStats {
@@ -34,7 +35,8 @@ interface ActivitySummary {
 }
 
 export const Insights = () => {
-  const { userSkills, selectedRole, roadmap, roadmapProgress, loadRoadmapProgress, isAuthenticated } = useApp();
+  const { userSkills, selectedRole, roadmap, roadmapProgress, loadRoadmapProgress } = useAppData();
+  const { isAuthenticated } = useAuth();
   
   // State for real user data
   const [userStats, setUserStats] = useState<UserStats | null>(null);
@@ -51,8 +53,8 @@ export const Insights = () => {
       
       // Load user stats and activity summary in parallel
       const [statsResponse, activityResponse] = await Promise.all([
-        apiService.getUserStats(),
-        apiService.getUserActivity(30) // Last 30 days
+        apiClient.get('/users/stats'),
+        apiClient.get('/activity?days=30') // Last 30 days
       ]);
       
       setUserStats(statsResponse.stats);

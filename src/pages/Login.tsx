@@ -1,13 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Chrome, Loader2, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { MFAHandler } from "@/components/MFAHandler";
+import { MFAVerification } from "@/components/auth/MFAVerification";
 import { AuthErrorHandler } from "@/components/AuthErrorHandler";
-import { FirebaseAuthService } from "@/services/firebase";
 // import { AuthDebug } from "@/components/AuthDebug"; // Temporarily disabled
 
 const features = [
@@ -22,7 +21,17 @@ export const Login = () => {
   const [hasRedirected, setHasRedirected] = useState(false);
   const [showAuthError, setShowAuthError] = useState(false);
   const [authError, setAuthError] = useState<string>('');
-  const { login, user, loading, error, clearError, isAuthenticated, mfaRequired, mfaToken } = useApp();
+  const { 
+    signInWithPopup, 
+    signInWithRedirect, 
+    user, 
+    isLoading, 
+    error, 
+    clearError, 
+    isAuthenticated, 
+    mfaRequired, 
+    mfaToken 
+  } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -37,7 +46,7 @@ export const Login = () => {
     setAuthError('');
     
     try {
-      await login();
+      await signInWithPopup();
     } catch (error: any) {
       console.error('Login failed:', error);
       
@@ -57,7 +66,7 @@ export const Login = () => {
     
     try {
       // Force redirect method
-      await FirebaseAuthService.signInWithRedirect();
+      await signInWithRedirect();
     } catch (error: any) {
       console.error('Redirect login failed:', error);
       if (error.message !== 'REDIRECT_IN_PROGRESS') {
@@ -119,7 +128,7 @@ export const Login = () => {
   }, [isAuthenticated, user, loading, mfaRequired, navigate, from, hasRedirected]);
 
   // Show loading while checking authentication status
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -153,7 +162,7 @@ export const Login = () => {
 
   // If MFA is required, show MFA verification
   if (mfaRequired && mfaToken) {
-    return <MFAHandler />;
+    return <MFAVerification />;
   }
 
   // If there's an authentication error, show error handler
@@ -310,11 +319,11 @@ export const Login = () => {
               <CardContent className="space-y-6 pt-4">
                 <Button
                   onClick={handleGoogleLogin}
-                  disabled={isLoading || loading}
+                  disabled={isLoading}
                   className="w-full h-14 text-base font-medium group"
                   variant="outline"
                 >
-                  {isLoading || loading ? (
+                  {isLoading ? (
                     <>
                       <Loader2 className="mr-3 h-5 w-5 animate-spin" />
                       Signing in...

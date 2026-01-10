@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
-import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   Shield,
   Smartphone,
@@ -33,7 +33,7 @@ export const MFAVerification = ({
   onCancel 
 }: MFAVerificationProps) => {
   const { toast } = useToast();
-  const { completeMFALogin } = useApp();
+  const { completeMFALogin } = useAuth();
   
   const [loading, setLoading] = useState(false);
   const [totpCode, setTotpCode] = useState('');

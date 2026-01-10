@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
+import { useAppData } from "@/context/AppDataContext";
 import { Layout } from "@/components/Layout";
 import { ProgressCircle } from "@/components/ProgressCircle";
 import { StepIndicator } from "@/components/StepIndicator";
@@ -33,13 +34,12 @@ const getGreeting = () => {
 
 export const Dashboard = () => {
   const { 
-    isAuthenticated, 
-    user, 
     userSkills, 
     selectedRole, 
     analysis, 
     roadmap 
-  } = useApp();
+  } = useAppData();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {

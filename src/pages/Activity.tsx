@@ -2,11 +2,12 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
+import { useAppData } from "@/context/AppDataContext";
 import { Bell, CheckCircle, Target, TrendingUp, Award, Clock, Filter, CheckCheck, Star, Briefcase, Loader2, User, Settings, BookOpen } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { apiService } from "@/services/api";
+import { apiClient } from "@/services/apiClient";
 import { toast } from "@/hooks/use-toast";
 
 interface Activity {
@@ -32,7 +33,8 @@ interface ActivitySummary {
 }
 
 export const Activity = () => {
-  const { userSkills, isAuthenticated } = useApp();
+  const { userSkills } = useAppData();
+  const { isAuthenticated } = useAuth();
   
   // State for real activity data
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -50,8 +52,8 @@ export const Activity = () => {
       
       // Load activity data and summary
       const [activityResponse, summaryResponse] = await Promise.all([
-        apiService.getUserActivity(100), // Get last 100 activities
-        apiService.getUserActivity(30)   // Get last 30 days for summary
+        apiClient.get('/activity?limit=100'), // Get last 100 activities
+        apiClient.get('/activity?limit=30')   // Get last 30 days for summary
       ]);
       
       const allActivities = activityResponse.activities || [];

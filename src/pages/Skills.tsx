@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
+import { useAppData } from "@/context/AppDataContext";
 import { Layout } from "@/components/Layout";
 import { SkillChip } from "@/components/SkillChip";
 import { StepIndicator } from "@/components/StepIndicator";
@@ -11,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, ArrowRight, Target, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { apiService } from "@/services/api";
+import { apiClient } from "@/services/apiClient";
 
 export const Skills = () => {
   const [search, setSearch] = useState("");
@@ -33,9 +34,9 @@ export const Skills = () => {
     updateSkillProficiency, 
     loading, 
     error, 
-    clearError,
-    isAuthenticated 
-  } = useApp();
+    clearError
+  } = useAppData();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Filter master skills to exclude user skills
@@ -89,12 +90,13 @@ export const Skills = () => {
     
     setLoadingSkills(true);
     try {
-      const result = await apiService.getMasterSkillsPaginated({
-        page,
-        limit: 20,
-        search: searchQuery || undefined,
-        excludeUserSkills: true
-      });
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', '20');
+      if (searchQuery) params.append('search', searchQuery);
+      params.append('excludeUserSkills', 'true');
+      
+      const result = await apiClient.get(`/skills/master/paginated?${params.toString()}`);
       
       setAvailableSkills(result.skills);
       setPagination(result.pagination);
@@ -114,7 +116,7 @@ export const Skills = () => {
   const loadSkillsWithRoleAnalysis = async () => {
     if (selectedRole && isAuthenticated) {
       try {
-        const result = await apiService.getSkillsWithRoleAnalysis(selectedRole.id);
+        const result = await apiClient.get(`/skills/with-role-analysis?roleId=${selectedRole.id}`);
         setRoleAnalysis(result.roleAnalysis);
       } catch (error) {
         console.error('Failed to load role analysis:', error);

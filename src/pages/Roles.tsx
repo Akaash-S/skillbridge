@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
+import { useAppData } from "@/context/AppDataContext";
 import { Layout } from "@/components/Layout";
 import { RoleCard } from "@/components/RoleCard";
 import { SkillChip } from "@/components/SkillChip";
@@ -12,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Search, ArrowRight, Briefcase, DollarSign, TrendingUp, Loader2, Target, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { apiService } from "@/services/api";
+import { apiClient } from "@/services/apiClient";
 
 export const Roles = () => {
   const [search, setSearch] = useState("");
@@ -31,9 +32,9 @@ export const Roles = () => {
     jobRoles, 
     loading, 
     error, 
-    clearError, 
-    isAuthenticated 
-  } = useApp();
+    clearError
+  } = useAppData();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Calculate skill matching locally using cached data
@@ -124,10 +125,14 @@ export const Roles = () => {
   const loadRolesWithSkillMatchFromAPI = async (category?: string) => {
     setLoadingRoles(true);
     try {
-      const result = await apiService.getRolesWithSkillMatch({
-        category: category || undefined,
-        limit: 50
-      });
+      const params = new URLSearchParams();
+      if (category) params.append('category', category);
+      params.append('limit', '50');
+      
+      const result = await apiClient.get<{
+        roles: any[];
+        userSkillsCount: number;
+      }>(`/roles/with-skill-match?${params.toString()}`);
       
       setRolesWithSkillMatch(result.roles);
       setUserSkillsCount(result.userSkillsCount);
@@ -146,7 +151,7 @@ export const Roles = () => {
   // Load role categories
   const loadCategories = async () => {
     try {
-      const result = await apiService.getRoleCategories();
+      const result = await apiClient.get<{ categories: string[] }>('/roles/categories');
       setCategories(result.categories);
     } catch (error) {
       console.error('Failed to load categories:', error);

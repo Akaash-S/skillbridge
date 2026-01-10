@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApp } from "@/context/AppContext";
+import { useAuth } from "@/context/AuthContext";
+import { useAppData } from "@/context/AppDataContext";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +39,8 @@ const avatarOptions = [
 ];
 
 export const Profile = () => {
-  const { user, updateUserProfile, logout, resetProgress, loading, error, clearError } = useApp();
+  const { updateUserProfile, resetProgress, loading, error, clearError } = useAppData();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
@@ -118,8 +120,8 @@ export const Profile = () => {
     }
   };
 
-  const handleLogout = () => {
-    logout(true); // Require MFA for manual logout
+  const handleLogout = async () => {
+    await signOut();
     navigate("/");
   };
 

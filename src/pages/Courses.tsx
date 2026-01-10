@@ -8,8 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/components/ui/use-toast";
-import { useApp } from "@/context/AppContext";
-import { apiService } from "@/services/api";
+import { useAuth } from "@/context/AuthContext";
+import { apiClient } from "@/services/apiClient";
 import {
   Search,
   Play,
@@ -82,7 +82,7 @@ interface SearchFilters {
 
 export const Courses = () => {
   const { toast } = useToast();
-  const { isAuthenticated } = useApp();
+  const { isAuthenticated } = useAuth();
 
   // State management
   const [activeTab, setActiveTab] = useState("search");
@@ -135,13 +135,14 @@ export const Courses = () => {
 
     setLoading(true);
     try {
-      const response = await apiService.searchCourses({
-        query: searchQuery,
-        skillLevel: filters.skillLevel || undefined,
-        duration: filters.duration || undefined,
-        maxResults: filters.maxResults,
-        order: filters.order
-      });
+      const params = new URLSearchParams();
+      params.append('query', searchQuery);
+      if (filters.skillLevel) params.append('skillLevel', filters.skillLevel);
+      if (filters.duration) params.append('duration', filters.duration);
+      if (filters.maxResults) params.append('maxResults', filters.maxResults.toString());
+      if (filters.order) params.append('order', filters.order);
+      
+      const response = await apiClient.get<{ courses: Course[] }>(`/courses/search?${params.toString()}`);
 
       setSearchResults(response.courses || []);
       
@@ -175,8 +176,8 @@ export const Courses = () => {
 
     setRecommendationsLoading(true);
     try {
-      const response = await apiService.getCourseRecommendations();
-      setRecommendations(response.recommendations);
+      const response = await apiClient.get<{ recommendations: Course[] }>('/courses/recommendations');
+      setRecommendations(response.recommendations || []);
     } catch (error) {
       console.error('Recommendations error:', error);
       toast({
@@ -195,8 +196,8 @@ export const Courses = () => {
 
     setSavedCoursesLoading(true);
     try {
-      const response = await apiService.getSavedCourses();
-      setSavedCourses(response.courses);
+      const response = await apiClient.get<{ courses: Course[] }>('/courses/saved');
+      setSavedCourses(response.courses || []);
     } catch (error) {
       console.error('Saved courses error:', error);
       toast({
@@ -221,7 +222,7 @@ export const Courses = () => {
     }
 
     try {
-      await apiService.saveCourse({
+      await apiClient.post('/courses/save', {
         course_id: course.id,
         title: course.title,
         url: course.url,
@@ -253,7 +254,10 @@ export const Courses = () => {
   // Update course progress
   const updateProgress = useCallback(async (courseId: string, progress: number) => {
     try {
-      await apiService.updateCourseProgress(courseId, progress, progress >= 100);
+      await apiClient.put(`/courses/progress/${courseId}`, {
+        progress: progress,
+        completed: progress >= 100
+      });
       
       // Update local state
       setSavedCourses(prev => prev.map(course => 
@@ -281,7 +285,7 @@ export const Courses = () => {
   // Remove saved course
   const removeCourse = useCallback(async (courseId: string) => {
     try {
-      await apiService.removeSavedCourse(courseId);
+      await apiClient.delete(`/courses/saved/${courseId}`);
       setSavedCourses(prev => prev.filter(course => (course.course_id || course.id) !== courseId));
       
       toast({
