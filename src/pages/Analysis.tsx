@@ -17,7 +17,7 @@ export const Analysis = () => {
     analysis, 
     analysisProgress,
     roadmapProgress,
-    generateRoadmap, 
+    loadFixedRoadmap, 
     loadRoadmapProgress,
     loading, 
     error, 
@@ -70,10 +70,10 @@ export const Analysis = () => {
   const handleGenerateRoadmap = async () => {
     if (selectedRole) {
       try {
-        await generateRoadmap();
+        loadFixedRoadmap();
         navigate("/roadmap");
       } catch (error) {
-        console.error('Failed to generate roadmap:', error);
+        console.error('Failed to load roadmap:', error);
       }
     }
   };

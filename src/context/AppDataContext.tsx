@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
 import { UserSkill, JobRole, RoadmapItem, ProficiencyLevel } from "@/data/mockData";
+import { getFixedRoadmap } from "@/data/fixedRoadmaps";
 import { apiClient } from "@/services/apiClient";
 import { useAuth } from "@/context/AuthContext";
 
@@ -75,7 +76,7 @@ interface AppDataContextType extends AppDataState {
   
   // Analysis methods
   analyzeSkillGap: () => Promise<void>;
-  generateRoadmap: () => Promise<void>;
+  loadFixedRoadmap: () => void;
   markRoadmapItemComplete: (itemId: string) => Promise<void>;
   resetProgress: () => void;
   loadRoadmapProgress: () => Promise<void>;
@@ -315,34 +316,68 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     }
   }, [state.selectedRole]);
 
-  // Generate roadmap
-  const generateRoadmap = useCallback(async () => {
+  // Generate roadmap - REPLACED with fixed roadmap loading
+  const loadFixedRoadmap = useCallback(() => {
     if (!state.selectedRole) {
-      throw new Error('Please select a role first');
+      console.warn('⚠️ No role selected for roadmap');
+      return;
     }
     
     try {
-      setState(prev => ({ ...prev, loading: true }));
-      const roadmapItems = await apiClient.post<RoadmapItem[]>('/roadmap/generate', {
-        targetRole: state.selectedRole.id
+      console.log('📋 Loading fixed roadmap for role:', state.selectedRole.id);
+      
+      // Get fixed roadmap for the selected role
+      const fixedRoadmapItems = getFixedRoadmap(state.selectedRole.id);
+      
+      if (fixedRoadmapItems.length === 0) {
+        console.warn('⚠️ No fixed roadmap found for role:', state.selectedRole.id);
+        setState(prev => ({
+          ...prev,
+          roadmap: [],
+          roadmapProgress: null
+        }));
+        return;
+      }
+      
+      // Load existing completion status from backend if available
+      loadRoadmapProgress().then(() => {
+        // If no existing progress, use the fixed roadmap as-is
+        if (state.roadmap.length === 0) {
+          setState(prev => ({
+            ...prev,
+            roadmap: fixedRoadmapItems,
+            roadmapProgress: {
+              targetRole: state.selectedRole?.id || '',
+              totalItems: fixedRoadmapItems.length,
+              completedItems: 0,
+              progress: 0,
+              roadmapItems: fixedRoadmapItems
+            }
+          }));
+          console.log('✅ Fixed roadmap loaded:', fixedRoadmapItems.length, 'items');
+        }
+      }).catch(() => {
+        // Fallback to fixed roadmap without backend data
+        setState(prev => ({
+          ...prev,
+          roadmap: fixedRoadmapItems,
+          roadmapProgress: {
+            targetRole: state.selectedRole?.id || '',
+            totalItems: fixedRoadmapItems.length,
+            completedItems: 0,
+            progress: 0,
+            roadmapItems: fixedRoadmapItems
+          }
+        }));
+        console.log('✅ Fixed roadmap loaded (fallback):', fixedRoadmapItems.length, 'items');
       });
+      
+    } catch (error: any) {
+      console.error('❌ Failed to load fixed roadmap:', error);
       setState(prev => ({
         ...prev,
-        roadmap: roadmapItems || [],
-        roadmapProgress: {
-          targetRole: state.selectedRole.id,
-          totalItems: roadmapItems?.length || 0,
-          completedItems: 0,
-          progress: 0,
-          roadmapItems: roadmapItems || []
-        },
-        loading: false
+        error: 'Failed to load roadmap'
       }));
-      console.log('✅ Roadmap generated');
-    } catch (error: any) {
-      console.error('❌ Failed to generate roadmap:', error);
-      setState(prev => ({ ...prev, loading: false }));
-      throw error;
     }
   }, [state.selectedRole]);
 
@@ -359,6 +394,12 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
       const skillId = roadmapItem.skillId;
       const newCompletedState = !roadmapItem.completed;
 
+      console.log('🔄 Updating roadmap item completion:', {
+        itemId,
+        skillId,
+        completed: newCompletedState
+      });
+
       // Optimistically update local state first for immediate UI feedback
       setState(prev => ({
         ...prev,
@@ -368,17 +409,36 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
       }));
 
       // Call backend API to persist the change
-      // Note: Backend expects milestoneIndex, but we'll use 0 as the service finds the correct milestone
       await apiClient.put('/roadmap/progress', {
         milestoneIndex: 0, // Backend service will find the correct milestone
         skillId: skillId,
         completed: newCompletedState
       });
 
+      // Update roadmap progress statistics
+      const updatedRoadmap = state.roadmap.map(item =>
+        item.id === itemId ? { ...item, completed: newCompletedState } : item
+      );
+      
+      const completedItems = updatedRoadmap.filter(item => item.completed).length;
+      const totalItems = updatedRoadmap.length;
+      const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+      setState(prev => ({
+        ...prev,
+        roadmapProgress: prev.roadmapProgress ? {
+          ...prev.roadmapProgress,
+          completedItems,
+          progress,
+          roadmapItems: updatedRoadmap
+        } : null
+      }));
+
       console.log('✅ Roadmap item completion persisted to database:', {
         itemId,
         skillId,
-        completed: newCompletedState
+        completed: newCompletedState,
+        progress: `${completedItems}/${totalItems} (${progress}%)`
       });
 
     } catch (error) {
@@ -503,7 +563,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     selectRole,
     loadJobRoles,
     analyzeSkillGap,
-    generateRoadmap,
+    loadFixedRoadmap,
     markRoadmapItemComplete,
     resetProgress,
     loadRoadmapProgress,

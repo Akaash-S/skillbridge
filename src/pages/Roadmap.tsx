@@ -28,7 +28,7 @@ const resourceTypeIcons = {
 };
 
 export const Roadmap = () => {
-  const { selectedRole, roadmap, analysis, markRoadmapItemComplete, generateRoadmap, loadRoadmapProgress } = useAppData();
+  const { selectedRole, roadmap, analysis, markRoadmapItemComplete, loadFixedRoadmap, loadRoadmapProgress } = useAppData();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -41,28 +41,10 @@ export const Roadmap = () => {
       return;
     }
     
-    // First try to load existing roadmap progress
-    const initializeRoadmap = async () => {
-      try {
-        await loadRoadmapProgress();
-        
-        // If no roadmap was loaded, generate a new one
-        if (roadmap.length === 0) {
-          await generateRoadmap();
-        }
-      } catch (error) {
-        console.error('Failed to initialize roadmap:', error);
-        // Fallback to generating new roadmap
-        try {
-          await generateRoadmap();
-        } catch (generateError) {
-          console.error('Failed to generate fallback roadmap:', generateError);
-        }
-      }
-    };
-    
-    initializeRoadmap();
-  }, [selectedRole, analysis, loadRoadmapProgress, generateRoadmap, navigate]);
+    // Load fixed roadmap for the selected role
+    console.log('📋 Initializing fixed roadmap for role:', selectedRole.id);
+    loadFixedRoadmap();
+  }, [selectedRole, analysis, loadFixedRoadmap, navigate]);
 
   const completedCount = roadmap.filter((item) => item.completed).length;
   const progressPercent = roadmap.length > 0 ? Math.round((completedCount / roadmap.length) * 100) : 0;
@@ -74,7 +56,7 @@ export const Roadmap = () => {
           <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
           <h2 className="text-xl font-semibold mb-2">No Roadmap Available</h2>
           <p className="text-muted-foreground mb-4">
-            Complete the skill analysis first to generate your learning roadmap.
+            Complete the skill analysis first to access your curated learning roadmap.
           </p>
           <Link to="/analysis">
             <Button>Go to Analysis</Button>
@@ -94,8 +76,8 @@ export const Roadmap = () => {
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">Your Path to {selectedRole.title}</h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Follow this personalized roadmap to bridge your skill gaps. 
-            Mark items as complete as you progress.
+            Follow this curated roadmap to master the essential skills for your target role. 
+            Mark items as complete as you progress through your learning journey.
           </p>
         </div>
 
