@@ -57,11 +57,12 @@ interface AppState {
   error: string | null;
   mfaRequired: boolean;
   mfaToken: string | null;
+  requireMFAOnNextLogin: boolean; // New flag for manual logout
 }
 
 interface AppContextType extends AppState {
   login: () => Promise<void>;
-  logout: () => Promise<void>;
+  logout: (requireMFA?: boolean) => Promise<void>; // Add optional MFA requirement
   completeMFALogin: (mfaToken: string, code: string, isRecoveryCode?: boolean) => Promise<void>;
   setUserProfile: (profile: UserProfile) => void;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
@@ -115,7 +116,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     error: null,
     mfaRequired: false,
     mfaToken: null,
+    requireMFAOnNextLogin: false,
   });
+
+  // Debug: Track user state changes
+  useEffect(() => {
+    console.log('👤 User state changed:', {
+      hasUser: !!state.user,
+      userName: state.user?.name,
+      userEmail: state.user?.email,
+      isAuthenticated: state.isAuthenticated
+    });
+  }, [state.user, state.isAuthenticated]);
 
   const loadMasterSkills = useCallback(async () => {
     console.log('🎯 Loading master skills...');
@@ -172,19 +184,36 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (initialData.hasData || initialData.masterSkills?.length > 0) {
         console.log('✅ Initial data loaded from backend');
         
-        // Update state with all data at once
-        setState(prev => ({
-          ...prev,
-          userSkills: initialData.userSkills || [],
-          masterSkills: initialData.masterSkills || [],
-          jobRoles: initialData.jobRoles || [],
-          selectedRole: initialData.userState?.targetRole || null,
-          analysis: initialData.skillGapAnalysis || null,
-          analysisProgress: initialData.userState?.analysisProgress || null,
-          roadmapProgress: initialData.userState?.roadmapProgress || null,
-          roadmap: initialData.userState?.roadmapProgress?.roadmapItems || [],
-          loading: false
-        }));
+        // Update state with all data at once - preserve user and auth state
+        setState(prev => {
+          console.log('🔍 State before loadUserState update:', {
+            hasUser: !!prev.user,
+            userName: prev.user?.name,
+            isAuthenticated: prev.isAuthenticated
+          });
+          
+          const newState = {
+            ...prev,
+            userSkills: initialData.userSkills || [],
+            masterSkills: initialData.masterSkills || [],
+            jobRoles: initialData.jobRoles || [],
+            selectedRole: initialData.userState?.targetRole || null,
+            analysis: initialData.skillGapAnalysis || null,
+            analysisProgress: initialData.userState?.analysisProgress || null,
+            roadmapProgress: initialData.userState?.roadmapProgress || null,
+            roadmap: initialData.userState?.roadmapProgress?.roadmapItems || [],
+            loading: false
+            // Explicitly preserve authentication state
+          };
+          
+          console.log('🔍 State after loadUserState update:', {
+            hasUser: !!newState.user,
+            userName: newState.user?.name,
+            isAuthenticated: newState.isAuthenticated
+          });
+          
+          return newState;
+        });
         
         console.log('📈 Optimized data applied successfully');
       } else {
@@ -220,37 +249,95 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Initialize Firebase auth listener
   useEffect(() => {
     console.log('🔥 Setting up Firebase auth listener');
+    let isInitializing = true;
+    
+    // Handle redirect result first (in case user was redirected back)
+    FirebaseAuthService.handleRedirectResult().then((redirectUser) => {
+      if (redirectUser) {
+        console.log('✅ Redirect authentication successful');
+        // The auth state change listener will handle the rest
+      }
+    }).catch((error) => {
+      console.error('❌ Redirect result error:', error);
+    });
+    
     const unsubscribe = FirebaseAuthService.onAuthStateChanged(async (firebaseUser) => {
       console.log('🔄 Auth state changed:', firebaseUser ? `User: ${firebaseUser.email}` : 'No user');
+      console.log('🔍 Firebase user details:', {
+        hasUser: !!firebaseUser,
+        email: firebaseUser?.email,
+        uid: firebaseUser?.uid,
+        emailVerified: firebaseUser?.emailVerified,
+        isInitializing
+      });
+      
+      // Skip the first call if it's null during initialization
+      if (!firebaseUser && isInitializing) {
+        console.log('🔄 Skipping initial null user during initialization');
+        isInitializing = false;
+        return;
+      }
+      
+      isInitializing = false;
       
       if (firebaseUser) {
         try {
           setState(prev => ({ ...prev, loading: true, error: null }));
           console.log('🔑 Getting fresh token...');
           
-          // Get fresh token using our Firebase service (this ensures it's stored properly)
+          // Get fresh token using our Firebase service
           const idToken = await FirebaseAuthService.getCurrentUserToken();
           if (!idToken) {
             throw new Error('Failed to get authentication token');
           }
           
+          // Check if this is session restoration or explicit login
+          const isSessionRestoration = FirebaseAuthService.isSessionRestoration();
+          console.log('🔍 Session type:', isSessionRestoration ? 'Session Restoration' : 'Explicit Login');
+          
+          // Handle session restoration - clear manual logout flag if needed
+          if (isSessionRestoration) {
+            FirebaseAuthService.handleSessionRestoration();
+          }
+          
           console.log('🚀 Logging in with backend...');
           const loginResponse = await apiService.login(idToken);
+          console.log('📋 Backend login response:', {
+            hasUser: !!loginResponse.user,
+            userName: loginResponse.user?.name,
+            userEmail: loginResponse.user?.email,
+            isNewUser: loginResponse.isNewUser,
+            mfaRequired: loginResponse.mfa_required,
+            fullResponse: loginResponse
+          });
           
-          // Check if MFA is required
-          if (loginResponse.mfa_required) {
-            console.log('🔐 MFA verification required');
+          // Determine if MFA verification is needed
+          const shouldRequireMFA = loginResponse.mfa_required && FirebaseAuthService.shouldRequireMFA();
+          
+          console.log('🔐 MFA decision:', {
+            backendMfaRequired: loginResponse.mfa_required,
+            shouldRequireMFA: shouldRequireMFA,
+            isSessionRestoration: isSessionRestoration,
+            mfaToken: loginResponse.mfa_token ? 'present' : 'none'
+          });
+          
+          if (shouldRequireMFA) {
+            console.log('🔐 MFA verification required (explicit login after manual logout)');
             setState(prev => ({
               ...prev,
               mfaRequired: true,
               mfaToken: loginResponse.mfa_token,
+              isAuthenticated: false,
+              user: null,
               loading: false,
             }));
-            return; // Don't proceed with full login until MFA is verified
+            // Don't load user state yet - wait for MFA verification
+            return;
           }
           
-          console.log('✅ Backend login successful');
+          console.log('✅ Backend login successful', isSessionRestoration ? '(session restored)' : '(no MFA required)');
           
+          // Update state with authentication
           setState(prev => ({
             ...prev,
             isAuthenticated: true,
@@ -258,12 +345,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             user: loginResponse.user,
             mfaRequired: false,
             mfaToken: null,
+            requireMFAOnNextLogin: false,
             loading: false,
           }));
 
+          console.log('🔄 State updated with user:', {
+            userFromResponse: loginResponse.user,
+            userEmail: loginResponse.user?.email,
+            userName: loginResponse.user?.name
+          });
+
           // Load user state after successful authentication
           console.log('📊 Loading application data after authentication...');
-          await loadUserState(true);  // Pass authentication status directly
+          
+          try {
+            await loadUserState(true);
+            
+            // Log final auth state for debugging
+            console.log('🎯 Final auth state after login:', {
+              isAuthenticated: true,
+              hasUser: !!loginResponse.user,
+              userName: loginResponse.user?.name,
+              userEmail: loginResponse.user?.email,
+              sessionType: isSessionRestoration ? 'restored' : 'new'
+            });
+          } catch (error) {
+            console.error('❌ Error loading user state:', error);
+          }
           
         } catch (error) {
           console.error('❌ Auth error:', error);
@@ -274,36 +382,63 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           }));
         }
       } else {
-        console.log('🔓 User logged out');
-        setState(prev => ({
-          ...prev,
-          isAuthenticated: false,
-          firebaseUser: null,
-          user: null,
-          userSkills: [],
-          masterSkills: [],
-          jobRoles: [],
-          selectedRole: null,
-          analysis: null,
-          analysisProgress: null,
-          roadmap: [],
-          roadmapProgress: null,
-          loading: false,
-        }));
+        console.log('🔓 User logged out - Firebase user is null');
+        console.log('🔍 Current state before logout:', {
+          wasAuthenticated: state.isAuthenticated,
+          hadUser: !!state.user,
+          currentUserEmail: state.user?.email
+        });
+        
+        // Only clear state if we were actually authenticated before
+        if (state.isAuthenticated || state.user) {
+          console.log('🧹 Clearing authentication state');
+          setState(prev => ({
+            ...prev,
+            isAuthenticated: false,
+            firebaseUser: null,
+            user: null,
+            userSkills: [],
+            masterSkills: [],
+            jobRoles: [],
+            selectedRole: null,
+            analysis: null,
+            analysisProgress: null,
+            roadmap: [],
+            roadmapProgress: null,
+            loading: false,
+            mfaRequired: false,
+            mfaToken: null,
+          }));
+        } else {
+          console.log('🔄 Ignoring logout - user was not authenticated');
+        }
       }
     });
 
     return unsubscribe;
-  }, []); // Remove dependencies to prevent infinite loops
+  }, [loadUserState]);
 
   const login = useCallback(async () => {
     try {
+      console.log('🔑 Starting login process...');
       setState(prev => ({ ...prev, loading: true, error: null }));
-      await FirebaseAuthService.signInWithGoogle();
+      
+      const user = await FirebaseAuthService.signInWithGoogle();
+      console.log('✅ Firebase sign-in successful:', user.email);
+      
       // Auth state change will handle the backend login and MFA check
-      // Return value will be set by the auth state change handler
-    } catch (error) {
-      console.error('Login error:', error);
+      // Don't set loading to false here - let the auth state handler do it
+    } catch (error: any) {
+      console.error('❌ Login error:', error);
+      
+      // Don't show error for redirect in progress
+      if (error.message === 'REDIRECT_IN_PROGRESS') {
+        console.log('🔄 Redirect authentication in progress...');
+        // Don't set loading to false for redirect
+        return;
+      }
+      
+      // Set loading to false for actual errors
       setState(prev => ({
         ...prev,
         error: error instanceof Error ? error.message : 'Login failed',
@@ -319,12 +454,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       
       const loginResponse = await apiService.completeMFALogin(mfaToken, code, isRecoveryCode);
       
+      // Mark MFA as verified for this session
+      FirebaseAuthService.markMFAVerified();
+      
       setState(prev => ({
         ...prev,
         isAuthenticated: true,
         user: loginResponse.user,
         mfaRequired: false,
         mfaToken: null,
+        requireMFAOnNextLogin: false,
         loading: false,
       }));
 
@@ -342,9 +481,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [loadUserState]);
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (requireMFA: boolean = false) => {
     try {
-      await FirebaseAuthService.signOut();
+      console.log('🔓 Logging out...', requireMFA ? '(manual - MFA required next time)' : '(automatic - no MFA required)');
+      
+      await FirebaseAuthService.signOut(requireMFA);
       setState({
         isAuthenticated: false,
         user: null,
@@ -361,6 +502,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         error: null,
         mfaRequired: false,
         mfaToken: null,
+        requireMFAOnNextLogin: false,
       });
     } catch (error) {
       console.error('Logout error:', error);

@@ -38,7 +38,7 @@ export const Layout = ({ children, showNav = true }: LayoutProps) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
+    logout(true); // Require MFA for manual logout
     navigate("/");
   };
 

@@ -26,6 +26,8 @@ interface UserProfile {
 interface LoginResponse {
   user: UserProfile;
   isNewUser: boolean;
+  mfa_required?: boolean;
+  mfa_token?: string;
 }
 
 interface SkillGapAnalysis {

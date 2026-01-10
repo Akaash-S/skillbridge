@@ -878,7 +878,7 @@ export const Settings = () => {
                 <div className="space-y-4">
                   <Label className="text-sm font-medium">Account Actions</Label>
                   <div className="flex gap-3">
-                    <Button variant="outline" onClick={logout}>
+                    <Button variant="outline" onClick={() => logout(true)}>
                       <LogOut className="h-4 w-4 mr-2" />
                       Logout
                     </Button>

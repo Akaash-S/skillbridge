@@ -4,12 +4,13 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
+import { AuthProvider } from "@/context/AuthContext";
 import { AppProvider } from "@/context/AppContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { DebugInfo } from "@/components/DebugInfo";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Landing } from "@/pages/Landing";
-import { Login } from "@/pages/Login";
+import { Login } from "@/pages/auth/Login";
 import { Onboarding } from "@/pages/Onboarding";
 import { Skills } from "@/pages/Skills";
 import { Roles } from "@/pages/Roles";
@@ -42,55 +43,184 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="skillbridge-theme">
-      <AppProvider>
-        <ErrorBoundary>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter
-              future={{
-                v7_startTransition: true,
-                v7_relativeSplatPath: true,
-              }}
-            >
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Landing />} />
-                <Route path="/login" element={<Login />} />
-                
-                {/* Protected Routes */}
-                <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
-                <Route path="/skills" element={<ProtectedRoute><Skills /></ProtectedRoute>} />
-                <Route path="/skills/intelligence" element={<ProtectedRoute><SkillIntelligence /></ProtectedRoute>} />
-                <Route path="/roles" element={<ProtectedRoute><Roles /></ProtectedRoute>} />
-                <Route path="/analysis" element={<ProtectedRoute><Analysis /></ProtectedRoute>} />
-                <Route path="/roadmap" element={<ProtectedRoute><Roadmap /></ProtectedRoute>} />
-                <Route path="/roadmap/custom" element={<ProtectedRoute><RoadmapBuilder /></ProtectedRoute>} />
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                <Route path="/career-hub" element={<ProtectedRoute><CareerHub /></ProtectedRoute>} />
-                <Route path="/learning-history" element={<ProtectedRoute><LearningHistory /></ProtectedRoute>} />
-                <Route path="/assessments" element={<ProtectedRoute><Assessments /></ProtectedRoute>} />
-                <Route path="/opportunities" element={<ProtectedRoute><Opportunities /></ProtectedRoute>} />
-                <Route path="/readiness" element={<ProtectedRoute><Readiness /></ProtectedRoute>} />
-                <Route path="/resume-intelligence" element={<ProtectedRoute><ResumeIntelligence /></ProtectedRoute>} />
-                <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
-                <Route path="/activity" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
-                <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
-                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
-                <Route path="/guide/add-skills" element={<ProtectedRoute><AddSkillsGuide /></ProtectedRoute>} />
-                <Route path="/guide/career-goal" element={<ProtectedRoute><CareerGoalGuide /></ProtectedRoute>} />
-                <Route path="/guide/skill-gap" element={<ProtectedRoute><SkillGapGuide /></ProtectedRoute>} />
-                <Route path="/guide/roadmap" element={<ProtectedRoute><RoadmapGuide /></ProtectedRoute>} />
-                <Route path="/guide/growth-tracking" element={<ProtectedRoute><GrowthTrackingGuide /></ProtectedRoute>} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <DebugInfo />
-            </BrowserRouter>
-          </TooltipProvider>
-        </ErrorBoundary>
-      </AppProvider>
+      <AuthProvider>
+        <AppProvider>
+          <ErrorBoundary>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter
+                future={{
+                  v7_startTransition: true,
+                  v7_relativeSplatPath: true,
+                }}
+              >
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/login" element={<Login />} />
+                  
+                  {/* Protected Routes */}
+                  <Route path="/onboarding" element={
+                    <ProtectedRoute>
+                      <Onboarding />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/skills" element={
+                    <ProtectedRoute>
+                      <Skills />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/roles" element={
+                    <ProtectedRoute>
+                      <Roles />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/analysis" element={
+                    <ProtectedRoute>
+                      <Analysis />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/roadmap" element={
+                    <ProtectedRoute>
+                      <Roadmap />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/career-hub" element={
+                    <ProtectedRoute>
+                      <CareerHub />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/skill-intelligence" element={
+                    <ProtectedRoute>
+                      <SkillIntelligence />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/learning-history" element={
+                    <ProtectedRoute>
+                      <LearningHistory />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/assessments" element={
+                    <ProtectedRoute>
+                      <Assessments />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/opportunities" element={
+                    <ProtectedRoute>
+                      <Opportunities />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/readiness" element={
+                    <ProtectedRoute>
+                      <Readiness />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/resume-intelligence" element={
+                    <ProtectedRoute>
+                      <ResumeIntelligence />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/insights" element={
+                    <ProtectedRoute>
+                      <Insights />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/roadmap-builder" element={
+                    <ProtectedRoute>
+                      <RoadmapBuilder />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/activity" element={
+                    <ProtectedRoute>
+                      <Activity />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/courses" element={
+                    <ProtectedRoute>
+                      <Courses />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/help" element={
+                    <ProtectedRoute>
+                      <Help />
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Guide Routes */}
+                  <Route path="/guide/add-skills" element={
+                    <ProtectedRoute>
+                      <AddSkillsGuide />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/guide/career-goal" element={
+                    <ProtectedRoute>
+                      <CareerGoalGuide />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/guide/skill-gap" element={
+                    <ProtectedRoute>
+                      <SkillGapGuide />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/guide/roadmap" element={
+                    <ProtectedRoute>
+                      <RoadmapGuide />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/guide/growth-tracking" element={
+                    <ProtectedRoute>
+                      <GrowthTrackingGuide />
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Catch all route */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <DebugInfo />
+              </BrowserRouter>
+            </TooltipProvider>
+          </ErrorBoundary>
+        </AppProvider>
+      </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );

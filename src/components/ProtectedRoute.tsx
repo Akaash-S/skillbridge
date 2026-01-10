@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useApp } from '@/context/AppContext';
 import { Loader2 } from 'lucide-react';
@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, loading, firebaseUser } = useApp();
+  const { isAuthenticated, loading, firebaseUser, mfaRequired, mfaToken } = useApp();
   const location = useLocation();
 
   // Show loading spinner while checking authentication
@@ -18,6 +18,24 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
           <p className="text-muted-foreground">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If MFA is required, show MFA verification instead of redirecting to login
+  if (mfaRequired && mfaToken) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold">Two-Factor Authentication</h2>
+            <p className="text-muted-foreground mt-2">
+              Please enter your authentication code to continue
+            </p>
+          </div>
+          {/* MFA verification will be handled by the Login component */}
+          <Navigate to="/login" state={{ from: location }} replace />
         </div>
       </div>
     );

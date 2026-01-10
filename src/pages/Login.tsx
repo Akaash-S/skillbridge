@@ -1,11 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Chrome, Loader2, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { MFAVerification } from "@/components/MFAVerification";
+import { MFAHandler } from "@/components/MFAHandler";
+import { AuthErrorHandler } from "@/components/AuthErrorHandler";
+import { FirebaseAuthService } from "@/services/firebase";
+// import { AuthDebug } from "@/components/AuthDebug"; // Temporarily disabled
 
 const features = [
   "Personalized skill gap analysis",
@@ -16,55 +19,151 @@ const features = [
 
 export const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { login, user, loading, error, clearError, mfaRequired, mfaToken } = useApp();
+  const [hasRedirected, setHasRedirected] = useState(false);
+  const [showAuthError, setShowAuthError] = useState(false);
+  const [authError, setAuthError] = useState<string>('');
+  const { login, user, loading, error, clearError, isAuthenticated, mfaRequired, mfaToken } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get the intended destination from location state
-  const from = location.state?.from?.pathname || "/dashboard";
+  // Memoize the redirect destination to prevent infinite re-renders
+  const from = useMemo(() => {
+    return location.state?.from?.pathname || "/dashboard";
+  }, [location.state?.from?.pathname]);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
+    setShowAuthError(false);
+    setAuthError('');
+    
     try {
       await login();
-      // MFA state will be handled by context state changes
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed:', error);
+      
+      // Don't show error for redirect in progress
+      if (error.message !== 'REDIRECT_IN_PROGRESS') {
+        setAuthError(error.message || 'Authentication failed');
+        setShowAuthError(true);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleMFAComplete = () => {
-    // Navigation will be handled by auth state change
-  };
-
-  const handleMFACancel = () => {
-    // Could add logout logic here if needed
-  };
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      // Check if user has completed onboarding
-      if (!user.name || user.name === '') {
-        // New user - redirect to onboarding
-        navigate("/onboarding", { replace: true });
-      } else {
-        // Existing user - redirect to intended destination
-        navigate(from, { replace: true });
+  const handleUseRedirect = async () => {
+    setIsLoading(true);
+    setShowAuthError(false);
+    
+    try {
+      // Force redirect method
+      await FirebaseAuthService.signInWithRedirect();
+    } catch (error: any) {
+      console.error('Redirect login failed:', error);
+      if (error.message !== 'REDIRECT_IN_PROGRESS') {
+        setAuthError(error.message || 'Redirect authentication failed');
+        setShowAuthError(true);
       }
+    } finally {
+      setIsLoading(false);
     }
-  }, [user, navigate, from]);
+  };
 
-  // Show MFA verification if required
+  const handleRetryAuth = () => {
+    setShowAuthError(false);
+    setAuthError('');
+    handleGoogleLogin();
+  };
+
+  // Redirect authenticated users immediately
+  useEffect(() => {
+    console.log('🔍 Login page - Auth state check:', { 
+      isAuthenticated, 
+      user: !!user, 
+      userName: user?.name,
+      userEmail: user?.email,
+      loading, 
+      mfaRequired,
+      hasRedirected
+    });
+    
+    // If user is fully authenticated and not in MFA flow, redirect immediately
+    if (isAuthenticated && user && !mfaRequired && !hasRedirected) {
+      console.log('✅ User already authenticated, redirecting...');
+      setHasRedirected(true);
+      
+      // Immediate redirect without delay
+      const redirectPath = (!user.name || user.name === '') ? "/onboarding" : from;
+      console.log('🔄 Redirecting to:', redirectPath);
+      
+      // Try multiple redirect methods to ensure it works
+      navigate(redirectPath, { replace: true });
+      
+      // Fallback redirect after short delay
+      setTimeout(() => {
+        if (window.location.pathname === '/login') {
+          console.log('🔄 Fallback redirect triggered');
+          window.location.href = redirectPath;
+        }
+      }, 500);
+      
+    } else {
+      console.log('❌ Not redirecting because:', {
+        isAuthenticated: isAuthenticated ? '✅' : '❌',
+        hasUser: user ? '✅' : '❌',
+        notLoading: !loading ? '✅' : '❌',
+        noMFA: !mfaRequired ? '✅' : '❌',
+        notRedirected: !hasRedirected ? '✅' : '❌'
+      });
+    }
+  }, [isAuthenticated, user, loading, mfaRequired, navigate, from, hasRedirected]);
+
+  // Show loading while checking authentication status
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-foreground"></div>
+          </div>
+          <p className="text-muted-foreground">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If user is authenticated but we're still here, show loading while redirecting
+  if (isAuthenticated && user && !mfaRequired) {
+    console.log('🔄 Authenticated user on login page, showing redirect loading...');
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center mx-auto mb-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-foreground"></div>
+          </div>
+          <p className="text-muted-foreground">Redirecting to dashboard...</p>
+          <p className="text-xs text-muted-foreground/60 mt-2">
+            User: {user.email} | Auth: {isAuthenticated ? 'Yes' : 'No'}
+          </p>
+        </div>
+        {/* <AuthDebug /> */}
+      </div>
+    );
+  }
+
+  // If MFA is required, show MFA verification
   if (mfaRequired && mfaToken) {
+    return <MFAHandler />;
+  }
+
+  // If there's an authentication error, show error handler
+  if (showAuthError && authError) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <MFAVerification
-          mfaToken={mfaToken}
-          onVerificationComplete={handleMFAComplete}
-          onCancel={handleMFACancel}
+        <AuthErrorHandler
+          error={authError}
+          onRetry={handleRetryAuth}
+          onUseRedirect={handleUseRedirect}
         />
       </div>
     );
@@ -258,12 +357,13 @@ export const Login = () => {
             <p className="text-center text-sm text-muted-foreground mt-6">
               Don't have an account?{" "}
               <Link to="/login" className="text-primary hover:underline font-medium">
-                Sign up for free
+                Create one by signing in
               </Link>
             </p>
           </motion.div>
         </main>
       </div>
+      {/* <AuthDebug /> */}
     </div>
   );
 };

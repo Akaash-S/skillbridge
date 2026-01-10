@@ -119,7 +119,7 @@ export const Profile = () => {
   };
 
   const handleLogout = () => {
-    logout();
+    logout(true); // Require MFA for manual logout
     navigate("/");
   };
 
