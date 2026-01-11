@@ -7,7 +7,6 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/context/AuthContext";
 import { AppDataProvider } from "@/context/AppDataContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { DebugInfo } from "@/components/DebugInfo";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { SimpleLanding } from "@/pages/SimpleLanding";
 import { Login } from "@/pages/auth/Login";
@@ -216,7 +215,6 @@ const App = () => (
                   {/* Catch all route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                <DebugInfo />
               </BrowserRouter>
             </TooltipProvider>
           </ErrorBoundary>
