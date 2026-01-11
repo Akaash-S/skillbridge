@@ -86,7 +86,7 @@ export const MFASetup = ({ onSetupComplete, onCancel }: MFASetupProps) => {
     try {
       await apiClient.post('/mfa/verify-setup', {
         setup_token: setupToken,
-        code: verificationCode
+        totp_code: verificationCode // Changed from 'code' to 'totp_code' to match backend
       });
       
       toast({

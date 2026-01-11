@@ -92,8 +92,8 @@ export const MFAManagement = () => {
 
     setActionLoading(true);
     try {
-      const response = await apiClient.post('/mfa/regenerate-codes', {
-        code: verificationCode
+      const response = await apiClient.post('/mfa/regenerate-recovery-codes', { // Fixed endpoint name to match backend
+        totp_code: verificationCode // Changed from 'code' to 'totp_code' to match backend
       });
       setNewRecoveryCodes(response.recovery_codes);
       setVerificationCode('');
@@ -132,7 +132,7 @@ export const MFAManagement = () => {
     setActionLoading(true);
     try {
       await apiClient.post('/mfa/disable', {
-        code: verificationCode,
+        verification_code: verificationCode, // Changed from 'code' to 'verification_code' to match backend
         is_recovery_code: isRecoveryCode
       });
       setVerificationCode('');
