@@ -24,8 +24,9 @@ import {
   BarChart3,
   TrendingUp
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, isRoadmapCompleted } from "@/lib/utils";
 import { hasRoadmapTemplate } from "@/data/fixedRoadmaps";
+import { CompletionMessage } from "@/components/CompletionMessage";
 
 const resourceTypeIcons = {
   course: GraduationCap,
@@ -297,6 +298,9 @@ export const Roadmap = () => {
             </p>
           </CardContent>
         </Card>
+
+        {/* Completion Message */}
+        <CompletionMessage isCompleted={isRoadmapCompleted(roadmap)} />
 
         {/* Success Message */}
         {progressPercent === 100 && (
