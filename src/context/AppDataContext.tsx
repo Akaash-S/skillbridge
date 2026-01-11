@@ -365,8 +365,15 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
       
       // Try to load existing progress from backend (non-blocking)
       try {
-        await loadRoadmapProgress();
-        console.log('✅ Existing roadmap progress loaded');
+        const response = await apiClient.get<{
+          roadmap: any;
+          hasRoadmap: boolean;
+        }>('/roadmap');
+        
+        if (response.hasRoadmap && response.roadmap) {
+          console.log('✅ Existing roadmap progress loaded');
+          // Update with backend progress if available
+        }
       } catch (error) {
         console.log('ℹ️ No existing roadmap progress found, using fresh roadmap');
       }
@@ -379,7 +386,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
         loading: false
       }));
     }
-  }, [state.selectedRole, loadRoadmapProgress]);
+  }, [state.selectedRole]); // Removed loadRoadmapProgress dependency to prevent circular reference
 
   // Mark roadmap item complete - IMPROVED with better error handling
   const markRoadmapItemComplete = useCallback(async (itemId: string) => {

@@ -59,9 +59,11 @@ export const Roadmap = () => {
     error: error || 'None'
   });
 
-  // Simplified initialization logic
+  // Simplified initialization logic - Fixed to prevent circular dependencies
   useEffect(() => {
     const initializeRoadmap = async () => {
+      console.log('🔄 Initializing roadmap component...');
+      
       // Check prerequisites
       if (!selectedRole) {
         console.log('❌ No role selected, redirecting to roles page');
@@ -75,8 +77,8 @@ export const Roadmap = () => {
         return;
       }
 
-      // Load roadmap if not already loaded
-      if (roadmap.length === 0 && !loading) {
+      // Load roadmap if not already loaded and not currently loading
+      if (roadmap.length === 0 && !loading && !localLoading) {
         console.log('📋 Loading roadmap for role:', selectedRole.id);
         setLocalLoading(true);
         try {
@@ -87,11 +89,16 @@ export const Roadmap = () => {
         } finally {
           setLocalLoading(false);
         }
+      } else if (roadmap.length > 0) {
+        console.log('✅ Roadmap already loaded with', roadmap.length, 'items');
       }
     };
 
-    initializeRoadmap();
-  }, [selectedRole, analysis, loading, loadFixedRoadmap, navigate]); // Removed roadmap.length to prevent infinite loop
+    // Only run initialization if we have the required dependencies
+    if (selectedRole && analysis) {
+      initializeRoadmap();
+    }
+  }, [selectedRole?.id, analysis?.readinessScore, loading]); // Stable dependencies to prevent loops
 
   // Handle roadmap item completion with optimistic updates
   const handleItemComplete = async (itemId: string) => {
