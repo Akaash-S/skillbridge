@@ -136,10 +136,10 @@ export const Courses = () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      params.append('query', searchQuery);
-      if (filters.skillLevel) params.append('skillLevel', filters.skillLevel);
+      params.append('q', searchQuery); // Changed from 'query' to 'q' to match backend
+      if (filters.skillLevel) params.append('skill_level', filters.skillLevel); // Changed to match backend
       if (filters.duration) params.append('duration', filters.duration);
-      if (filters.maxResults) params.append('maxResults', filters.maxResults.toString());
+      if (filters.maxResults) params.append('max_results', filters.maxResults.toString()); // Changed to match backend
       if (filters.order) params.append('order', filters.order);
       
       const response = await apiClient.get<{ courses: Course[] }>(`/courses/search?${params.toString()}`);
@@ -170,7 +170,7 @@ export const Courses = () => {
     }
   }, [searchQuery, filters, toast]);
 
-  // Load recommendations
+  // Load recommendations with better error handling
   const loadRecommendations = useCallback(async () => {
     if (!isAuthenticated) return;
 
@@ -178,19 +178,16 @@ export const Courses = () => {
     try {
       const response = await apiClient.get<{ recommendations: Course[] }>('/courses/recommendations');
       setRecommendations(response.recommendations || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Recommendations error:', error);
-      toast({
-        title: "Failed to load recommendations",
-        description: "Could not load personalized course recommendations.",
-        variant: "destructive",
-      });
+      // Don't show error toast for recommendations as it's not critical
+      setRecommendations([]);
     } finally {
       setRecommendationsLoading(false);
     }
-  }, [isAuthenticated, toast]);
+  }, [isAuthenticated]);
 
-  // Load saved courses
+  // Load saved courses with better error handling
   const loadSavedCourses = useCallback(async () => {
     if (!isAuthenticated) return;
 
@@ -198,17 +195,14 @@ export const Courses = () => {
     try {
       const response = await apiClient.get<{ courses: Course[] }>('/courses/saved');
       setSavedCourses(response.courses || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Saved courses error:', error);
-      toast({
-        title: "Failed to load saved courses",
-        description: "Could not load your saved courses.",
-        variant: "destructive",
-      });
+      // Don't show error toast for saved courses as it's not critical
+      setSavedCourses([]);
     } finally {
       setSavedCoursesLoading(false);
     }
-  }, [isAuthenticated, toast]);
+  }, [isAuthenticated]);
 
   // Save course
   const saveCourse = useCallback(async (course: Course) => {
@@ -254,7 +248,8 @@ export const Courses = () => {
   // Update course progress
   const updateProgress = useCallback(async (courseId: string, progress: number) => {
     try {
-      await apiClient.put(`/courses/progress/${courseId}`, {
+      await apiClient.put('/courses/progress', { // Changed endpoint to match backend
+        course_id: courseId, // Changed to match backend parameter name
         progress: progress,
         completed: progress >= 100
       });
@@ -285,7 +280,7 @@ export const Courses = () => {
   // Remove saved course
   const removeCourse = useCallback(async (courseId: string) => {
     try {
-      await apiClient.delete(`/courses/saved/${courseId}`);
+      await apiClient.delete(`/courses/remove?course_id=${courseId}`); // Changed to match backend endpoint
       setSavedCourses(prev => prev.filter(course => (course.course_id || course.id) !== courseId));
       
       toast({
