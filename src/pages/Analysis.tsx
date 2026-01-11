@@ -4,7 +4,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useAppData } from "@/context/AppDataContext";
 import { Layout } from "@/components/Layout";
 import { ProgressCircle } from "@/components/ProgressCircle";
-import { SkillChip } from "@/components/SkillChip";
 import { StepIndicator } from "@/components/StepIndicator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +46,9 @@ export const Analysis = () => {
     
     setLoadingAnalysis(true);
     try {
-      const result = await apiClient.get(`/skills/with-role-analysis?roleId=${selectedRole.id}`);
+      const result = await apiClient.get<{
+        roleAnalysis?: any;
+      }>(`/skills/with-role-analysis?roleId=${selectedRole.id}`);
       if (result.roleAnalysis) {
         setDetailedAnalysis(result.roleAnalysis);
       }
@@ -222,6 +223,19 @@ export const Analysis = () => {
                         </div>
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* Real-time Update Indicator */}
+                {analysisProgress && analysisProgress.completedRoadmapItems > 0 && (
+                  <div className="mt-4 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                      <TrendingUp className="h-4 w-4" />
+                      <span className="text-sm font-medium">Live Progress Tracking</span>
+                    </div>
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      Your readiness score updates automatically as you complete roadmap milestones
+                    </p>
                   </div>
                 )}
               </div>

@@ -21,7 +21,8 @@ import {
   Loader2,
   AlertCircle,
   RefreshCw,
-  BarChart3
+  BarChart3,
+  TrendingUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hasRoadmapTemplate } from "@/data/fixedRoadmaps";
@@ -100,7 +101,7 @@ export const Roadmap = () => {
     }
   }, [selectedRole?.id, analysis?.readinessScore, loading]); // Stable dependencies to prevent loops
 
-  // Handle roadmap item completion with optimistic updates
+  // Handle roadmap item completion with optimistic updates and analysis refresh
   const handleItemComplete = async (itemId: string) => {
     if (updatingItems.has(itemId)) return; // Prevent double-clicks
 
@@ -109,6 +110,15 @@ export const Roadmap = () => {
     try {
       await markRoadmapItemComplete(itemId);
       console.log('✅ Roadmap item updated successfully:', itemId);
+      
+      // Show success message with analysis update info
+      const roadmapItem = roadmap.find(item => item.id === itemId);
+      if (roadmapItem?.completed) {
+        // Item was just completed
+        setTimeout(() => {
+          console.log('🎯 Analysis will be updated based on skill completion');
+        }, 1000);
+      }
     } catch (error) {
       console.error('❌ Failed to update roadmap item:', error);
       // Error handling is done in the context, UI will revert automatically
@@ -295,6 +305,18 @@ export const Roadmap = () => {
             <AlertDescription className="text-green-800 dark:text-green-200">
               🎉 Congratulations! You've completed your roadmap for {selectedRole.title}. 
               You're now ready to apply for positions in this role!
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Real-time Analysis Updates Info */}
+        {roadmap.some(item => item.completed) && (
+          <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+            <TrendingUp className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="text-blue-800 dark:text-blue-200">
+              <strong>Smart Progress Tracking:</strong> Your Role Readiness score automatically updates 
+              as you complete skills. Check your <Link to="/analysis" className="underline font-medium">Analysis page</Link> to 
+              see your improved readiness score!
             </AlertDescription>
           </Alert>
         )}

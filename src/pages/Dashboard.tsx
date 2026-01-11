@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { useAppData } from "@/context/AppDataContext";
@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   Target, 
   BookOpen, 
@@ -21,9 +22,16 @@ import {
   ChevronRight,
   Flame,
   Trophy,
-  Calendar
+  Calendar,
+  Brain,
+  Zap,
+  TrendingDown,
+  AlertTriangle,
+  Info
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
+import { getLearningInsights } from "@/data/fixedRoadmaps";
+import AnalyticsService from "@/services/analyticsService";
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -37,10 +45,12 @@ export const Dashboard = () => {
     userSkills, 
     selectedRole, 
     analysis, 
-    roadmap 
+    roadmap,
+    roadmapProgress 
   } = useAppData();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [learningInsights, setLearningInsights] = useState<any>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -48,8 +58,27 @@ export const Dashboard = () => {
     }
   }, [isAuthenticated, navigate]);
 
+  // Calculate enhanced analytics
+  const analytics = useMemo(() => {
+    if (roadmap.length === 0) return null;
+    
+    return AnalyticsService.calculateLearningAnalytics(
+      roadmap,
+      roadmapProgress,
+      [] // Learning sessions would come from backend
+    );
+  }, [roadmap, roadmapProgress]);
+
+  // Get learning insights for the selected role
+  useEffect(() => {
+    if (selectedRole && roadmapProgress) {
+      const insights = getLearningInsights(selectedRole.id, roadmapProgress);
+      setLearningInsights(insights);
+    }
+  }, [selectedRole, roadmapProgress]);
+
   const completedItems = roadmap.filter((item) => item.completed).length;
-  const roadmapProgress = roadmap.length > 0 ? Math.round((completedItems / roadmap.length) * 100) : 0;
+  const roadmapProgressPercent = roadmap.length > 0 ? Math.round((completedItems / roadmap.length) * 100) : 0;
 
   const skillsByProficiency = userSkills.reduce((acc, skill) => {
     acc[skill.proficiency] = (acc[skill.proficiency] || 0) + 1;
@@ -122,8 +151,8 @@ export const Dashboard = () => {
       description: "Follow your roadmap", 
       icon: BookOpen, 
       path: "/roadmap",
-      completed: roadmapProgress === 100,
-      count: roadmapProgress,
+      completed: roadmapProgressPercent === 100,
+      count: roadmapProgressPercent,
       label: "% complete"
     },
   ];
@@ -212,7 +241,7 @@ export const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Stats Grid */}
+        {/* Enhanced Analytics Cards */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
             <CardContent className="p-6">
@@ -220,6 +249,11 @@ export const Dashboard = () => {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Total Skills</p>
                   <p className="text-3xl font-bold">{userSkills.length}</p>
+                  {analytics && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      +{Math.round(analytics.learningVelocity * 4)} this month
+                    </p>
+                  )}
                 </div>
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
                   <Target className="h-6 w-6 text-primary" />
@@ -234,6 +268,11 @@ export const Dashboard = () => {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Readiness Score</p>
                   <p className="text-3xl font-bold">{analysis?.readinessScore || 0}%</p>
+                  {learningInsights && (
+                    <p className="text-xs text-green-600 mt-1">
+                      {learningInsights.isOnTrack ? "On track" : "Behind schedule"}
+                    </p>
+                  )}
                 </div>
                 <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center">
                   <TrendingUp className="h-6 w-6 text-accent" />
@@ -247,7 +286,12 @@ export const Dashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Roadmap Progress</p>
-                  <p className="text-3xl font-bold">{roadmapProgress}%</p>
+                  <p className="text-3xl font-bold">{roadmapProgressPercent}%</p>
+                  {analytics && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {Math.round(analytics.estimatedWeeksRemaining)}w remaining
+                    </p>
+                  )}
                 </div>
                 <div className="h-12 w-12 rounded-xl bg-warning/10 flex items-center justify-center">
                   <BookOpen className="h-6 w-6 text-warning" />
@@ -260,16 +304,145 @@ export const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Weekly Goal</p>
-                  <p className="text-3xl font-bold">{user?.weeklyGoal || 10}h</p>
+                  <p className="text-sm font-medium text-muted-foreground">Learning Streak</p>
+                  <p className="text-3xl font-bold">{analytics?.currentStreak || 0}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Best: {analytics?.longestStreak || 0} days
+                  </p>
                 </div>
                 <div className="h-12 w-12 rounded-xl bg-info/10 flex items-center justify-center">
-                  <Calendar className="h-6 w-6 text-info" />
+                  <Flame className="h-6 w-6 text-info" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Learning Insights */}
+        {analytics && analytics.insights.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <Brain className="h-5 w-5" />
+              Learning Insights
+            </h2>
+            <div className="grid gap-4">
+              {analytics.insights.slice(0, 3).map((insight, index) => (
+                <Alert 
+                  key={index} 
+                  className={`${
+                    insight.type === 'success' ? 'border-green-200 bg-green-50 dark:bg-green-950/20' :
+                    insight.type === 'warning' ? 'border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20' :
+                    insight.type === 'error' ? 'border-red-200 bg-red-50 dark:bg-red-950/20' :
+                    'border-blue-200 bg-blue-50 dark:bg-blue-950/20'
+                  }`}
+                >
+                  {insight.type === 'success' && <CheckCircle2 className="h-4 w-4 text-green-600" />}
+                  {insight.type === 'warning' && <AlertTriangle className="h-4 w-4 text-yellow-600" />}
+                  {insight.type === 'error' && <AlertTriangle className="h-4 w-4 text-red-600" />}
+                  {insight.type === 'info' && <Info className="h-4 w-4 text-blue-600" />}
+                  <AlertDescription className={`${
+                    insight.type === 'success' ? 'text-green-800 dark:text-green-200' :
+                    insight.type === 'warning' ? 'text-yellow-800 dark:text-yellow-200' :
+                    insight.type === 'error' ? 'text-red-800 dark:text-red-200' :
+                    'text-blue-800 dark:text-blue-200'
+                  }`}>
+                    <strong>{insight.title}:</strong> {insight.message}
+                    {insight.action && (
+                      <div className="mt-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="text-xs"
+                        >
+                          {insight.action}
+                        </Button>
+                      </div>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Learning Analytics Chart */}
+        {analytics && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5" />
+                Learning Analytics
+              </CardTitle>
+              <CardDescription>
+                Your learning progress and predictions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-3 gap-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Completion Likelihood</span>
+                    <span className="text-2xl font-bold text-primary">
+                      {Math.round(analytics.completionLikelihood)}%
+                    </span>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
+                      style={{ width: `${analytics.completionLikelihood}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Based on your current pace and consistency
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Learning Velocity</span>
+                    <span className="text-2xl font-bold text-accent">
+                      {analytics.learningVelocity.toFixed(1)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Skills per week • Target: {analytics.recommendedPace.toFixed(1)}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    {analytics.isOnTrack ? (
+                      <Badge variant="secondary" className="text-green-600 bg-green-100">
+                        <TrendingUp className="h-3 w-3 mr-1" />
+                        On Track
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-yellow-600 bg-yellow-100">
+                        <TrendingDown className="h-3 w-3 mr-1" />
+                        Behind
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Est. Completion</span>
+                    <span className="text-sm font-bold">
+                      {analytics.estimatedCompletionDate.toLocaleDateString()}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {Math.round(analytics.estimatedWeeksRemaining)} weeks remaining
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">
+                      {analytics.weeksElapsed} weeks elapsed
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
@@ -308,6 +481,20 @@ export const Dashboard = () => {
                       <span className="font-semibold">{analysis.missingSkills.length}</span>
                     </div>
                   </div>
+                  
+                  {/* Real-time Update Indicator */}
+                  {completedItems > 0 && (
+                    <div className="mt-4 w-full p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                      <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                        <TrendingUp className="h-4 w-4" />
+                        <span className="text-sm font-medium">Live Updates Active</span>
+                      </div>
+                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                        Score updates as you complete roadmap items
+                      </p>
+                    </div>
+                  )}
+                  
                   <Link to="/analysis" className="mt-6 w-full">
                     <Button variant="outline" className="w-full">
                       View Full Analysis
@@ -441,12 +628,12 @@ export const Dashboard = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
                   <span>{completedItems} of {roadmap.length} skills completed</span>
-                  <span className="font-medium text-primary">{roadmapProgress}%</span>
+                  <span className="font-medium text-primary">{roadmapProgressPercent}%</span>
                 </div>
                 <div className="h-3 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 ease-out rounded-full"
-                    style={{ width: `${roadmapProgress}%` }}
+                    style={{ width: `${roadmapProgressPercent}%` }}
                   />
                 </div>
                 <div className="grid sm:grid-cols-3 gap-4 pt-4">

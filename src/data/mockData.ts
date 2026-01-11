@@ -27,6 +27,10 @@ export interface LearningResource {
   type: "course" | "tutorial" | "documentation" | "video";
   duration: string;
   provider: string;
+  difficulty?: ProficiencyLevel;
+  rating?: number; // 0-5 stars
+  completionRate?: number; // 0-100%
+  effectiveness?: number; // 0-100% based on user outcomes
 }
 
 export interface RoadmapItem {
@@ -37,6 +41,78 @@ export interface RoadmapItem {
   difficulty: ProficiencyLevel;
   estimatedTime: string;
   completed: boolean;
+  prerequisites?: string[]; // Skill IDs that should be completed first
+  learningOutcomes?: string[]; // What you'll learn
+  practicalProjects?: string[]; // Suggested projects
+  assessmentCriteria?: string[]; // How to validate mastery
+}
+
+// Enhanced analytics interfaces
+export interface LearningSession {
+  id: string;
+  userId: string;
+  skillId: string;
+  resourceId?: string;
+  startTime: Date;
+  endTime?: Date;
+  duration?: number; // minutes
+  completed: boolean;
+  notes?: string;
+  effectiveness?: number; // 1-5 rating
+}
+
+export interface SkillProgression {
+  skillId: string;
+  initialLevel: ProficiencyLevel;
+  currentLevel: ProficiencyLevel;
+  confidence: number; // 0-100
+  progressionHistory: Array<{
+    timestamp: Date;
+    level: ProficiencyLevel;
+    confidence: number;
+    source: 'roadmap_completion' | 'self_assessment' | 'project_completion';
+    notes?: string;
+  }>;
+  practicalProjects: number;
+  assessmentScore?: number;
+  timeToMastery?: number; // hours
+}
+
+export interface LearningInsight {
+  type: 'success' | 'warning' | 'info' | 'error';
+  title: string;
+  message: string;
+  action?: string;
+  priority?: 'low' | 'medium' | 'high';
+}
+
+export interface LearningAnalytics {
+  progressPercent: number;
+  learningVelocity: number; // skills per week
+  weeksElapsed: number;
+  estimatedWeeksRemaining: number;
+  estimatedCompletionDate: Date;
+  completionLikelihood: number; // 0-100%
+  isOnTrack: boolean;
+  recommendedPace: number; // skills per week
+  insights: LearningInsight[];
+  totalTimeSpent: number; // hours
+  averageSessionDuration: number; // minutes
+  currentStreak: number; // days
+  longestStreak: number; // days
+}
+
+export interface ResourceEffectiveness {
+  resourceId: string;
+  completionRate: number; // 0-100%
+  averageRating: number; // 0-5
+  timeToComplete: number; // hours
+  skillImprovementRate: number; // 0-100%
+  userFeedback: Array<{
+    rating: number;
+    comment?: string;
+    timestamp: Date;
+  }>;
 }
 
 export const skillsDatabase: Skill[] = [

@@ -388,7 +388,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     }
   }, [state.selectedRole]); // Removed loadRoadmapProgress dependency to prevent circular reference
 
-  // Mark roadmap item complete - IMPROVED with better error handling
+  // Mark roadmap item complete - ENHANCED with analysis updates
   const markRoadmapItemComplete = useCallback(async (itemId: string) => {
     try {
       // Find the roadmap item to get skillId
@@ -433,10 +433,70 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
         } : null
       }));
 
+      // If skill was completed, update user skills and recalculate analysis
+      if (newCompletedState && state.selectedRole) {
+        console.log('🎯 Skill completed, updating analysis...');
+        
+        try {
+          // Add the skill to user's skill list with intermediate proficiency
+          const skillProficiency = roadmapItem.difficulty === 'advanced' ? 'advanced' : 
+                                 roadmapItem.difficulty === 'beginner' ? 'beginner' : 'intermediate';
+          
+          // Check if user already has this skill
+          const existingSkill = state.userSkills.find(skill => skill.id === skillId);
+          
+          if (!existingSkill) {
+            // Add new skill
+            await apiClient.post('/skills', { 
+              skillId: skillId, 
+              level: skillProficiency 
+            });
+            
+            // Reload user skills
+            const updatedSkills = await apiClient.get<UserSkill[]>('/skills');
+            setState(prev => ({ ...prev, userSkills: updatedSkills }));
+            
+            console.log('✅ Added new skill:', skillId, 'at level:', skillProficiency);
+          } else if (existingSkill.proficiency !== skillProficiency) {
+            // Update existing skill proficiency if needed
+            await apiClient.put(`/skills/${skillId}`, { level: skillProficiency });
+            
+            // Reload user skills
+            const updatedSkills = await apiClient.get<UserSkill[]>('/skills');
+            setState(prev => ({ ...prev, userSkills: updatedSkills }));
+            
+            console.log('✅ Updated skill proficiency:', skillId, 'to level:', skillProficiency);
+          }
+
+          // Recalculate skill gap analysis with updated skills
+          const analysisResponse = await apiClient.get<{
+            roleId: string;
+            analysis: SkillGapAnalysis;
+            progress: AnalysisProgress;
+            hasProgress: boolean;
+          }>(`/skills/analyze/${state.selectedRole.id}`);
+          
+          setState(prev => ({
+            ...prev,
+            analysis: analysisResponse.analysis,
+            analysisProgress: analysisResponse.progress
+          }));
+          
+          console.log('✅ Analysis updated after skill completion:', {
+            newReadinessScore: analysisResponse.analysis.readinessScore,
+            matchedSkills: analysisResponse.analysis.matchedSkills.length,
+            missingSkills: analysisResponse.analysis.missingSkills.length
+          });
+          
+        } catch (analysisError) {
+          console.warn('⚠️ Failed to update analysis after skill completion:', analysisError);
+          // Don't throw error here as the main roadmap update was successful
+        }
+      }
+
       // Try to persist to backend (non-blocking for better UX)
       try {
         await apiClient.put('/roadmap/progress', {
-          milestoneIndex: 0, // Backend service will find the correct milestone
           skillId: skillId,
           completed: newCompletedState
         });
@@ -470,7 +530,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
       // Re-throw error so UI can handle it
       throw error;
     }
-  }, [state.roadmap]);
+  }, [state.roadmap, state.selectedRole, state.userSkills]);
 
   // Reset progress
   const resetProgress = useCallback(() => {
