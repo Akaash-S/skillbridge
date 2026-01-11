@@ -7,8 +7,9 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/context/AuthContext";
 import { AppDataProvider } from "@/context/AppDataContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { DebugInfo } from "@/components/DebugInfo";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { Landing } from "@/pages/Landing";
+import { SimpleLanding } from "@/pages/SimpleLanding";
 import { Login } from "@/pages/auth/Login";
 import { Onboarding } from "@/pages/Onboarding";
 import { Skills } from "@/pages/Skills";
@@ -51,7 +52,7 @@ const App = () => (
               <BrowserRouter>
                 <Routes>
                   {/* Public Routes */}
-                  <Route path="/" element={<Landing />} />
+                  <Route path="/" element={<SimpleLanding />} />
                   <Route path="/login" element={<Login />} />
                   
                   {/* Protected Routes */}
@@ -215,6 +216,7 @@ const App = () => (
                   {/* Catch all route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
+                <DebugInfo />
               </BrowserRouter>
             </TooltipProvider>
           </ErrorBoundary>
