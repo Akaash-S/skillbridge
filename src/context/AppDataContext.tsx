@@ -316,15 +316,20 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     }
   }, [state.selectedRole]);
 
-  // Generate roadmap - REPLACED with fixed roadmap loading
+  // Generate roadmap - SIMPLIFIED with better error handling
   const loadFixedRoadmap = useCallback(() => {
     if (!state.selectedRole) {
       console.warn('⚠️ No role selected for roadmap');
+      setState(prev => ({
+        ...prev,
+        error: 'Please select a role first to generate your roadmap'
+      }));
       return;
     }
     
     try {
       console.log('📋 Loading fixed roadmap for role:', state.selectedRole.id);
+      setState(prev => ({ ...prev, loading: true, error: null }));
       
       // Get fixed roadmap for the selected role
       const fixedRoadmapItems = getFixedRoadmap(state.selectedRole.id);
@@ -334,61 +339,53 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
         setState(prev => ({
           ...prev,
           roadmap: [],
-          roadmapProgress: null
+          roadmapProgress: null,
+          loading: false,
+          error: `No roadmap template available for ${state.selectedRole.title}. Please try a different role.`
         }));
         return;
       }
       
-      // Load existing completion status from backend if available
-      loadRoadmapProgress().then(() => {
-        // If no existing progress, use the fixed roadmap as-is
-        if (state.roadmap.length === 0) {
-          setState(prev => ({
-            ...prev,
-            roadmap: fixedRoadmapItems,
-            roadmapProgress: {
-              targetRole: state.selectedRole?.id || '',
-              totalItems: fixedRoadmapItems.length,
-              completedItems: 0,
-              progress: 0,
-              roadmapItems: fixedRoadmapItems
-            }
-          }));
-          console.log('✅ Fixed roadmap loaded:', fixedRoadmapItems.length, 'items');
-        }
-      }).catch(() => {
-        // Fallback to fixed roadmap without backend data
-        setState(prev => ({
-          ...prev,
-          roadmap: fixedRoadmapItems,
-          roadmapProgress: {
-            targetRole: state.selectedRole?.id || '',
-            totalItems: fixedRoadmapItems.length,
-            completedItems: 0,
-            progress: 0,
-            roadmapItems: fixedRoadmapItems
-          }
-        }));
-        console.log('✅ Fixed roadmap loaded (fallback):', fixedRoadmapItems.length, 'items');
+      // Set the roadmap immediately
+      setState(prev => ({
+        ...prev,
+        roadmap: fixedRoadmapItems,
+        roadmapProgress: {
+          targetRole: state.selectedRole?.id || '',
+          totalItems: fixedRoadmapItems.length,
+          completedItems: 0,
+          progress: 0,
+          roadmapItems: fixedRoadmapItems
+        },
+        loading: false,
+        error: null
+      }));
+      
+      console.log('✅ Fixed roadmap loaded successfully:', fixedRoadmapItems.length, 'items');
+      
+      // Try to load existing progress from backend (non-blocking)
+      loadRoadmapProgress().catch(error => {
+        console.log('ℹ️ No existing roadmap progress found, using fresh roadmap');
       });
       
     } catch (error: any) {
       console.error('❌ Failed to load fixed roadmap:', error);
       setState(prev => ({
         ...prev,
-        error: 'Failed to load roadmap'
+        error: 'Failed to load roadmap. Please try again.',
+        loading: false
       }));
     }
   }, [state.selectedRole]);
 
-  // Mark roadmap item complete - FIXED to persist to database
+  // Mark roadmap item complete - IMPROVED with better error handling
   const markRoadmapItemComplete = useCallback(async (itemId: string) => {
     try {
       // Find the roadmap item to get skillId
       const roadmapItem = state.roadmap.find(item => item.id === itemId);
       if (!roadmapItem) {
         console.error('❌ Roadmap item not found:', itemId);
-        return;
+        throw new Error('Roadmap item not found');
       }
 
       const skillId = roadmapItem.skillId;
@@ -401,29 +398,21 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
       });
 
       // Optimistically update local state first for immediate UI feedback
-      setState(prev => ({
-        ...prev,
-        roadmap: prev.roadmap.map(item =>
-          item.id === itemId ? { ...item, completed: newCompletedState } : item
-        )
-      }));
-
-      // Call backend API to persist the change
-      await apiClient.put('/roadmap/progress', {
-        milestoneIndex: 0, // Backend service will find the correct milestone
-        skillId: skillId,
-        completed: newCompletedState
-      });
-
-      // Update roadmap progress statistics
       const updatedRoadmap = state.roadmap.map(item =>
         item.id === itemId ? { ...item, completed: newCompletedState } : item
       );
       
+      setState(prev => ({
+        ...prev,
+        roadmap: updatedRoadmap
+      }));
+
+      // Calculate new progress
       const completedItems = updatedRoadmap.filter(item => item.completed).length;
       const totalItems = updatedRoadmap.length;
       const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
+      // Update roadmap progress
       setState(prev => ({
         ...prev,
         roadmapProgress: prev.roadmapProgress ? {
@@ -434,15 +423,28 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
         } : null
       }));
 
-      console.log('✅ Roadmap item completion persisted to database:', {
-        itemId,
-        skillId,
-        completed: newCompletedState,
-        progress: `${completedItems}/${totalItems} (${progress}%)`
-      });
+      // Try to persist to backend (non-blocking for better UX)
+      try {
+        await apiClient.put('/roadmap/progress', {
+          milestoneIndex: 0, // Backend service will find the correct milestone
+          skillId: skillId,
+          completed: newCompletedState
+        });
+
+        console.log('✅ Roadmap item completion persisted to database:', {
+          itemId,
+          skillId,
+          completed: newCompletedState,
+          progress: `${completedItems}/${totalItems} (${progress}%)`
+        });
+      } catch (backendError) {
+        console.warn('⚠️ Failed to persist to backend, but local state updated:', backendError);
+        // Don't throw error here - local state is already updated
+        // User can continue working offline
+      }
 
     } catch (error) {
-      console.error('❌ Failed to persist roadmap completion:', error);
+      console.error('❌ Failed to update roadmap completion:', error);
       
       // Revert optimistic update on error
       const roadmapItem = state.roadmap.find(item => item.id === itemId);
