@@ -49,6 +49,16 @@ export const Roadmap = () => {
   const [localLoading, setLocalLoading] = useState(false);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
 
+  // Debug logging
+  console.log('🔍 Roadmap Component State:', {
+    selectedRole: selectedRole?.title || 'None',
+    hasAnalysis: !!analysis,
+    roadmapLength: roadmap.length,
+    loading,
+    localLoading,
+    error: error || 'None'
+  });
+
   // Simplified initialization logic
   useEffect(() => {
     const initializeRoadmap = async () => {
@@ -70,7 +80,8 @@ export const Roadmap = () => {
         console.log('📋 Loading roadmap for role:', selectedRole.id);
         setLocalLoading(true);
         try {
-          loadFixedRoadmap();
+          await loadFixedRoadmap();
+          console.log('✅ Roadmap loaded successfully');
         } catch (error) {
           console.error('❌ Failed to load roadmap:', error);
         } finally {
@@ -80,7 +91,7 @@ export const Roadmap = () => {
     };
 
     initializeRoadmap();
-  }, [selectedRole, analysis, roadmap.length, loading, loadFixedRoadmap, navigate]);
+  }, [selectedRole, analysis, loading, loadFixedRoadmap, navigate]); // Removed roadmap.length to prevent infinite loop
 
   // Handle roadmap item completion with optimistic updates
   const handleItemComplete = async (itemId: string) => {
@@ -107,6 +118,41 @@ export const Roadmap = () => {
   const completedCount = roadmap.filter((item) => item.completed).length;
   const progressPercent = roadmap.length > 0 ? Math.round((completedCount / roadmap.length) * 100) : 0;
 
+  // Early return for missing prerequisites (before any rendering)
+  if (!selectedRole) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center max-w-md mx-auto">
+          <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">No Target Role Selected</h2>
+          <p className="text-muted-foreground mb-6">
+            Please select a target role first to generate your learning roadmap.
+          </p>
+          <Link to="/roles">
+            <Button>Select Role</Button>
+          </Link>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!analysis) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center min-h-[400px] text-center max-w-md mx-auto">
+          <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Analysis Required</h2>
+          <p className="text-muted-foreground mb-6">
+            Complete the skill analysis to access your curated learning roadmap.
+          </p>
+          <Link to="/analysis">
+            <Button>Go to Analysis</Button>
+          </Link>
+        </div>
+      </Layout>
+    );
+  }
+
   // Loading state
   if (loading || localLoading) {
     return (
@@ -115,7 +161,7 @@ export const Roadmap = () => {
           <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
           <h2 className="text-xl font-semibold mb-2">Loading Your Roadmap</h2>
           <p className="text-muted-foreground">
-            Preparing your personalized learning path...
+            Preparing your personalized learning path for {selectedRole.title}...
           </p>
         </div>
       </Layout>
@@ -149,27 +195,21 @@ export const Roadmap = () => {
     );
   }
 
-  // No roadmap state
-  if (!selectedRole || roadmap.length === 0) {
+  // No roadmap data state (after loading completed)
+  if (roadmap.length === 0) {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center min-h-[400px] text-center max-w-md mx-auto">
           <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
           <h2 className="text-xl font-semibold mb-2">No Roadmap Available</h2>
           <p className="text-muted-foreground mb-6">
-            {!selectedRole 
-              ? "Please select a target role first to generate your learning roadmap."
-              : selectedRole && !hasRoadmapTemplate(selectedRole.id)
+            {selectedRole && !hasRoadmapTemplate(selectedRole.id)
               ? `We don't have a pre-built roadmap for ${selectedRole.title} yet. Try selecting a different role or check back later.`
-              : "Complete the skill analysis to access your curated learning roadmap."
+              : "Unable to load roadmap data. Please try again."
             }
           </p>
           <div className="flex gap-3">
-            {!selectedRole ? (
-              <Link to="/roles">
-                <Button>Select Role</Button>
-              </Link>
-            ) : selectedRole && !hasRoadmapTemplate(selectedRole.id) ? (
+            {selectedRole && !hasRoadmapTemplate(selectedRole.id) ? (
               <>
                 <Link to="/roles">
                   <Button>Choose Different Role</Button>
@@ -179,22 +219,30 @@ export const Roadmap = () => {
                 </Link>
               </>
             ) : (
-              <Link to="/analysis">
-                <Button>Go to Analysis</Button>
-              </Link>
+              <>
+                <Button 
+                  onClick={() => loadFixedRoadmap()}
+                  className="gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Retry Loading
+                </Button>
+                <Link to="/analysis">
+                  <Button variant="outline">Back to Analysis</Button>
+                </Link>
+              </>
             )}
-            <Button 
-              variant="outline" 
-              onClick={() => loadFixedRoadmap()}
-              className="gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Retry
-            </Button>
           </div>
         </div>
       </Layout>
     );
+  }
+
+  // Main roadmap content - only render if we have valid roadmap data
+  if (roadmap.length > 0) {
+    console.log('✅ Rendering roadmap with', roadmap.length, 'items');
+  } else {
+    console.log('⚠️ No roadmap items to render');
   }
 
   return (

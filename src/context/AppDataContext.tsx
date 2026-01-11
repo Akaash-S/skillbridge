@@ -317,7 +317,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
   }, [state.selectedRole]);
 
   // Generate roadmap - SIMPLIFIED with better error handling
-  const loadFixedRoadmap = useCallback(() => {
+  const loadFixedRoadmap = useCallback(async () => {
     if (!state.selectedRole) {
       console.warn('⚠️ No role selected for roadmap');
       setState(prev => ({
@@ -364,9 +364,12 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
       console.log('✅ Fixed roadmap loaded successfully:', fixedRoadmapItems.length, 'items');
       
       // Try to load existing progress from backend (non-blocking)
-      loadRoadmapProgress().catch(error => {
+      try {
+        await loadRoadmapProgress();
+        console.log('✅ Existing roadmap progress loaded');
+      } catch (error) {
         console.log('ℹ️ No existing roadmap progress found, using fresh roadmap');
-      });
+      }
       
     } catch (error: any) {
       console.error('❌ Failed to load fixed roadmap:', error);
@@ -376,7 +379,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
         loading: false
       }));
     }
-  }, [state.selectedRole]);
+  }, [state.selectedRole, loadRoadmapProgress]);
 
   // Mark roadmap item complete - IMPROVED with better error handling
   const markRoadmapItemComplete = useCallback(async (itemId: string) => {
