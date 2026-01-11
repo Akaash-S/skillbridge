@@ -363,6 +363,132 @@ export const fixedRoadmaps: Record<string, RoadmapItem[]> = {
       estimatedTime: "15 hours",
       completed: false
     }
+  ],
+
+  "ml-engineer": [
+    {
+      id: "roadmap-python-ml",
+      skillId: "python",
+      skillName: "Python for ML",
+      resources: [
+        { id: "python-ml-1", title: "Python Machine Learning", url: "https://scikit-learn.org/stable/tutorial/index.html", type: "documentation", duration: "25 hours", provider: "Scikit-learn" },
+        { id: "python-ml-2", title: "Python for Data Science", url: "https://www.kaggle.com/learn/python", type: "course", duration: "20 hours", provider: "Kaggle" }
+      ],
+      difficulty: "advanced" as ProficiencyLevel,
+      estimatedTime: "35 hours",
+      completed: false
+    },
+    {
+      id: "roadmap-ml-advanced",
+      skillId: "ml",
+      skillName: "Advanced Machine Learning",
+      resources: [
+        { id: "ml-adv-1", title: "Advanced ML Specialization", url: "https://www.coursera.org/specializations/advanced-machine-learning", type: "course", duration: "60 hours", provider: "Coursera" },
+        { id: "ml-adv-2", title: "ML Engineering Best Practices", url: "https://developers.google.com/machine-learning/guides", type: "documentation", duration: "20 hours", provider: "Google" }
+      ],
+      difficulty: "advanced" as ProficiencyLevel,
+      estimatedTime: "70 hours",
+      completed: false
+    },
+    {
+      id: "roadmap-tensorflow",
+      skillId: "tensorflow",
+      skillName: "TensorFlow",
+      resources: [
+        { id: "tf-1", title: "TensorFlow Documentation", url: "https://www.tensorflow.org/learn", type: "documentation", duration: "30 hours", provider: "TensorFlow" },
+        { id: "tf-2", title: "TensorFlow Developer Certificate", url: "https://www.tensorflow.org/certificate", type: "course", duration: "40 hours", provider: "TensorFlow" }
+      ],
+      difficulty: "intermediate" as ProficiencyLevel,
+      estimatedTime: "50 hours",
+      completed: false
+    },
+    {
+      id: "roadmap-docker-ml",
+      skillId: "docker",
+      skillName: "Docker for ML",
+      resources: [
+        { id: "docker-ml-1", title: "Docker for Data Science", url: "https://docs.docker.com/get-started/", type: "documentation", duration: "10 hours", provider: "Docker" },
+        { id: "docker-ml-2", title: "Containerizing ML Models", url: "https://towardsdatascience.com/how-to-containerize-python-applications-with-docker-7ceae397a90a", type: "tutorial", duration: "8 hours", provider: "Medium" }
+      ],
+      difficulty: "intermediate" as ProficiencyLevel,
+      estimatedTime: "15 hours",
+      completed: false
+    },
+    {
+      id: "roadmap-aws-ml",
+      skillId: "aws",
+      skillName: "AWS for ML",
+      resources: [
+        { id: "aws-ml-1", title: "AWS Machine Learning", url: "https://aws.amazon.com/machine-learning/", type: "documentation", duration: "20 hours", provider: "AWS" },
+        { id: "aws-ml-2", title: "AWS SageMaker Tutorial", url: "https://aws.amazon.com/sagemaker/getting-started/", type: "tutorial", duration: "15 hours", provider: "AWS" }
+      ],
+      difficulty: "beginner" as ProficiencyLevel,
+      estimatedTime: "25 hours",
+      completed: false
+    }
+  ],
+
+  "cloud-architect": [
+    {
+      id: "roadmap-aws-architect",
+      skillId: "aws",
+      skillName: "AWS Architecture",
+      resources: [
+        { id: "aws-arch-1", title: "AWS Solutions Architect", url: "https://aws.amazon.com/certification/certified-solutions-architect-associate/", type: "course", duration: "80 hours", provider: "AWS" },
+        { id: "aws-arch-2", title: "AWS Well-Architected Framework", url: "https://aws.amazon.com/architecture/well-architected/", type: "documentation", duration: "20 hours", provider: "AWS" }
+      ],
+      difficulty: "advanced" as ProficiencyLevel,
+      estimatedTime: "90 hours",
+      completed: false
+    },
+    {
+      id: "roadmap-kubernetes-arch",
+      skillId: "kubernetes",
+      skillName: "Kubernetes Architecture",
+      resources: [
+        { id: "k8s-arch-1", title: "Kubernetes Architecture Deep Dive", url: "https://kubernetes.io/docs/concepts/architecture/", type: "documentation", duration: "25 hours", provider: "Kubernetes" },
+        { id: "k8s-arch-2", title: "CKA Certification", url: "https://www.cncf.io/certification/cka/", type: "course", duration: "60 hours", provider: "CNCF" }
+      ],
+      difficulty: "advanced" as ProficiencyLevel,
+      estimatedTime: "70 hours",
+      completed: false
+    },
+    {
+      id: "roadmap-terraform-arch",
+      skillId: "terraform",
+      skillName: "Infrastructure as Code",
+      resources: [
+        { id: "tf-arch-1", title: "Terraform Associate Certification", url: "https://www.hashicorp.com/certification/terraform-associate", type: "course", duration: "40 hours", provider: "HashiCorp" },
+        { id: "tf-arch-2", title: "Advanced Terraform Patterns", url: "https://learn.hashicorp.com/terraform", type: "tutorial", duration: "30 hours", provider: "HashiCorp" }
+      ],
+      difficulty: "advanced" as ProficiencyLevel,
+      estimatedTime: "60 hours",
+      completed: false
+    },
+    {
+      id: "roadmap-docker-arch",
+      skillId: "docker",
+      skillName: "Container Architecture",
+      resources: [
+        { id: "docker-arch-1", title: "Docker Architecture Guide", url: "https://docs.docker.com/get-started/overview/", type: "documentation", duration: "15 hours", provider: "Docker" },
+        { id: "docker-arch-2", title: "Docker Security Best Practices", url: "https://docs.docker.com/engine/security/", type: "documentation", duration: "10 hours", provider: "Docker" }
+      ],
+      difficulty: "advanced" as ProficiencyLevel,
+      estimatedTime: "20 hours",
+      completed: false
+    },
+    {
+      id: "roadmap-cicd-arch",
+      skillId: "cicd",
+      skillName: "CI/CD Architecture",
+      resources: [
+        { id: "cicd-arch-1", title: "DevOps CI/CD Pipeline", url: "https://docs.github.com/en/actions", type: "documentation", duration: "20 hours", provider: "GitHub" },
+        { id: "cicd-arch-2", title: "Enterprise CI/CD Patterns", url: "https://www.jenkins.io/doc/book/pipeline/", type: "tutorial", duration: "25 hours", provider: "Jenkins" }
+      ],
+      difficulty: "intermediate" as ProficiencyLevel,
+      estimatedTime: "35 hours",
+      completed: false
+    }
   ]
 };
 
@@ -374,4 +500,34 @@ export const getFixedRoadmap = (roleId: string): RoadmapItem[] => {
 // Helper function to get all available roadmap role IDs
 export const getAvailableRoadmapRoles = (): string[] => {
   return Object.keys(fixedRoadmaps);
+};
+
+// Helper function to check if a role has a roadmap template
+export const hasRoadmapTemplate = (roleId: string): boolean => {
+  return roleId in fixedRoadmaps && fixedRoadmaps[roleId].length > 0;
+};
+
+// Helper function to get roadmap statistics
+export const getRoadmapStats = (roleId: string) => {
+  const roadmap = getFixedRoadmap(roleId);
+  if (roadmap.length === 0) {
+    return null;
+  }
+  
+  const totalHours = roadmap.reduce((sum, item) => {
+    const hours = parseInt(item.estimatedTime.split(' ')[0]) || 0;
+    return sum + hours;
+  }, 0);
+  
+  const difficultyCount = roadmap.reduce((acc, item) => {
+    acc[item.difficulty] = (acc[item.difficulty] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  
+  return {
+    totalSkills: roadmap.length,
+    totalHours,
+    estimatedWeeks: Math.ceil(totalHours / 10), // Assuming 10 hours per week
+    difficultyBreakdown: difficultyCount
+  };
 };

@@ -24,6 +24,7 @@ import {
   BarChart3
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { hasRoadmapTemplate } from "@/data/fixedRoadmaps";
 
 const resourceTypeIcons = {
   course: GraduationCap,
@@ -158,6 +159,8 @@ export const Roadmap = () => {
           <p className="text-muted-foreground mb-6">
             {!selectedRole 
               ? "Please select a target role first to generate your learning roadmap."
+              : selectedRole && !hasRoadmapTemplate(selectedRole.id)
+              ? `We don't have a pre-built roadmap for ${selectedRole.title} yet. Try selecting a different role or check back later.`
               : "Complete the skill analysis to access your curated learning roadmap."
             }
           </p>
@@ -166,6 +169,15 @@ export const Roadmap = () => {
               <Link to="/roles">
                 <Button>Select Role</Button>
               </Link>
+            ) : selectedRole && !hasRoadmapTemplate(selectedRole.id) ? (
+              <>
+                <Link to="/roles">
+                  <Button>Choose Different Role</Button>
+                </Link>
+                <Link to="/analysis">
+                  <Button variant="outline">Back to Analysis</Button>
+                </Link>
+              </>
             ) : (
               <Link to="/analysis">
                 <Button>Go to Analysis</Button>

@@ -8,8 +8,10 @@ import { SkillChip } from "@/components/SkillChip";
 import { StepIndicator } from "@/components/StepIndicator";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, XCircle, AlertCircle, ArrowRight, BarChart3, Target, TrendingUp, Loader2 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle2, XCircle, AlertCircle, ArrowRight, BarChart3, Target, TrendingUp, Loader2, Info } from "lucide-react";
 import { apiClient } from "@/services/apiClient";
+import { hasRoadmapTemplate, getRoadmapStats } from "@/data/fixedRoadmaps";
 
 export const Analysis = () => {
   const { 
@@ -77,6 +79,10 @@ export const Analysis = () => {
       }
     }
   };
+
+  // Check if selected role has a roadmap template
+  const roleHasRoadmap = selectedRole ? hasRoadmapTemplate(selectedRole.id) : false;
+  const roadmapStats = selectedRole ? getRoadmapStats(selectedRole.id) : null;
 
   // Use detailed analysis if available, fallback to context analysis
   const currentAnalysis = detailedAnalysis || analysis;
@@ -323,7 +329,33 @@ export const Analysis = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {roadmapProgress ? (
+            {!roleHasRoadmap ? (
+              // Role doesn't have roadmap template
+              <div className="space-y-4">
+                <Alert className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20">
+                  <Info className="h-4 w-4 text-yellow-600" />
+                  <AlertDescription className="text-yellow-800 dark:text-yellow-200">
+                    <strong>Roadmap Not Available:</strong> We don't have a pre-built learning roadmap for {selectedRole?.title} yet. 
+                    You can still track your progress manually or choose a different role with available roadmaps.
+                  </AlertDescription>
+                </Alert>
+                <div className="flex gap-3">
+                  <Link to="/roles" className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      Choose Different Role
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                  <Link to="/roadmap" className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      View Roadmap Page
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            ) : roadmapProgress ? (
+              // Roadmap exists and user has progress
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -351,13 +383,33 @@ export const Analysis = () => {
                 </Button>
               </div>
             ) : (
+              // Roadmap available but not generated yet
               <div className="text-center py-6">
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <Target className="h-8 w-8 text-primary" />
                 </div>
-                <p className="text-muted-foreground mb-4">
+                <p className="text-muted-foreground mb-2">
                   Ready to start your learning journey?
                 </p>
+                {roadmapStats && (
+                  <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-2">Roadmap includes:</p>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div>
+                        <div className="font-semibold text-primary">{roadmapStats.totalSkills}</div>
+                        <div className="text-xs text-muted-foreground">Skills</div>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-primary">{roadmapStats.totalHours}h</div>
+                        <div className="text-xs text-muted-foreground">Est. Time</div>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-primary">{roadmapStats.estimatedWeeks}w</div>
+                        <div className="text-xs text-muted-foreground">Duration</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Button onClick={handleGenerateRoadmap} disabled={loading} className="w-full">
                     {loading ? (
