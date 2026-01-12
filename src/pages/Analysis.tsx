@@ -361,14 +361,14 @@ export const Analysis = () => {
                     </Button>
                   </Link>
                   <Link to="/roadmap" className="flex-1">
-                    <Button variant="outline" className="w-full">
+                    <Button className="w-full">
                       View Roadmap Page
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
                 </div>
               </div>
-            ) : roadmapProgress ? (
+            ) : roadmapProgress && roadmapProgress.totalItems > 0 ? (
               // Roadmap exists and user has progress
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -397,7 +397,7 @@ export const Analysis = () => {
                 </Button>
               </div>
             ) : (
-              // Roadmap available but not generated yet
+              // Roadmap available - show for both new users and users with 0% progress
               <div className="text-center py-6">
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <Target className="h-8 w-8 text-primary" />
@@ -425,18 +425,13 @@ export const Analysis = () => {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Button onClick={handleGenerateRoadmap} disabled={loading} className="w-full">
-                    {loading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <TrendingUp className="mr-2 h-4 w-4" />
-                    )}
-                    Generate Learning Roadmap
+                  <Button onClick={handleViewRoadmap} className="w-full">
+                    <TrendingUp className="mr-2 h-4 w-4" />
+                    Start Learning Roadmap
                   </Button>
-                  <Button variant="outline" onClick={handleViewRoadmap} className="w-full">
-                    View Roadmap Page
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Your roadmap will be generated automatically when you visit the page
+                  </p>
                 </div>
               </div>
             )}

@@ -61,20 +61,22 @@ export const Roadmap = () => {
     error: error || 'None'
   });
 
-  // Simplified initialization logic - Fixed to prevent circular dependencies
+  // Simplified initialization logic - Allow roadmap to render even with 0% progress
   useEffect(() => {
     const initializeRoadmap = async () => {
       console.log('🔄 Initializing roadmap component...');
       
-      // Check prerequisites
+      // Check prerequisites - but allow users with analysis to proceed even with 0% progress
       if (!selectedRole) {
         console.log('❌ No role selected, redirecting to roles page');
         navigate("/roles");
         return;
       }
       
-      if (!analysis) {
-        console.log('❌ No analysis found, redirecting to analysis page');
+      // Allow users to access roadmap if they have a selected role, even without analysis
+      // This enables the roadmap template to render for users with 0% progress
+      if (!analysis && !hasRoadmapTemplate(selectedRole.id)) {
+        console.log('❌ No analysis and no roadmap template, redirecting to analysis page');
         navigate("/analysis");
         return;
       }
@@ -96,11 +98,11 @@ export const Roadmap = () => {
       }
     };
 
-    // Only run initialization if we have the required dependencies
-    if (selectedRole && analysis) {
+    // Run initialization if we have a selected role
+    if (selectedRole) {
       initializeRoadmap();
     }
-  }, [selectedRole?.id, analysis?.readinessScore, loading]); // Stable dependencies to prevent loops
+  }, [selectedRole?.id, loading]); // Removed analysis dependency to allow 0% users
 
   // Handle roadmap item completion with optimistic updates and analysis refresh
   const handleItemComplete = async (itemId: string) => {
@@ -154,14 +156,15 @@ export const Roadmap = () => {
     );
   }
 
-  if (!analysis) {
+  // Only redirect to analysis if we don't have a roadmap template for the role
+  if (!analysis && !hasRoadmapTemplate(selectedRole.id)) {
     return (
       <Layout>
         <div className="flex flex-col items-center justify-center min-h-[400px] text-center max-w-md mx-auto">
           <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
           <h2 className="text-xl font-semibold mb-2">Analysis Required</h2>
           <p className="text-muted-foreground mb-6">
-            Complete the skill analysis to access your curated learning roadmap.
+            Complete the skill analysis to access your curated learning roadmap for {selectedRole.title}.
           </p>
           <Link to="/analysis">
             <Button>Go to Analysis</Button>
@@ -296,6 +299,21 @@ export const Roadmap = () => {
             <p className="text-center text-2xl font-bold mt-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               {progressPercent}% Complete
             </p>
+            
+            {/* Encouragement for 0% progress users */}
+            {progressPercent === 0 && (
+              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="text-center">
+                  <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                    🚀 Ready to Start Your Journey?
+                  </h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    This is your personalized roadmap to become a {selectedRole.title}. 
+                    Start by checking off your first skill below!
+                  </p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
