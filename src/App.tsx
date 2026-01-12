@@ -17,6 +17,10 @@ import { Analysis } from "@/pages/Analysis";
 import { Roadmap } from "@/pages/Roadmap";
 import { Dashboard } from "@/pages/Dashboard";
 import { Profile } from "@/pages/Profile";
+import { Resources } from "@/pages/Resources";
+import { TestFeatures } from "@/pages/TestFeatures";
+import { FeatureShowcase } from "@/pages/FeatureShowcase";
+import { PDFTest } from "@/pages/PDFTest";
 import { CareerHub } from "@/pages/CareerHub";
 import { SkillIntelligence } from "@/pages/SkillIntelligence";
 import { LearningHistory } from "@/pages/LearningHistory";
@@ -94,6 +98,30 @@ const App = () => (
                   <Route path="/profile" element={
                     <ProtectedRoute>
                       <Profile />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/resources" element={
+                    <ProtectedRoute>
+                      <Resources />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/test-features" element={
+                    <ProtectedRoute>
+                      <TestFeatures />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/showcase" element={
+                    <ProtectedRoute>
+                      <FeatureShowcase />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/pdf-test" element={
+                    <ProtectedRoute>
+                      <PDFTest />
                     </ProtectedRoute>
                   } />
                   
