@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { 
   Target, 
   BookOpen, 
@@ -27,9 +29,22 @@ import {
   Zap,
   TrendingDown,
   AlertTriangle,
-  Info
+  Info,
+  Share2,
+  Download,
+  Bell,
+  Settings,
+  Users,
+  MessageCircle,
+  Bookmark,
+  PlayCircle,
+  FileText,
+  ExternalLink,
+  Star,
+  Award
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
+import { cn, isRoadmapCompleted } from "@/lib/utils";
 import { getLearningInsights } from "@/data/fixedRoadmaps";
 import AnalyticsService from "@/services/analyticsService";
 
@@ -51,12 +66,158 @@ export const Dashboard = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [learningInsights, setLearningInsights] = useState<any>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showCertificateDialog, setShowCertificateDialog] = useState(false);
+  const [showGoalDialog, setShowGoalDialog] = useState(false);
+  const [showMentorDialog, setShowMentorDialog] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
     }
   }, [isAuthenticated, navigate]);
+
+  // Handle insight actions
+  const handleInsightAction = (action: string, insight: any) => {
+    switch (action) {
+      case 'Set a daily learning goal':
+        setShowGoalDialog(true);
+        break;
+      case 'Schedule regular learning sessions':
+        toast.success("Calendar integration coming soon! For now, try setting reminders on your phone.");
+        break;
+      case 'Consider mentoring others':
+        setShowMentorDialog(true);
+        break;
+      case 'Update resume and LinkedIn':
+        handleUpdateResume();
+        break;
+      case 'Explore advanced topics':
+        navigate('/roadmap');
+        toast.info("Check out advanced skills in your roadmap!");
+        break;
+      case 'Review learning strategy':
+        navigate('/analysis');
+        toast.info("Review your skill gap analysis to optimize your learning strategy.");
+        break;
+      case 'Keep the streak alive':
+        toast.success("Great job on your learning streak! Keep it up! 🔥");
+        break;
+      case 'Start a quick learning session':
+        navigate('/roadmap');
+        toast.info("Let's get back to learning! Pick a skill from your roadmap.");
+        break;
+      case 'Track your achievements':
+        handleShowAchievements();
+        break;
+      case 'Increase practice time':
+        navigate('/roadmap');
+        toast.info("Focus on hands-on practice with your roadmap items.");
+        break;
+      default:
+        toast.info("Feature coming soon!");
+    }
+  };
+
+  // Handle sharing progress
+  const handleShareProgress = () => {
+    const shareText = `🚀 I'm ${roadmapProgressPercent}% through my ${selectedRole?.title || 'career'} learning journey! 
+    
+✅ ${completedItems} skills mastered
+📈 ${analysis?.readinessScore || 0}% job-ready
+🔥 ${analytics?.currentStreak || 0} day learning streak
+
+#SkillBridge #LearningJourney #CareerGrowth`;
+
+    if (navigator.share) {
+      navigator.share({
+        title: 'My Learning Progress',
+        text: shareText,
+        url: window.location.origin
+      });
+    } else {
+      navigator.clipboard.writeText(shareText);
+      toast.success("Progress shared to clipboard!");
+    }
+  };
+
+  // Handle certificate download
+  const handleDownloadCertificate = () => {
+    if (!isRoadmapComplete) {
+      toast.error("Complete your roadmap first to earn your certificate!");
+      return;
+    }
+    setShowCertificateDialog(true);
+  };
+
+  // Handle resume update
+  const handleUpdateResume = () => {
+    const linkedInUrl = "https://www.linkedin.com/in/me/";
+    const resumeTips = `
+📝 Update your resume with these new skills:
+${userSkills.slice(0, 5).map(skill => `• ${skill.name} (${skill.proficiency})`).join('\n')}
+
+💡 Pro tip: Add specific projects and achievements for each skill!
+    `;
+    
+    toast.success("Resume tips copied to clipboard!");
+    navigator.clipboard.writeText(resumeTips);
+    
+    // Open LinkedIn in new tab
+    window.open(linkedInUrl, '_blank');
+  };
+
+  // Handle achievements view
+  const handleShowAchievements = () => {
+    const achievements = [
+      `🎯 ${userSkills.length} skills added`,
+      `📚 ${completedItems} roadmap items completed`,
+      `🔥 ${analytics?.currentStreak || 0} day learning streak`,
+      `⏱️ ${Math.round(analytics?.totalTimeSpent || 0)} hours invested`,
+      `📈 ${analysis?.readinessScore || 0}% job readiness`
+    ];
+    
+    toast.success(`Your Achievements:\n${achievements.join('\n')}`, {
+      duration: 5000
+    });
+  };
+
+  // Handle notifications
+  const handleNotifications = () => {
+    toast.info("🔔 Notification preferences coming soon! You'll be able to set learning reminders and progress updates.");
+  };
+
+  // Handle settings
+  const handleSettings = () => {
+    navigate('/profile');
+  };
+
+  // Handle community features
+  const handleCommunity = () => {
+    toast.info("👥 Community features coming soon! Connect with other learners and share experiences.");
+  };
+
+  // Handle bookmarks
+  const handleBookmarks = () => {
+    toast.info("🔖 Bookmark feature coming soon! Save your favorite resources and track progress.");
+  };
+
+  // Handle quick learning session
+  const handleQuickLearning = () => {
+    if (roadmap.length === 0) {
+      navigate('/roles');
+      toast.info("Select a role first to start your learning journey!");
+      return;
+    }
+    
+    const nextIncompleteItem = roadmap.find(item => !item.completed);
+    if (nextIncompleteItem) {
+      navigate('/roadmap');
+      toast.success(`Let's work on: ${nextIncompleteItem.skillName}!`);
+    } else {
+      toast.success("🎉 You've completed all roadmap items! Time to apply for jobs!");
+    }
+  };
 
   // Calculate enhanced analytics
   const analytics = useMemo(() => {
@@ -79,6 +240,9 @@ export const Dashboard = () => {
 
   const completedItems = roadmap.filter((item) => item.completed).length;
   const roadmapProgressPercent = roadmap.length > 0 ? Math.round((completedItems / roadmap.length) * 100) : 0;
+  
+  // Check roadmap completion status
+  const isRoadmapComplete = isRoadmapCompleted(roadmap);
 
   const skillsByProficiency = userSkills.reduce((acc, skill) => {
     acc[skill.proficiency] = (acc[skill.proficiency] || 0) + 1;
@@ -151,7 +315,7 @@ export const Dashboard = () => {
       description: "Follow your roadmap", 
       icon: BookOpen, 
       path: "/roadmap",
-      completed: roadmapProgressPercent === 100,
+      completed: isRoadmapComplete,
       count: roadmapProgressPercent,
       label: "% complete"
     },
@@ -177,12 +341,29 @@ export const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={handleNotifications}>
+                <Bell className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleSettings}>
+                <Settings className="h-4 w-4" />
+              </Button>
+            </div>
             <Badge variant="secondary" className="gap-1 px-3 py-1.5">
               <Flame className="h-4 w-4 text-warning" />
-              <span>3 day streak</span>
+              <span>{analytics?.currentStreak || 0} day streak</span>
             </Badge>
-            <Badge variant="secondary" className="gap-1 px-3 py-1.5">
-              <Trophy className="h-4 w-4 text-warning" />
+            <Badge 
+              variant="secondary" 
+              className={cn(
+                "gap-1 px-3 py-1.5",
+                isRoadmapComplete && "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+              )}
+            >
+              <Trophy className={cn(
+                "h-4 w-4",
+                isRoadmapComplete ? "text-green-600" : "text-warning"
+              )} />
               <span>{completedItems} completed</span>
             </Badge>
           </div>
@@ -210,6 +391,7 @@ export const Dashboard = () => {
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
               {journeySteps.map((step) => {
                 const Icon = step.icon;
+                
                 return (
                   <Link
                     key={step.step}
@@ -217,11 +399,21 @@ export const Dashboard = () => {
                     className="p-6 hover:bg-muted/50 transition-colors group"
                   >
                     <div className="flex items-start justify-between mb-4">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${
-                        step.completed ? "bg-accent/10" : "bg-muted"
-                      }`}>
+                      <div className={cn(
+                        "h-10 w-10 rounded-xl flex items-center justify-center",
+                        step.completed 
+                          ? step.step === 4 
+                            ? "bg-green-100 dark:bg-green-900" // Special green background for completed roadmap
+                            : "bg-accent/10"
+                          : "bg-muted"
+                      )}>
                         {step.completed ? (
-                          <CheckCircle2 className="h-5 w-5 text-accent" />
+                          <CheckCircle2 className={cn(
+                            "h-5 w-5",
+                            step.step === 4 
+                              ? "text-green-600 dark:text-green-400" // Special green color for completed roadmap
+                              : "text-accent"
+                          )} />
                         ) : (
                           <Icon className="h-5 w-5 text-muted-foreground" />
                         )}
@@ -237,6 +429,91 @@ export const Dashboard = () => {
                   </Link>
                 );
               })}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Roadmap Completion Celebration */}
+        {isRoadmapComplete && (
+          <Alert className="border-green-200 bg-green-50 dark:bg-green-950">
+            <Trophy className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800 dark:text-green-200">
+              🎉 <strong>Congratulations!</strong> You've completed your entire learning roadmap for {selectedRole?.title || 'your target role'}! 
+              You're now ready to apply for positions in this role. Your dedication and hard work have paid off!
+              <div className="flex gap-2 mt-3">
+                <Button size="sm" onClick={handleDownloadCertificate} className="bg-green-600 hover:bg-green-700">
+                  <Download className="h-4 w-4 mr-2" />
+                  Get Certificate
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleShareProgress}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share Achievement
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              Quick Actions
+            </CardTitle>
+            <CardDescription>
+              Boost your learning with these helpful actions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2"
+                onClick={handleQuickLearning}
+              >
+                <PlayCircle className="h-6 w-6 text-primary" />
+                <div className="text-center">
+                  <div className="font-medium">Quick Learn</div>
+                  <div className="text-xs text-muted-foreground">15 min session</div>
+                </div>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2"
+                onClick={handleShareProgress}
+              >
+                <Share2 className="h-6 w-6 text-blue-600" />
+                <div className="text-center">
+                  <div className="font-medium">Share Progress</div>
+                  <div className="text-xs text-muted-foreground">Social media</div>
+                </div>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2"
+                onClick={handleBookmarks}
+              >
+                <Bookmark className="h-6 w-6 text-yellow-600" />
+                <div className="text-center">
+                  <div className="font-medium">Bookmarks</div>
+                  <div className="text-xs text-muted-foreground">Saved resources</div>
+                </div>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="h-auto p-4 flex flex-col items-center gap-2"
+                onClick={handleCommunity}
+              >
+                <Users className="h-6 w-6 text-green-600" />
+                <div className="text-center">
+                  <div className="font-medium">Community</div>
+                  <div className="text-xs text-muted-foreground">Connect & learn</div>
+                </div>
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -353,6 +630,7 @@ export const Dashboard = () => {
                           variant="outline" 
                           size="sm"
                           className="text-xs"
+                          onClick={() => handleInsightAction(insight.action, insight)}
                         >
                           {insight.action}
                         </Button>
@@ -611,10 +889,20 @@ export const Dashboard = () => {
 
         {/* Roadmap Progress */}
         {roadmap.length > 0 && (
-          <Card>
+          <Card className={cn(
+            isRoadmapComplete && "border-green-200 bg-green-50/50 dark:bg-green-950/20"
+          )}>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Learning Roadmap</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  Learning Roadmap
+                  {isRoadmapComplete && (
+                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                      <Trophy className="h-3 w-3 mr-1" />
+                      Completed!
+                    </Badge>
+                  )}
+                </CardTitle>
                 <CardDescription>Your personalized path to {selectedRole?.title}</CardDescription>
               </div>
               <Link to="/roadmap">
@@ -628,11 +916,19 @@ export const Dashboard = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
                   <span>{completedItems} of {roadmap.length} skills completed</span>
-                  <span className="font-medium text-primary">{roadmapProgressPercent}%</span>
+                  <span className={cn(
+                    "font-medium",
+                    isRoadmapComplete ? "text-green-600" : "text-primary"
+                  )}>{roadmapProgressPercent}%</span>
                 </div>
                 <div className="h-3 bg-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500 ease-out rounded-full"
+                    className={cn(
+                      "h-full transition-all duration-500 ease-out rounded-full",
+                      isRoadmapComplete
+                        ? "bg-gradient-to-r from-green-500 to-green-600" 
+                        : "bg-gradient-to-r from-primary to-accent"
+                    )}
                     style={{ width: `${roadmapProgressPercent}%` }}
                   />
                 </div>
@@ -640,16 +936,20 @@ export const Dashboard = () => {
                   {roadmap.slice(0, 3).map((item, index) => (
                     <div
                       key={item.id}
-                      className={`p-4 rounded-xl border transition-all ${
+                      className={cn(
+                        "p-4 rounded-xl border transition-all",
                         item.completed 
-                          ? "bg-accent/5 border-accent/20" 
+                          ? "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800" 
                           : "bg-card hover:border-primary/50"
-                      }`}
+                      )}
                     >
                       <div className="flex items-start gap-3">
-                        <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${
-                          item.completed ? "bg-accent text-accent-foreground" : "bg-primary/10 text-primary"
-                        }`}>
+                        <div className={cn(
+                          "h-8 w-8 rounded-lg flex items-center justify-center",
+                          item.completed 
+                            ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" 
+                            : "bg-primary/10 text-primary"
+                        )}>
                           {item.completed ? (
                             <CheckCircle2 className="h-4 w-4" />
                           ) : (
@@ -657,7 +957,10 @@ export const Dashboard = () => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className={`font-medium text-sm truncate ${item.completed && "line-through opacity-75"}`}>
+                          <p className={cn(
+                            "font-medium text-sm truncate",
+                            item.completed && "line-through opacity-75"
+                          )}>
                             {item.skillName}
                           </p>
                           <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
@@ -674,6 +977,139 @@ export const Dashboard = () => {
           </Card>
         )}
       </div>
+
+      {/* Dialogs */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Share Your Progress</DialogTitle>
+            <DialogDescription>
+              Share your learning journey with others to inspire and motivate!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <p className="text-sm">
+                🚀 I'm {roadmapProgressPercent}% through my {selectedRole?.title || 'career'} learning journey!
+                <br />✅ {completedItems} skills mastered
+                <br />📈 {analysis?.readinessScore || 0}% job-ready
+                <br />🔥 {analytics?.currentStreak || 0} day learning streak
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleShareProgress} className="flex-1">
+                <Share2 className="h-4 w-4 mr-2" />
+                Share Now
+              </Button>
+              <Button variant="outline" onClick={() => setShowShareDialog(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showCertificateDialog} onOpenChange={setShowCertificateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>🏆 Congratulations!</DialogTitle>
+            <DialogDescription>
+              You've completed your {selectedRole?.title || 'learning'} roadmap!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="text-center p-6 bg-gradient-to-br from-primary/10 to-accent/10 rounded-lg">
+              <Trophy className="h-16 w-16 mx-auto mb-4 text-primary" />
+              <h3 className="text-xl font-bold mb-2">Certificate of Completion</h3>
+              <p className="text-muted-foreground">
+                {user?.name || 'Learner'} has successfully completed the {selectedRole?.title || 'Career Development'} learning path
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {completedItems} skills mastered • {Math.round(analytics?.totalTimeSpent || 0)} hours invested
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button className="flex-1">
+                <Download className="h-4 w-4 mr-2" />
+                Download Certificate
+              </Button>
+              <Button variant="outline" onClick={() => setShowCertificateDialog(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showGoalDialog} onOpenChange={setShowGoalDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Set Daily Learning Goal</DialogTitle>
+            <DialogDescription>
+              Consistency is key to mastering new skills. Set a realistic daily goal.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-2">
+              <Button variant="outline" onClick={() => {
+                toast.success("Great! 15 minutes daily is a perfect start!");
+                setShowGoalDialog(false);
+              }}>
+                15 min
+              </Button>
+              <Button variant="outline" onClick={() => {
+                toast.success("Excellent! 30 minutes daily will accelerate your progress!");
+                setShowGoalDialog(false);
+              }}>
+                30 min
+              </Button>
+              <Button variant="outline" onClick={() => {
+                toast.success("Amazing commitment! 1 hour daily will make you a fast learner!");
+                setShowGoalDialog(false);
+              }}>
+                1 hour
+              </Button>
+            </div>
+            <Button variant="ghost" onClick={() => setShowGoalDialog(false)} className="w-full">
+              Maybe later
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showMentorDialog} onOpenChange={setShowMentorDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Become a Mentor</DialogTitle>
+            <DialogDescription>
+              Share your knowledge and help others on their learning journey!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <h4 className="font-medium mb-2">Why mentor others?</h4>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• Reinforce your own learning</li>
+                <li>• Build leadership skills</li>
+                <li>• Expand your professional network</li>
+                <li>• Give back to the community</li>
+              </ul>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={() => {
+                toast.success("Mentoring features coming soon! We'll notify you when available.");
+                setShowMentorDialog(false);
+              }} className="flex-1">
+                <Users className="h-4 w-4 mr-2" />
+                Join Mentor Program
+              </Button>
+              <Button variant="outline" onClick={() => setShowMentorDialog(false)}>
+                Not Now
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
