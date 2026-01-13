@@ -17,7 +17,6 @@ import {
   Star,
   Bookmark,
   BookmarkCheck,
-  TrendingUp,
   Users
 } from "lucide-react";
 import { toast } from "sonner";
@@ -67,9 +66,9 @@ const defaultResources: Resource[] = [
     id: '1',
     title: 'Complete Web Development Bootcamp',
     description: 'Learn HTML, CSS, JavaScript, React, Node.js and more in this comprehensive course',
-    url: 'https://example.com/web-dev-bootcamp',
+    url: 'https://www.udemy.com/course/the-complete-web-development-bootcamp/',
     type: 'course',
-    provider: 'TechAcademy',
+    provider: 'Udemy',
     duration: '40 hours',
     difficulty: 'beginner',
     rating: 4.8,
@@ -81,10 +80,10 @@ const defaultResources: Resource[] = [
   {
     id: '2',
     title: 'JavaScript Fundamentals',
-    description: 'Master the basics of JavaScript programming',
-    url: 'https://example.com/js-fundamentals',
+    description: 'Master the basics of JavaScript programming with interactive lessons',
+    url: 'https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/',
     type: 'tutorial',
-    provider: 'CodeMaster',
+    provider: 'freeCodeCamp',
     duration: '8 hours',
     difficulty: 'beginner',
     rating: 4.6,
@@ -96,16 +95,61 @@ const defaultResources: Resource[] = [
   {
     id: '3',
     title: 'React Advanced Patterns',
-    description: 'Learn advanced React patterns and best practices',
-    url: 'https://example.com/react-advanced',
+    description: 'Learn advanced React patterns and best practices from industry experts',
+    url: 'https://egghead.io/courses/advanced-react-component-patterns',
     type: 'video',
-    provider: 'ReactPro',
+    provider: 'Egghead.io',
     duration: '12 hours',
     difficulty: 'advanced',
     rating: 4.9,
     price: 'freemium',
     tags: ['React', 'Advanced', 'Patterns'],
     skillsRequired: ['JavaScript', 'React Basics'],
+    isBookmarked: false
+  },
+  {
+    id: '4',
+    title: 'CSS Grid and Flexbox',
+    description: 'Master modern CSS layout techniques with practical examples',
+    url: 'https://cssgrid.io/',
+    type: 'course',
+    provider: 'Wes Bos',
+    duration: '4 hours',
+    difficulty: 'intermediate',
+    rating: 4.7,
+    price: 'free',
+    tags: ['CSS', 'Layout', 'Grid', 'Flexbox'],
+    skillsRequired: ['HTML', 'CSS Basics'],
+    isBookmarked: false
+  },
+  {
+    id: '5',
+    title: 'Node.js Complete Guide',
+    description: 'Build scalable server-side applications with Node.js and Express',
+    url: 'https://nodejs.org/en/learn/',
+    type: 'documentation',
+    provider: 'Node.js Foundation',
+    duration: '6 hours',
+    difficulty: 'intermediate',
+    rating: 4.5,
+    price: 'free',
+    tags: ['Node.js', 'Backend', 'Server', 'Express'],
+    skillsRequired: ['JavaScript'],
+    isBookmarked: false
+  },
+  {
+    id: '6',
+    title: 'TypeScript Handbook',
+    description: 'Learn TypeScript from the ground up with official documentation',
+    url: 'https://www.typescriptlang.org/docs/',
+    type: 'documentation',
+    provider: 'Microsoft',
+    duration: '10 hours',
+    difficulty: 'intermediate',
+    rating: 4.8,
+    price: 'free',
+    tags: ['TypeScript', 'JavaScript', 'Types'],
+    skillsRequired: ['JavaScript'],
     isBookmarked: false
   }
 ];
@@ -141,7 +185,20 @@ export const LearningResources: React.FC<LearningResourcesProps> = ({
     if (onResourceClick) {
       onResourceClick(resource);
     } else {
-      window.open(resource.url, '_blank', 'noopener,noreferrer');
+      // Open resource in new tab with proper security attributes
+      const newWindow = window.open(resource.url, '_blank', 'noopener,noreferrer');
+      
+      // Provide user feedback
+      if (newWindow) {
+        toast.success(`Opening ${resource.title} in new tab`);
+      } else {
+        // Handle popup blocker
+        toast.error('Popup blocked. Please allow popups and try again.');
+        // Fallback: try to navigate in same tab
+        setTimeout(() => {
+          window.location.href = resource.url;
+        }, 1000);
+      }
     }
   };
 
