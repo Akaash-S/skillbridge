@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useAppData } from "@/context/AppDataContext";
 import { Layout } from "@/components/Layout";
@@ -11,8 +11,10 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { apiClient } from "@/services/apiClient";
+import jsPDF from 'jspdf';
 import { 
   User, 
   Mail, 
@@ -27,7 +29,13 @@ import {
   GraduationCap,
   Save,
   RefreshCw,
-  Palette
+  Palette,
+  FileText,
+  BarChart3,
+  CheckCircle2,
+  Clock,
+  Star,
+  Award
 } from "lucide-react";
 
 interface UserProfile {
@@ -61,12 +69,14 @@ interface UserStats {
 
 export const Profile = () => {
   const { user } = useAuth();
-  const { userSkills, selectedRole, analysis } = useAppData();
+  const { userSkills, selectedRole, analysis, roadmap, analysisProgress } = useAppData();
+  const pdfRef = useRef<HTMLDivElement>(null);
   
   // State management
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
   
   // Data state
   const [profileData, setProfileData] = useState<UserProfile>({
@@ -195,29 +205,427 @@ export const Profile = () => {
 
   const handleExportData = async () => {
     try {
-      // Export profile data
+      setExportingPDF(true);
+      toast.info('Generating comprehensive PDF report...', { duration: 3000 });
+      
+      await generateComprehensivePDF();
+      
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      toast.error('Failed to export profile data');
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
+  const generateComprehensivePDF = async () => {
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 20;
+    const contentWidth = pageWidth - (2 * margin);
+    let yPosition = margin;
+
+    // Helper function to add new page if needed
+    const checkPageBreak = (requiredHeight: number) => {
+      if (yPosition + requiredHeight > pageHeight - margin) {
+        pdf.addPage();
+        yPosition = margin;
+        return true;
+      }
+      return false;
+    };
+
+    // Helper function to add text with word wrap
+    const addWrappedText = (text: string, x: number, y: number, maxWidth: number, fontSize: number = 10) => {
+      pdf.setFontSize(fontSize);
+      const lines = pdf.splitTextToSize(text, maxWidth);
+      pdf.text(lines, x, y);
+      return lines.length * (fontSize * 0.35); // Return height used
+    };
+
+    // Header with logo and title
+    pdf.setFillColor(59, 130, 246); // Blue background
+    pdf.rect(0, 0, pageWidth, 40, 'F');
+    
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(24);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('SkillBridge Profile Report', margin, 25);
+    
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Generated on ${new Date().toLocaleDateString()}`, margin, 35);
+
+    yPosition = 50;
+    pdf.setTextColor(0, 0, 0);
+
+    // Personal Information Section
+    pdf.setFontSize(18);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Personal Information', margin, yPosition);
+    yPosition += 10;
+
+    // Draw section separator
+    pdf.setDrawColor(59, 130, 246);
+    pdf.setLineWidth(0.5);
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 8;
+
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    
+    const personalInfo = [
+      ['Name:', profileData.name || 'Not specified'],
+      ['Email:', profileData.email || 'Not specified'],
+      ['Location:', profileData.location || 'Not specified'],
+      ['Experience:', profileData.experience || 'Not specified'],
+      ['Education:', profileData.education || 'Not specified'],
+      ['Weekly Goal:', `${profileData.weeklyGoal} hours/week`],
+      ['Member Since:', formatDate(profileData.createdAt)]
+    ];
+
+    personalInfo.forEach(([label, value]) => {
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(label, margin, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(value, margin + 40, yPosition);
+      yPosition += 6;
+    });
+
+    // Bio section
+    if (profileData.bio) {
+      yPosition += 5;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Bio:', margin, yPosition);
+      yPosition += 6;
+      pdf.setFont('helvetica', 'normal');
+      const bioHeight = addWrappedText(profileData.bio, margin, yPosition, contentWidth - 10, 10);
+      yPosition += bioHeight + 5;
+    }
+
+    // Target Role Section
+    checkPageBreak(30);
+    yPosition += 10;
+    pdf.setFontSize(18);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Career Focus', margin, yPosition);
+    yPosition += 10;
+
+    pdf.setDrawColor(59, 130, 246);
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 8;
+
+    if (selectedRole) {
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Target Role:', margin, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(selectedRole.title, margin + 30, yPosition);
+      yPosition += 8;
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Description:', margin, yPosition);
+      yPosition += 6;
+      pdf.setFont('helvetica', 'normal');
+      const descHeight = addWrappedText(selectedRole.description, margin, yPosition, contentWidth - 10, 10);
+      yPosition += descHeight + 8;
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Category:', margin, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(selectedRole.category, margin + 25, yPosition);
+      yPosition += 6;
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Salary Range:', margin, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(selectedRole.avgSalary, margin + 35, yPosition);
+      yPosition += 6;
+
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Market Demand:', margin, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(selectedRole.demand.toUpperCase(), margin + 40, yPosition);
+      yPosition += 10;
+    } else {
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'italic');
+      pdf.text('No target role selected yet.', margin, yPosition);
+      yPosition += 15;
+    }
+
+    // Skills Analysis Section
+    checkPageBreak(40);
+    pdf.setFontSize(18);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Skills Analysis', margin, yPosition);
+    yPosition += 10;
+
+    pdf.setDrawColor(59, 130, 246);
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 8;
+
+    // Skills summary
+    const skillsByLevel = userSkills.reduce((acc, skill) => {
+      acc[skill.proficiency] = (acc[skill.proficiency] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`Total Skills: ${userSkills.length}`, margin, yPosition);
+    yPosition += 8;
+
+    const skillLevels = [
+      ['Beginner:', skillsByLevel.beginner || 0],
+      ['Intermediate:', skillsByLevel.intermediate || 0],
+      ['Advanced:', skillsByLevel.advanced || 0]
+    ];
+
+    skillLevels.forEach(([level, count]) => {
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`${level} ${count}`, margin + 10, yPosition);
+      yPosition += 5;
+    });
+
+    // Job Readiness Score
+    if (analysis) {
+      yPosition += 5;
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`Job Readiness Score: ${analysis.readinessScore}%`, margin, yPosition);
+      yPosition += 8;
+
+      // Draw progress bar for readiness score
+      const barWidth = 100;
+      const barHeight = 6;
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(margin, yPosition, barWidth, barHeight, 'FD');
+      
+      const fillWidth = (analysis.readinessScore / 100) * barWidth;
+      pdf.setFillColor(59, 130, 246);
+      pdf.rect(margin, yPosition, fillWidth, barHeight, 'F');
+      yPosition += 15;
+
+      // Skills breakdown
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Skills Breakdown:', margin, yPosition);
+      yPosition += 6;
+
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`✓ Matched Skills: ${analysis.matchedSkills.length}`, margin + 5, yPosition);
+      yPosition += 5;
+      pdf.text(`⚠ Partial Skills: ${analysis.partialSkills.length}`, margin + 5, yPosition);
+      yPosition += 5;
+      pdf.text(`✗ Missing Skills: ${analysis.missingSkills.length}`, margin + 5, yPosition);
+      yPosition += 10;
+    }
+
+    // Skills List
+    checkPageBreak(30);
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Skills Inventory', margin, yPosition);
+    yPosition += 8;
+
+    pdf.setDrawColor(59, 130, 246);
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 8;
+
+    // Group skills by category
+    const skillsByCategory = userSkills.reduce((acc, skill) => {
+      if (!acc[skill.category]) acc[skill.category] = [];
+      acc[skill.category].push(skill);
+      return acc;
+    }, {} as Record<string, typeof userSkills>);
+
+    Object.entries(skillsByCategory).forEach(([category, skills]) => {
+      checkPageBreak(20 + skills.length * 5);
+      
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(category, margin, yPosition);
+      yPosition += 8;
+
+      skills.forEach(skill => {
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(`• ${skill.name}`, margin + 5, yPosition);
+        
+        // Proficiency badge
+        const proficiencyColors = {
+          beginner: [255, 193, 7],
+          intermediate: [0, 123, 255],
+          advanced: [40, 167, 69]
+        };
+        
+        const color = proficiencyColors[skill.proficiency] || [128, 128, 128];
+        pdf.setFillColor(color[0], color[1], color[2]);
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(8);
+        
+        const badgeX = margin + 120;
+        const badgeY = yPosition - 3;
+        const badgeWidth = 25;
+        const badgeHeight = 4;
+        
+        pdf.rect(badgeX, badgeY, badgeWidth, badgeHeight, 'F');
+        pdf.text(skill.proficiency.toUpperCase(), badgeX + 2, yPosition - 0.5);
+        
+        pdf.setTextColor(0, 0, 0);
+        yPosition += 6;
+      });
+      yPosition += 5;
+    });
+
+    // Roadmap Progress Section
+    if (roadmap && roadmap.length > 0) {
+      checkPageBreak(40);
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Learning Roadmap Progress', margin, yPosition);
+      yPosition += 10;
+
+      pdf.setDrawColor(59, 130, 246);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 8;
+
+      const completedItems = roadmap.filter(item => item.completed).length;
+      const progressPercent = Math.round((completedItems / roadmap.length) * 100);
+
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`Progress: ${completedItems}/${roadmap.length} items completed (${progressPercent}%)`, margin, yPosition);
+      yPosition += 8;
+
+      // Progress bar
+      const barWidth = 120;
+      const barHeight = 8;
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(margin, yPosition, barWidth, barHeight, 'FD');
+      
+      const fillWidth = (progressPercent / 100) * barWidth;
+      pdf.setFillColor(40, 167, 69);
+      pdf.rect(margin, yPosition, fillWidth, barHeight, 'F');
+      yPosition += 15;
+
+      // Roadmap items
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Roadmap Items:', margin, yPosition);
+      yPosition += 8;
+
+      roadmap.slice(0, 15).forEach((item, index) => { // Limit to first 15 items
+        checkPageBreak(8);
+        
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        
+        const status = item.completed ? '✓' : '○';
+        const statusColor = item.completed ? [40, 167, 69] : [128, 128, 128];
+        
+        pdf.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+        pdf.text(status, margin, yPosition);
+        
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(`${item.skillName}`, margin + 8, yPosition);
+        pdf.text(`(${item.difficulty})`, margin + 100, yPosition);
+        pdf.text(item.estimatedTime, margin + 130, yPosition);
+        
+        yPosition += 5;
+      });
+
+      if (roadmap.length > 15) {
+        yPosition += 3;
+        pdf.setFont('helvetica', 'italic');
+        pdf.text(`... and ${roadmap.length - 15} more items`, margin, yPosition);
+        yPosition += 8;
+      }
+    }
+
+    // Progress Analytics Section
+    if (analysisProgress) {
+      checkPageBreak(30);
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Progress Analytics', margin, yPosition);
+      yPosition += 10;
+
+      pdf.setDrawColor(59, 130, 246);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 8;
+
+      const analytics = [
+        ['Initial Readiness Score:', `${analysisProgress.initialScore}%`],
+        ['Current Readiness Score:', `${analysisProgress.currentScore}%`],
+        ['Score Improvement:', `+${analysisProgress.scoreImprovement}%`],
+        ['Skills Improvement:', `+${analysisProgress.skillsImprovement} skills`],
+        ['Completed Roadmap Items:', `${analysisProgress.completedRoadmapItems}`],
+        ['Last Updated:', formatDate(analysisProgress.lastUpdated)]
+      ];
+
+      pdf.setFontSize(12);
+      analytics.forEach(([label, value]) => {
+        pdf.setFont('helvetica', 'bold');
+        pdf.text(label, margin, yPosition);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text(value, margin + 60, yPosition);
+        yPosition += 6;
+      });
+    }
+
+    // Footer
+    const totalPages = pdf.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(128, 128, 128);
+      pdf.text(`Generated by SkillBridge - Page ${i} of ${totalPages}`, margin, pageHeight - 10);
+      pdf.text(`Export Date: ${new Date().toLocaleString()}`, pageWidth - margin - 50, pageHeight - 10);
+    }
+
+    // Save the PDF
+    const fileName = `skillbridge-profile-${profileData.name?.replace(/\s+/g, '-').toLowerCase() || 'user'}-${new Date().toISOString().split('T')[0]}.pdf`;
+    pdf.save(fileName);
+    
+    toast.success('Comprehensive PDF report generated successfully!', { duration: 4000 });
+  };
+
+  const handleExportJSON = async () => {
+    try {
+      // Export profile data as JSON
       const profileExport = {
         profile: profileData,
         stats: userStats,
         skills: userSkills,
         targetRole: selectedRole,
-        readinessScore: analysis?.readinessScore || 0,
+        analysis: analysis,
+        roadmap: roadmap,
+        analysisProgress: analysisProgress,
         exportDate: new Date().toISOString(),
-        version: '2.0'
+        version: '3.0'
       };
       
       const blob = new Blob([JSON.stringify(profileExport, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `skillbridge-profile-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `skillbridge-data-${profileData.name?.replace(/\s+/g, '-').toLowerCase() || 'user'}-${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
       
-      toast.success("Profile data exported successfully!");
+      toast.success("Profile data exported as JSON successfully!");
     } catch (error) {
-      console.error('Error exporting data:', error);
-      toast.error('Failed to export profile data');
+      console.error('Error exporting JSON data:', error);
+      toast.error('Failed to export JSON data');
     }
   };
 
@@ -525,26 +933,43 @@ export const Profile = () => {
                 <CardTitle>Account Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button variant="outline" className="w-full justify-start" onClick={handleExportData}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Data
-                </Button>
                 <Button 
+                  variant="outline" 
+                  className="w-full justify-start" 
+                  onClick={handleExportData}
+                  disabled={exportingPDF}
+                >
+                  {exportingPDF ? (
+                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <FileText className="h-4 w-4 mr-2" />
+                  )}
+                  {exportingPDF ? 'Generating PDF...' : 'Export PDF Report'}
+                </Button>
+                {/* <Button 
+                  variant="outline" 
+                  className="w-full justify-start" 
+                  onClick={handleExportJSON}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export JSON Data
+                </Button> */}
+                {/* <Button 
                   variant="outline" 
                   className="w-full justify-start" 
                   onClick={() => toast.info("Import feature coming soon!")}
                 >
                   <Upload className="h-4 w-4 mr-2" />
                   Import Data
-                </Button>
-                <Button 
+                </Button> */}
+                {/* <Button 
                   variant="outline" 
                   className="w-full justify-start" 
                   onClick={() => toast.info("Theme customization coming soon!")}
                 >
                   <Palette className="h-4 w-4 mr-2" />
                   Customize Theme
-                </Button>
+                </Button> */}
               </CardContent>
             </Card>
 

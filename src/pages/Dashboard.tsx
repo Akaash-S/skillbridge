@@ -593,7 +593,7 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Button 
                 variant={showNotifications ? "default" : "ghost"} 
                 size="sm" 
@@ -608,7 +608,7 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
               >
                 <Settings className="h-4 w-4" />
               </Button>
-            </div>
+            </div> */}
             <Badge variant="secondary" className="gap-1 px-3 py-1.5">
               <Flame className="h-4 w-4 text-warning" />
               <span>{analytics?.currentStreak || 0} day streak</span>
