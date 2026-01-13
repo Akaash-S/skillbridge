@@ -47,6 +47,13 @@ class ApiClient {
     // Build full URL
     const url = `${API_BASE_URL}${endpoint}`;
     
+    // Debug logging
+    if (env.debugMode) {
+      console.log(`🌐 API Request: ${method} ${url}`);
+      console.log(`🔧 API Base URL: ${API_BASE_URL}`);
+      console.log(`🔧 Endpoint: ${endpoint}`);
+    }
+    
     // Prepare headers
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
