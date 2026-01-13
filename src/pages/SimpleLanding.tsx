@@ -384,13 +384,13 @@ export const SimpleLanding = () => {
                   className="relative h-[600px] hidden lg:block"
                 >
                   {/* Main Card */}
-                  <motion.div
+                  {/* <motion.div
                     initial={{ opacity: 0, scale: 0.8, rotateY: 20 }}
                     animate={{ opacity: 1, scale: 1, rotateY: 0 }}
                     transition={{ delay: 0.5, duration: 0.8 }}
                     className="absolute inset-0 bg-gradient-to-br from-card via-card to-card/80 rounded-3xl border border-border/50 shadow-2xl backdrop-blur-xl overflow-hidden"
-                  >
-                    <div className="p-8 h-full flex flex-col">
+                  > */}
+                    {/* <div className="p-8 h-full flex flex-col">
                       <div className="flex items-center gap-3 mb-6">
                         <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                           <BarChart3 className="h-5 w-5 text-white" />
@@ -425,13 +425,13 @@ export const SimpleLanding = () => {
                           </motion.div>
                         ))}
                       </div>
-                    </div>
-                  </motion.div>
+                    </div> */}
+                  {/* </motion.div> */}
 
                   {/* Floating Skills */}
-                  {skillIcons.map((skill, index) => (
+                  {/* {skillIcons.map((skill, index) => (
                     <FloatingSkill key={skill.name} skill={skill} index={index} />
-                  ))}
+                  ))} */}
                 </motion.div>
               </div>
             </motion.div>
