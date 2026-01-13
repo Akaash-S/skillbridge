@@ -21,6 +21,7 @@ import { Resources } from "@/pages/Resources";
 import { TestFeatures } from "@/pages/TestFeatures";
 import { FeatureShowcase } from "@/pages/FeatureShowcase";
 import { PDFTest } from "@/pages/PDFTest";
+// import { ResumeGenerator } from "@/pages/ResumeGenerator";
 import { CareerHub } from "@/pages/CareerHub";
 import { SkillIntelligence } from "@/pages/SkillIntelligence";
 import { LearningHistory } from "@/pages/LearningHistory";
@@ -124,6 +125,12 @@ const App = () => (
                       <PDFTest />
                     </ProtectedRoute>
                   } />
+                  
+                  {/* <Route path="/resume-generator" element={
+                    <ProtectedRoute>
+                      <ResumeGenerator />
+                    </ProtectedRoute>
+                  } /> */}
                   
                   <Route path="/career-hub" element={
                     <ProtectedRoute>
