@@ -55,7 +55,6 @@ export const WalkthroughLayout = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [email, setEmail] = useState("");
   const [query, setQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -252,7 +251,7 @@ export const WalkthroughLayout = ({
           </div>
 
           {/* Query Box */}
-          <motion.section
+          {/* <motion.section
             className="pt-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -285,17 +284,6 @@ export const WalkthroughLayout = ({
                 ) : (
                   <form onSubmit={handleSubmitQuery} className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="email">Your Email (optional)</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="bg-background"
-                      />
-                    </div>
-                    <div className="space-y-2">
                       <Label htmlFor="query">Your Question</Label>
                       <Textarea
                         id="query"
@@ -323,7 +311,7 @@ export const WalkthroughLayout = ({
                 )}
               </CardContent>
             </Card>
-          </motion.section>
+          </motion.section> */}
         </div>
       </div>
     </Layout>

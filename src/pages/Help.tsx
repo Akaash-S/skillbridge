@@ -6,6 +6,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Compass,
   Target,
@@ -19,13 +24,118 @@ import {
   BarChart3,
   Route,
   Shield,
+  Mail,
+  Send,
+  MessageSquare,
+  Phone,
+  Clock,
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { apiClient } from "@/services/apiClient";
+import { env } from "@/config/env";
 
 const Help = () => {
   const prefersReducedMotion = useReducedMotion();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  // Contact form state
+  const [contactForm, setContactForm] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    type: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Handle contact form submission
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!contactForm.message.trim()) {
+      toast({
+        title: "Message Required",
+        description: "Please enter your message before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!contactForm.type) {
+      toast({
+        title: "Type Required", 
+        description: "Please select the type of inquiry.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Send feedback email using the API client
+      const response = await apiClient.post('/email/feedback', {
+        type: contactForm.type,
+        message: contactForm.message
+      });
+
+      if (response) {
+        setIsSubmitted(true);
+        setContactForm({
+          name: user?.name || '',
+          email: user?.email || '',
+          type: '',
+          message: ''
+        });
+        
+        toast({
+          title: "Message Sent Successfully! ✅",
+          description: "Thank you for contacting us. We'll get back to you within 24-48 hours.",
+        });
+      } else {
+        throw new Error('Failed to send message');
+      }
+    } catch (error: any) {
+      console.error('Contact form error:', error);
+      toast({
+        title: "Failed to Send Message",
+        description: error.message || "There was an error sending your message. Please try again or contact us directly.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Test API connection
+  const testApiConnection = async () => {
+    try {
+      const response = await apiClient.publicRequest<{success: boolean, message: string}>('/email/test-connection');
+      toast({
+        title: "API Connection Test",
+        description: `✅ ${response.message}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "API Connection Failed",
+        description: `❌ ${error.message}`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setContactForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   const steps = [
     {
@@ -364,6 +474,173 @@ const Help = () => {
             </Card>
           </section>
 
+          {/* Contact & Support Section */}
+          <section className="space-y-6" data-contact-form>
+            <div className="flex items-center gap-3">
+              <Mail className="w-6 h-6 text-primary" />
+              <h2 className="text-2xl font-semibold">Contact & Support</h2>
+            </div>
+            
+            <div className="grid lg:grid-cols-2 gap-6">
+              {/* Contact Information */}
+              <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+                <CardContent className="p-6 space-y-6">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-primary" />
+                    Get in Touch
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                      <Mail className="w-5 h-5 text-primary mt-0.5" />
+                      <div>
+                        <p className="font-medium">Email Support</p>
+                        <p className="text-sm text-muted-foreground">support@skillbridge.app</p>
+                        <p className="text-xs text-muted-foreground mt-1">We respond within 24-48 hours</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                      <Clock className="w-5 h-5 text-primary mt-0.5" />
+                      <div>
+                        <p className="font-medium">Response Time</p>
+                        <p className="text-sm text-muted-foreground">Monday - Friday: 9 AM - 6 PM EST</p>
+                        <p className="text-xs text-muted-foreground mt-1">Weekend inquiries answered on Monday</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
+                      <HelpCircle className="w-5 h-5 text-primary mt-0.5" />
+                      <div>
+                        <p className="font-medium">Common Issues</p>
+                        <p className="text-sm text-muted-foreground">Check our FAQ section above first</p>
+                        <p className="text-xs text-muted-foreground mt-1">Most questions are answered there</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Contact Form */}
+              <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+                <CardContent className="p-6">
+                  {isSubmitted ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
+                      <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
+                        <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold">Message Sent Successfully!</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Thank you for contacting us. Our support team will get back to you within 24-48 hours.
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsSubmitted(false)}
+                        className="gap-2"
+                      >
+                        <Send className="w-4 h-4" />
+                        Send Another Message
+                      </Button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleContactSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="contact-name">Name</Label>
+                        <Input
+                          id="contact-name"
+                          value={contactForm.name}
+                          onChange={(e) => handleInputChange('name', e.target.value)}
+                          placeholder="Your full name"
+                          className="bg-background"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="contact-email">Email</Label>
+                        <Input
+                          id="contact-email"
+                          type="email"
+                          value={contactForm.email}
+                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          placeholder="your.email@example.com"
+                          className="bg-background"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="contact-type">Type of Inquiry</Label>
+                        <Select value={contactForm.type} onValueChange={(value) => handleInputChange('type', value)}>
+                          <SelectTrigger className="bg-background">
+                            <SelectValue placeholder="Select inquiry type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="general">General Question</SelectItem>
+                            <SelectItem value="technical">Technical Support</SelectItem>
+                            <SelectItem value="bug">Bug Report</SelectItem>
+                            <SelectItem value="feature">Feature Request</SelectItem>
+                            <SelectItem value="account">Account Issue</SelectItem>
+                            <SelectItem value="feedback">Feedback</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="contact-message">Message</Label>
+                        <Textarea
+                          id="contact-message"
+                          value={contactForm.message}
+                          onChange={(e) => handleInputChange('message', e.target.value)}
+                          placeholder="Please describe your question or issue in detail..."
+                          rows={5}
+                          className="bg-background resize-none"
+                          required
+                        />
+                      </div>
+                      
+                      <Button 
+                        type="submit" 
+                        disabled={isSubmitting} 
+                        className="w-full gap-2"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <span className="animate-spin">⏳</span>
+                            Sending Message...
+                          </>
+                        ) : (
+                          <>
+                            <Send className="w-4 h-4" />
+                            Send Message
+                          </>
+                        )}
+                      </Button>
+                      
+                      <p className="text-xs text-muted-foreground text-center">
+                        We typically respond within 24-48 hours during business days.
+                      </p>
+                      
+                      {/* Debug: Test API Connection */}
+                      {env.debugMode && (
+                        <Button 
+                          type="button"
+                          variant="outline" 
+                          size="sm"
+                          onClick={testApiConnection}
+                          className="w-full gap-2 mt-2"
+                        >
+                          🔧 Test API Connection
+                        </Button>
+                      )}
+                    </form>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+
           {/* Need More Help */}
           <section className="text-center py-8">
             <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
@@ -371,11 +648,32 @@ const Help = () => {
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10">
                   <Shield className="w-6 h-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold">Need More Help?</h3>
+                <h3 className="text-xl font-semibold">Still Need Help?</h3>
                 <p className="text-muted-foreground max-w-md mx-auto">
-                  If you're ever unsure, don't worry. SkillBridge will guide you step by step. 
-                  Just follow the prompts and take it at your own pace.
+                  Don't worry! SkillBridge guides you step by step. If you're still stuck, 
+                  use the contact form above to reach our support team.
                 </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => navigate('/guide/add-skills')}
+                    className="gap-2"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Start Guided Tour
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      const contactSection = document.querySelector('[data-contact-form]');
+                      contactSection?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="gap-2"
+                  >
+                    <Mail className="w-4 h-4" />
+                    Contact Support
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </section>
