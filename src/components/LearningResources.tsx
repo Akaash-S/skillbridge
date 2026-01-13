@@ -395,7 +395,7 @@ export const LearningResources: React.FC<LearningResourcesProps> = ({
       )}
 
       {/* Call to Action */}
-      <Card className="bg-gradient-to-r from-primary/5 to-accent/5">
+      {/* <Card className="bg-gradient-to-r from-primary/5 to-accent/5">
         <CardContent className="p-6 text-center">
           <div className="flex items-center justify-center gap-2 mb-3">
             <TrendingUp className="h-5 w-5 text-primary" />
@@ -413,7 +413,7 @@ export const LearningResources: React.FC<LearningResourcesProps> = ({
             </Button>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 };

@@ -122,11 +122,12 @@ export const Dashboard = () => {
 
   // Handle sharing progress
   const handleShareProgress = () => {
+    const streakCount = analytics?.currentStreak || 0;
     const shareText = `🚀 I'm ${roadmapProgressPercent}% through my ${selectedRole?.title || 'career'} learning journey! 
     
 ✅ ${completedItems} skills mastered
-📈 ${analysis?.readinessScore || 0}% job-ready
-🔥 ${analytics?.currentStreak || 0} day learning streak
+� $${analysis?.readinessScore || 0}% job-ready
+🔥 ${streakCount} day learning streak ${streakCount > 7 ? '(Amazing consistency!)' : ''}
 
 #SkillBridge #LearningJourney #CareerGrowth`;
 
@@ -609,10 +610,11 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
                 <Settings className="h-4 w-4" />
               </Button>
             </div> */}
-            <Badge variant="secondary" className="gap-1 px-3 py-1.5">
-              <Flame className="h-4 w-4 text-warning" />
-              <span>{analytics?.currentStreak || 0} day streak</span>
-            </Badge>
+            {/* <Badge variant="secondary" className="gap-1 px-3 py-1.5">
+              <Flame className="h-4 w-4 text-orange-500" />
+              <span className="font-semibold">{analytics?.currentStreak || 0}</span>
+              <span className="text-xs">day streak</span>
+            </Badge> */}
             <Badge 
               variant="secondary" 
               className={cn(
@@ -692,6 +694,27 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
             </div>
           </CardContent>
         </Card>
+
+        {/* Streak Milestone Celebration */}
+        {(analytics?.currentStreak || 0) >= 7 && (
+          <Alert className="border-orange-200 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20">
+            <Flame className="h-4 w-4 text-orange-500" />
+            <AlertDescription className="text-orange-800 dark:text-orange-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <strong>🔥 Streak Milestone!</strong> You've maintained a {analytics?.currentStreak} day learning streak! 
+                  {(analytics?.currentStreak || 0) >= 30 && " You're a learning champion! 🏆"}
+                  {(analytics?.currentStreak || 0) >= 14 && (analytics?.currentStreak || 0) < 30 && " You're building amazing habits! 💪"}
+                  {(analytics?.currentStreak || 0) >= 7 && (analytics?.currentStreak || 0) < 14 && " Keep the momentum going! 🚀"}
+                </div>
+                <div className="flex items-center gap-2 text-2xl">
+                  <span className="font-bold text-orange-600">{analytics?.currentStreak}</span>
+                  <Flame className="h-6 w-6 text-orange-500 animate-pulse" />
+                </div>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Roadmap Completion Celebration */}
         {isRoadmapComplete && (
@@ -837,20 +860,38 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-info/10 to-info/5 border-info/20">
+          <Card className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 border-orange-200 dark:border-orange-800">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Learning Streak</p>
-                  <p className="text-3xl font-bold">{analytics?.currentStreak || 0}</p>
+                  <div className="flex items-baseline gap-1">
+                    <p className="text-3xl font-bold text-orange-600">{analytics?.currentStreak || 0}</p>
+                    <span className="text-sm text-muted-foreground">days</span>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     Best: {analytics?.longestStreak || 0} days
                   </p>
                 </div>
-                <div className="h-12 w-12 rounded-xl bg-info/10 flex items-center justify-center">
-                  <Flame className="h-6 w-6 text-info" />
+                <div className="h-12 w-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                  <Flame className="h-6 w-6 text-orange-500" />
                 </div>
               </div>
+              {(analytics?.currentStreak || 0) > 0 && (
+                <div className="mt-3 flex items-center gap-2">
+                  <div className="flex-1 h-2 bg-orange-100 dark:bg-orange-900/30 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-orange-400 to-red-500 rounded-full transition-all duration-500"
+                      style={{ 
+                        width: `${Math.min(100, ((analytics?.currentStreak || 0) / Math.max(analytics?.longestStreak || 7, 7)) * 100)}%` 
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs text-orange-600 font-medium">
+                    {analytics?.currentStreak === analytics?.longestStreak ? '🔥 Record!' : 'Keep going!'}
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -1275,7 +1316,8 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
                 🚀 I'm {roadmapProgressPercent}% through my {selectedRole?.title || 'career'} learning journey!
                 <br />✅ {completedItems} skills mastered
                 <br />📈 {analysis?.readinessScore || 0}% job-ready
-                <br />🔥 {analytics?.currentStreak || 0} day learning streak
+                <br />🔥 <span className="font-semibold text-orange-600">{analytics?.currentStreak || 0} day</span> learning streak
+                {(analytics?.currentStreak || 0) > 7 && <span className="text-green-600"> (Amazing consistency!)</span>}
               </p>
             </div>
             <div className="flex gap-2">
