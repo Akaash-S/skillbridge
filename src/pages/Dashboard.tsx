@@ -1280,11 +1280,36 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
 
         {/* Learning Resources */}
         {selectedRole && (
-          <LearningResources
-            skillName={selectedRole.title}
-            showFilters={false}
-            className="max-w-none"
-          />
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  Learning Resources
+                </CardTitle>
+                <CardDescription>
+                  Curated resources for {selectedRole.title}
+                </CardDescription>
+              </div>
+              <Link to="/resources">
+                <Button variant="outline" size="sm">
+                  View All Resources
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent className="p-0">
+              <LearningResources
+                skillName={selectedRole.title}
+                showFilters={false}
+                className="max-w-none"
+                onResourceClick={(resource) => {
+                  // Navigate to resources page for detailed view
+                  navigate('/resources');
+                }}
+              />
+            </CardContent>
+          </Card>
         )}
 
         {/* Advanced Analytics */}

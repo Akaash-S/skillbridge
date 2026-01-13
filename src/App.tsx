@@ -8,6 +8,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { AppDataProvider } from "@/context/AppDataContext";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AuthRedirect } from "@/components/auth/AuthRedirect";
 import { SimpleLanding } from "@/pages/SimpleLanding";
 import { Login } from "@/pages/auth/Login";
 import { Onboarding } from "@/pages/Onboarding";
@@ -56,7 +57,7 @@ const App = () => (
               <BrowserRouter>
                 <Routes>
                   {/* Public Routes */}
-                  <Route path="/" element={<SimpleLanding />} />
+                  <Route path="/" element={<AuthRedirect />} />
                   <Route path="/login" element={<Login />} />
                   
                   {/* Protected Routes */}

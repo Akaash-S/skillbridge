@@ -355,12 +355,12 @@ export const SimpleLanding = () => {
                         <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </Link>
-                    <Button size="lg" variant="outline" className="text-lg px-8 h-14 backdrop-blur-sm group" asChild>
+                    {/* <Button size="lg" variant="outline" className="text-lg px-8 h-14 backdrop-blur-sm group" asChild>
                       <a href="#demo" className="flex items-center gap-2">
                         <Play className="h-5 w-5 group-hover:scale-110 transition-transform" />
                         Watch Demo
                       </a>
-                    </Button>
+                    </Button> */}
                   </motion.div>
 
                   <motion.div 
@@ -439,7 +439,7 @@ export const SimpleLanding = () => {
         </section>
 
         {/* Companies Section */}
-        <motion.section 
+        {/* <motion.section 
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -465,7 +465,7 @@ export const SimpleLanding = () => {
               </div>
             </div>
           </div>
-        </motion.section>
+        </motion.section> */}
 
         {/* Stats Section */}
         <motion.section 
