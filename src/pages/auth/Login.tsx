@@ -264,7 +264,7 @@ export const Login: React.FC = () => {
               </Button>
 
               {/* Alternative Method */}
-              <div className="relative">
+              {/* <div className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
                 </div>
@@ -293,7 +293,7 @@ export const Login: React.FC = () => {
                     Use redirect method
                   </>
                 )}
-              </Button>
+              </Button> */}
 
               {/* Help Text */}
               <div className="text-center text-sm text-muted-foreground space-y-2">
