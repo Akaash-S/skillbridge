@@ -328,6 +328,61 @@ const FeaturesSection = () => {
   );
 };
 
+const ScrollVideo = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start end", "end start"]
+  });
+
+  useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const unsubscribe = scrollYProgress.on("change", (latest) => {
+      if (video.duration && !isNaN(video.duration)) {
+        // Map scroll progress (0-1) to video duration
+        // We use a subset of the scroll to control the full video for better feel
+        const videoTime = latest * video.duration;
+        video.currentTime = Math.min(Math.max(videoTime, 0), video.duration);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [scrollYProgress]);
+
+  return (
+    <section ref={containerRef} className="relative h-[200vh] bg-black">
+      <div className="sticky top-0 h-screen w-full flex items-center justify-center overflow-hidden">
+        <video
+          ref={videoRef}
+          className="absolute inset-0 w-full h-full object-cover opacity-60"
+          src="https://videos.pexels.com/video-files/3129671/3129671-uhd_2560_1440_30fps.mp4"
+          muted
+          playsInline
+          preload="auto"
+        />
+        <div className="relative z-10 text-center px-4">
+          <motion.h2
+            style={{ opacity: useTransform(scrollYProgress, [0.3, 0.5, 0.7], [0, 1, 0]) }}
+            className="text-5xl md:text-8xl font-bold bg-gradient-to-r from-white to-white/50 bg-clip-text text-transparent"
+          >
+            Future of Tech
+          </motion.h2>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 export const SimpleLanding = () => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
@@ -362,6 +417,7 @@ export const SimpleLanding = () => {
       <main>
         <HeroSection />
         <MarketDataSection />
+        <ScrollVideo />
         <FeaturesSection />
 
         <section className="py-24 container mx-auto px-4 bg-muted/20">
