@@ -60,7 +60,8 @@ export const Dashboard = () => {
     selectedRole, 
     analysis, 
     roadmap,
-    roadmapProgress 
+    roadmapProgress,
+    loadFixedRoadmap
   } = useAppData();
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -491,8 +492,41 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
     }
   }, [selectedRole, roadmapProgress]);
 
-  const completedItems = roadmap.filter((item) => item.completed).length;
+  // Auto-load roadmap when role changes
+  useEffect(() => {
+    if (selectedRole && roadmap.length === 0) {
+      console.log('🔄 Dashboard: Auto-loading roadmap for new role:', selectedRole.title);
+      loadFixedRoadmap();
+    }
+  }, [selectedRole, roadmap.length, loadFixedRoadmap]);
+
+  // Track role changes for debugging
+  useEffect(() => {
+    console.log('🎯 Dashboard: Role change detected:', {
+      selectedRole: selectedRole?.title || 'None',
+      roadmapLength: roadmap.length,
+      hasRoadmapProgress: !!roadmapProgress
+    });
+  }, [selectedRole, roadmap.length, roadmapProgress]);
+
+  const completedItems = roadmap.filter((item) => item.completed === true).length;
   const roadmapProgressPercent = roadmap.length > 0 ? Math.round((completedItems / roadmap.length) * 100) : 0;
+  
+  // Debug logging for roadmap progress calculation
+  useEffect(() => {
+    if (roadmap.length > 0) {
+      console.log('🔍 Dashboard Progress Debug:', {
+        totalItems: roadmap.length,
+        completedItems,
+        roadmapProgressPercent,
+        roadmapItems: roadmap.map(item => ({
+          id: item.id,
+          skillName: item.skillName,
+          completed: item.completed
+        }))
+      });
+    }
+  }, [roadmap, completedItems, roadmapProgressPercent]);
   
   // Check roadmap completion status
   const isRoadmapComplete = isRoadmapCompleted(roadmap);

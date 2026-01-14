@@ -160,6 +160,13 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
           console.warn('⚠️ Stored target role is no longer valid, clearing role-specific data');
         }
         
+        // Process roadmap data to ensure proper completion status
+        const roadmapItems = isValidRole ? initialData.userState?.roadmapProgress?.roadmapItems || [] : [];
+        const processedRoadmapItems = roadmapItems.map((item: any) => ({
+          ...item,
+          completed: Boolean(item.completed) // Ensure completed is a proper boolean
+        }));
+        
         setState(prev => ({
           ...prev,
           userSkills: initialData.userSkills || [],
@@ -169,13 +176,15 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
           analysis: isValidRole ? initialData.skillGapAnalysis || null : null,
           analysisProgress: isValidRole ? initialData.userState?.analysisProgress || null : null,
           roadmapProgress: isValidRole ? initialData.userState?.roadmapProgress || null : null,
-          roadmap: isValidRole ? initialData.userState?.roadmapProgress?.roadmapItems || [] : [],
+          roadmap: processedRoadmapItems,
           loading: false
         }));
         
         console.log('📈 Optimized data applied successfully', {
           hasValidRole: isValidRole,
-          roleName: targetRole?.title || 'None'
+          roleName: targetRole?.title || 'None',
+          roadmapItemsCount: processedRoadmapItems.length,
+          completedItemsCount: processedRoadmapItems.filter((item: any) => item.completed === true).length
         });
       } else {
         console.log('📝 No existing user state found - loading master data');
@@ -334,6 +343,36 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
           to: role.title,
           clearedData: ['analysis', 'analysisProgress', 'roadmap', 'roadmapProgress']
         });
+        
+        // Auto-load roadmap for the new role
+        setTimeout(async () => {
+          try {
+            console.log('🔄 Auto-loading roadmap for new role:', role.title);
+            const fixedRoadmapItems = getFixedRoadmap(role.id);
+            if (fixedRoadmapItems.length > 0) {
+              const initializedRoadmapItems = fixedRoadmapItems.map(item => ({
+                ...item,
+                completed: false
+              }));
+              
+              setState(prev => ({
+                ...prev,
+                roadmap: initializedRoadmapItems,
+                roadmapProgress: {
+                  targetRole: role.id,
+                  totalItems: initializedRoadmapItems.length,
+                  completedItems: 0,
+                  progress: 0,
+                  roadmapItems: initializedRoadmapItems
+                }
+              }));
+              
+              console.log('✅ Auto-loaded roadmap for new role:', role.title, 'with', initializedRoadmapItems.length, 'items');
+            }
+          } catch (error) {
+            console.error('❌ Failed to auto-load roadmap for new role:', error);
+          }
+        }, 100); // Small delay to ensure state is updated
       } else {
         // Same role selected - just update state
         setState(prev => ({ ...prev, selectedRole: role }));
@@ -408,16 +447,22 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
         return;
       }
       
-      // Set the roadmap immediately
+      // Set the roadmap immediately with proper completion status
       setState(prev => ({
         ...prev,
-        roadmap: fixedRoadmapItems,
+        roadmap: fixedRoadmapItems.map(item => ({
+          ...item,
+          completed: false // Ensure all items start as incomplete
+        })),
         roadmapProgress: {
           targetRole: state.selectedRole?.id || '',
           totalItems: fixedRoadmapItems.length,
           completedItems: 0,
           progress: 0,
-          roadmapItems: fixedRoadmapItems
+          roadmapItems: fixedRoadmapItems.map(item => ({
+            ...item,
+            completed: false // Ensure all items start as incomplete
+          }))
         },
         loading: false,
         error: null
@@ -635,7 +680,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
                   resources: skill.resources || [],
                   difficulty: skill.targetLevel || 'intermediate',
                   estimatedTime: `${skill.estimatedHours || 20} hours`,
-                  completed: skill.completed || false
+                  completed: Boolean(skill.completed) === true // Ensure proper boolean conversion
                 };
                 roadmapItems.push(roadmapItem);
               });
@@ -659,7 +704,13 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
         
         console.log('✅ Roadmap progress loaded from database:', {
           totalItems: roadmapItems.length,
-          completedItems: roadmapItems.filter(item => item.completed).length
+          completedItems: roadmapItems.filter(item => item.completed).length,
+          roadmapItemsDebug: roadmapItems.map(item => ({
+            id: item.id,
+            skillName: item.skillName,
+            completed: item.completed,
+            completedType: typeof item.completed
+          }))
         });
       } else {
         // No existing roadmap found
@@ -720,18 +771,23 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
         }
       }
       
-      // Load fresh roadmap
+      // Load fresh roadmap with proper initialization
       const fixedRoadmapItems = getFixedRoadmap(state.selectedRole.id);
       if (fixedRoadmapItems.length > 0) {
+        const initializedRoadmapItems = fixedRoadmapItems.map(item => ({
+          ...item,
+          completed: false // Ensure all items start as incomplete
+        }));
+        
         setState(prev => ({
           ...prev,
-          roadmap: fixedRoadmapItems,
+          roadmap: initializedRoadmapItems,
           roadmapProgress: {
             targetRole: state.selectedRole?.id || '',
-            totalItems: fixedRoadmapItems.length,
+            totalItems: initializedRoadmapItems.length,
             completedItems: 0,
             progress: 0,
-            roadmapItems: fixedRoadmapItems
+            roadmapItems: initializedRoadmapItems
           }
         }));
         console.log('✅ Fresh roadmap loaded for new role');
