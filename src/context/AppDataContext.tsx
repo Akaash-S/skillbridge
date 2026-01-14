@@ -319,12 +319,13 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
         
         // Persist role selection to backend
         try {
-          await apiClient.put('/user-state/target-role', { 
+          console.log('🔄 Attempting to persist role to backend:', role);
+          const response = await apiClient.put('/user-state/target-role', { 
             targetRole: role
           });
-          console.log('✅ Role selection persisted to backend');
+          console.log('✅ Role selection persisted to backend:', response);
         } catch (error) {
-          console.warn('⚠️ Failed to persist role selection to backend:', error);
+          console.error('❌ Failed to persist role selection to backend:', error);
           // Don't throw error here - local state is updated
         }
         
