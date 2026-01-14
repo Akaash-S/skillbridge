@@ -160,12 +160,27 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
           console.warn('⚠️ Stored target role is no longer valid, clearing role-specific data');
         }
         
-        // Process roadmap data to ensure proper completion status
-        const roadmapItems = isValidRole ? initialData.userState?.roadmapProgress?.roadmapItems || [] : [];
-        const processedRoadmapItems = roadmapItems.map((item: any) => ({
-          ...item,
-          completed: Boolean(item.completed) // Ensure completed is a proper boolean
-        }));
+        // CRITICAL FIX: Validate roadmap matches current role
+        let processedRoadmapItems: any[] = [];
+        if (isValidRole && initialData.userState?.roadmapProgress) {
+          const storedRoadmapProgress = initialData.userState.roadmapProgress;
+          const storedRoadmapRoleId = storedRoadmapProgress.targetRole;
+          
+          // Only use stored roadmap if it matches the current target role
+          if (storedRoadmapRoleId === targetRole.id) {
+            console.log('✅ Stored roadmap matches current role, loading existing progress');
+            const roadmapItems = storedRoadmapProgress.roadmapItems || [];
+            processedRoadmapItems = roadmapItems.map((item: any) => ({
+              ...item,
+              completed: Boolean(item.completed) // Ensure completed is a proper boolean
+            }));
+          } else {
+            console.warn('⚠️ Stored roadmap is for different role, will generate fresh roadmap');
+            console.log(`Stored roadmap role: ${storedRoadmapRoleId}, Current role: ${targetRole.id}`);
+            // Don't load stale roadmap data - let the component generate fresh roadmap
+            processedRoadmapItems = [];
+          }
+        }
         
         setState(prev => ({
           ...prev,
@@ -175,7 +190,10 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
           selectedRole: isValidRole ? targetRole : null,
           analysis: isValidRole ? initialData.skillGapAnalysis || null : null,
           analysisProgress: isValidRole ? initialData.userState?.analysisProgress || null : null,
-          roadmapProgress: isValidRole ? initialData.userState?.roadmapProgress || null : null,
+          roadmapProgress: isValidRole && processedRoadmapItems.length > 0 ? {
+            ...initialData.userState?.roadmapProgress,
+            roadmapItems: processedRoadmapItems
+          } : null,
           roadmap: processedRoadmapItems,
           loading: false
         }));
@@ -186,6 +204,38 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
           roadmapItemsCount: processedRoadmapItems.length,
           completedItemsCount: processedRoadmapItems.filter((item: any) => item.completed === true).length
         });
+        
+        // CRITICAL FIX: Auto-generate fresh roadmap if role exists but no valid roadmap
+        if (isValidRole && processedRoadmapItems.length === 0) {
+          console.log('🔄 No valid roadmap found for current role, generating fresh roadmap');
+          setTimeout(() => {
+            try {
+              const fixedRoadmapItems = getFixedRoadmap(targetRole.id);
+              if (fixedRoadmapItems.length > 0) {
+                const initializedRoadmapItems = fixedRoadmapItems.map(item => ({
+                  ...item,
+                  completed: false
+                }));
+                
+                setState(prev => ({
+                  ...prev,
+                  roadmap: initializedRoadmapItems,
+                  roadmapProgress: {
+                    targetRole: targetRole.id,
+                    totalItems: initializedRoadmapItems.length,
+                    completedItems: 0,
+                    progress: 0,
+                    roadmapItems: initializedRoadmapItems
+                  }
+                }));
+                
+                console.log('✅ Fresh roadmap generated for role:', targetRole.title, 'with', initializedRoadmapItems.length, 'items');
+              }
+            } catch (error) {
+              console.error('❌ Failed to generate fresh roadmap:', error);
+            }
+          }, 100); // Small delay to ensure state is updated
+        }
       } else {
         console.log('📝 No existing user state found - loading master data');
         await Promise.all([

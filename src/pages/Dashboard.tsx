@@ -434,55 +434,81 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
 
   // Calculate enhanced analytics
   const analytics = useMemo(() => {
-    if (roadmap.length === 0) return null;
+    if (roadmap.length === 0 || !selectedRole) return null;
+    
+    console.log('📊 Calculating analytics for role:', selectedRole.title, {
+      roadmapLength: roadmap.length,
+      completedItems: roadmap.filter(item => item.completed === true).length,
+      hasRoadmapProgress: !!roadmapProgress
+    });
     
     return AnalyticsService.calculateLearningAnalytics(
       roadmap,
       roadmapProgress,
       [] // Learning sessions would come from backend
     );
-  }, [roadmap, roadmapProgress]);
+  }, [roadmap, roadmapProgress, selectedRole]);
 
-  // Mock advanced analytics data
-  const advancedAnalyticsData = useMemo(() => ({
-    currentStreak: analytics?.currentStreak || 7,
-    longestStreak: analytics?.longestStreak || 14,
-    totalTimeSpent: analytics?.totalTimeSpent || 45,
-    learningVelocity: analytics?.learningVelocity || 1.2,
-    completionLikelihood: analytics?.completionLikelihood || 85,
-    estimatedWeeksRemaining: analytics?.estimatedWeeksRemaining || 8,
-    skillsPerWeek: analytics?.learningVelocity || 1.2,
-    consistencyScore: 78,
-    focusAreas: [
-      'Frontend Development',
-      'React Ecosystem',
-      'JavaScript Fundamentals',
-      'API Integration'
-    ],
-    weeklyProgress: [
-      { week: 'Week 1', skillsCompleted: 2, timeSpent: 8, consistency: 85 },
-      { week: 'Week 2', skillsCompleted: 3, timeSpent: 12, consistency: 92 },
-      { week: 'Week 3', skillsCompleted: 1, timeSpent: 6, consistency: 65 },
-      { week: 'Week 4', skillsCompleted: 4, timeSpent: 15, consistency: 95 },
-      { week: 'Week 5', skillsCompleted: 2, timeSpent: 10, consistency: 80 },
-      { week: 'Week 6', skillsCompleted: 3, timeSpent: 13, consistency: 88 }
-    ],
-    skillDistribution: [
-      { category: 'Frontend', completed: 8, remaining: 4 },
-      { category: 'Backend', completed: 3, remaining: 7 },
-      { category: 'Database', completed: 2, remaining: 3 },
-      { category: 'DevOps', completed: 1, remaining: 4 }
-    ],
-    learningPattern: [
-      { day: 'Mon', morning: 45, afternoon: 30, evening: 60 },
-      { day: 'Tue', morning: 30, afternoon: 45, evening: 40 },
-      { day: 'Wed', morning: 60, afternoon: 20, evening: 35 },
-      { day: 'Thu', morning: 40, afternoon: 50, evening: 45 },
-      { day: 'Fri', morning: 35, afternoon: 40, evening: 30 },
-      { day: 'Sat', morning: 20, afternoon: 60, evening: 80 },
-      { day: 'Sun', morning: 15, afternoon: 30, evening: 45 }
-    ]
-  }), [analytics]);
+  // Mock advanced analytics data - reset for new roles
+  const advancedAnalyticsData = useMemo(() => {
+    // If no analytics (new role or no roadmap), return default values
+    if (!analytics || !selectedRole) {
+      return {
+        currentStreak: 0,
+        longestStreak: 0,
+        totalTimeSpent: 0,
+        learningVelocity: 0,
+        completionLikelihood: 50,
+        estimatedWeeksRemaining: 12,
+        skillsPerWeek: 0,
+        consistencyScore: 0,
+        focusAreas: [selectedRole?.title || 'No Role Selected'],
+        weeklyProgress: [],
+        skillDistribution: [],
+        learningPattern: []
+      };
+    }
+
+    return {
+      currentStreak: analytics?.currentStreak || 0,
+      longestStreak: analytics?.longestStreak || 0,
+      totalTimeSpent: analytics?.totalTimeSpent || 0,
+      learningVelocity: analytics?.learningVelocity || 0,
+      completionLikelihood: analytics?.completionLikelihood || 50,
+      estimatedWeeksRemaining: analytics?.estimatedWeeksRemaining || 12,
+      skillsPerWeek: analytics?.learningVelocity || 0,
+      consistencyScore: Math.round((analytics?.currentStreak || 0) * 10),
+      focusAreas: [
+        selectedRole?.title || 'Current Role',
+        'Core Skills',
+        'Practical Projects',
+        'Industry Standards'
+      ],
+      weeklyProgress: [
+        { week: 'Week 1', skillsCompleted: 0, timeSpent: 0, consistency: 0 },
+        { week: 'Week 2', skillsCompleted: 0, timeSpent: 0, consistency: 0 },
+        { week: 'Week 3', skillsCompleted: 0, timeSpent: 0, consistency: 0 },
+        { week: 'Week 4', skillsCompleted: 0, timeSpent: 0, consistency: 0 },
+        { week: 'Week 5', skillsCompleted: 0, timeSpent: 0, consistency: 0 },
+        { week: 'Week 6', skillsCompleted: 0, timeSpent: 0, consistency: 0 }
+      ],
+      skillDistribution: [
+        { category: 'Frontend', completed: 0, remaining: roadmap.filter(item => item.skillName.toLowerCase().includes('frontend') || item.skillName.toLowerCase().includes('react') || item.skillName.toLowerCase().includes('html') || item.skillName.toLowerCase().includes('css') || item.skillName.toLowerCase().includes('javascript')).length },
+        { category: 'Backend', completed: 0, remaining: roadmap.filter(item => item.skillName.toLowerCase().includes('backend') || item.skillName.toLowerCase().includes('node') || item.skillName.toLowerCase().includes('api') || item.skillName.toLowerCase().includes('server')).length },
+        { category: 'Database', completed: 0, remaining: roadmap.filter(item => item.skillName.toLowerCase().includes('database') || item.skillName.toLowerCase().includes('sql') || item.skillName.toLowerCase().includes('mongo')).length },
+        { category: 'DevOps', completed: 0, remaining: roadmap.filter(item => item.skillName.toLowerCase().includes('devops') || item.skillName.toLowerCase().includes('docker') || item.skillName.toLowerCase().includes('aws') || item.skillName.toLowerCase().includes('deploy')).length }
+      ],
+      learningPattern: [
+        { day: 'Mon', morning: 0, afternoon: 0, evening: 0 },
+        { day: 'Tue', morning: 0, afternoon: 0, evening: 0 },
+        { day: 'Wed', morning: 0, afternoon: 0, evening: 0 },
+        { day: 'Thu', morning: 0, afternoon: 0, evening: 0 },
+        { day: 'Fri', morning: 0, afternoon: 0, evening: 0 },
+        { day: 'Sat', morning: 0, afternoon: 0, evening: 0 },
+        { day: 'Sun', morning: 0, afternoon: 0, evening: 0 }
+      ]
+    };
+  }, [analytics, selectedRole, roadmap]);
 
   // Get learning insights for the selected role
   useEffect(() => {
@@ -505,9 +531,25 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
     console.log('🎯 Dashboard: Role change detected:', {
       selectedRole: selectedRole?.title || 'None',
       roadmapLength: roadmap.length,
-      hasRoadmapProgress: !!roadmapProgress
+      hasRoadmapProgress: !!roadmapProgress,
+      hasAnalytics: !!analytics
     });
-  }, [selectedRole, roadmap.length, roadmapProgress]);
+  }, [selectedRole, roadmap.length, roadmapProgress, analytics]);
+
+  // Track analytics changes
+  useEffect(() => {
+    if (analytics) {
+      console.log('📊 Dashboard: Analytics updated:', {
+        role: selectedRole?.title,
+        progressPercent: analytics.progressPercent,
+        learningVelocity: analytics.learningVelocity,
+        currentStreak: analytics.currentStreak,
+        completionLikelihood: analytics.completionLikelihood
+      });
+    } else {
+      console.log('📊 Dashboard: Analytics cleared (no roadmap or role)');
+    }
+  }, [analytics, selectedRole]);
 
   const completedItems = roadmap.filter((item) => item.completed === true).length;
   const roadmapProgressPercent = roadmap.length > 0 ? Math.round((completedItems / roadmap.length) * 100) : 0;
@@ -836,7 +878,7 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
         </Card>
 
         {/* Enhanced Analytics Cards */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div key={`analytics-${selectedRole?.id || 'no-role'}`} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -1315,6 +1357,7 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
         {/* Learning Resources */}
         {selectedRole && (
           <LearningResources
+            key={`learning-resources-${selectedRole.id}`}
             skillName={selectedRole.title}
             showFilters={false}
             className="max-w-none"
@@ -1324,6 +1367,7 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
         {/* Advanced Analytics */}
         {showAdvancedAnalytics && analytics && (
           <AdvancedAnalytics 
+            key={`advanced-analytics-${selectedRole?.id || 'no-role'}`}
             data={advancedAnalyticsData}
             className="max-w-none"
           />
