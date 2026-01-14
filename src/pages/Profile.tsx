@@ -811,7 +811,7 @@ export const Profile = () => {
                       onValueChange={(value) => setProfileData(prev => ({ ...prev, experience: value }))}
                       disabled={!isEditing}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger id="experience">
                         <SelectValue placeholder="Select experience" />
                       </SelectTrigger>
                       <SelectContent>
@@ -831,7 +831,7 @@ export const Profile = () => {
                       onValueChange={(value) => setProfileData(prev => ({ ...prev, education: value }))}
                       disabled={!isEditing}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger id="education">
                         <SelectValue placeholder="Select education" />
                       </SelectTrigger>
                       <SelectContent>
@@ -855,7 +855,7 @@ export const Profile = () => {
                       onValueChange={(value) => setProfileData(prev => ({ ...prev, weeklyGoal: parseInt(value) }))}
                       disabled={!isEditing}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger id="weeklyGoal">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

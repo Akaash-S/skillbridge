@@ -573,7 +573,7 @@ const Help = () => {
                       <div className="space-y-2">
                         <Label htmlFor="contact-type">Type of Inquiry</Label>
                         <Select value={contactForm.type} onValueChange={(value) => handleInputChange('type', value)}>
-                          <SelectTrigger className="bg-background">
+                          <SelectTrigger id="contact-type" className="bg-background">
                             <SelectValue placeholder="Select inquiry type" />
                           </SelectTrigger>
                           <SelectContent>
