@@ -22,6 +22,7 @@ export const Roles = () => {
   const [rolesWithSkillMatch, setRolesWithSkillMatch] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loadingRoles, setLoadingRoles] = useState(false);
+  const [selectingRole, setSelectingRole] = useState(false);
   const [userSkillsCount, setUserSkillsCount] = useState(0);
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   
@@ -214,23 +215,27 @@ export const Roles = () => {
   }, [selectedRoleId, processedRoles, rolesWithSkillMatch, jobRoles.length]);
 
   const handleSelectRole = async (roleId: string) => {
-    const rolesToSearch = jobRoles.length > 0 ? processedRoles : rolesWithSkillMatch;
-    const role = rolesToSearch.find((r) => r.id === roleId);
-    if (role) {
-      try {
+    try {
+      setSelectingRole(true);
+      const rolesToSearch = jobRoles.length > 0 ? processedRoles : rolesWithSkillMatch;
+      const role = rolesToSearch.find((r) => r.id === roleId);
+      if (role) {
         await selectRole(role);
         toast({
-          title: "Role selected",
-          description: `${role.title} has been set as your target role.`,
+          title: "Role Updated Successfully! 🎯",
+          description: `${role.title} has been set as your target role. Previous analysis and roadmap data has been cleared.`,
         });
         navigate("/analysis");
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to select role. Please try again.",
-          variant: "destructive",
-        });
       }
+    } catch (error: any) {
+      console.error('Failed to select role:', error);
+      toast({
+        title: "Failed to Update Role",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSelectingRole(false);
     }
   };
 
@@ -536,9 +541,9 @@ export const Roles = () => {
                     <Button
                       onClick={() => handleSelectRole(detailRole.id)}
                       className="flex-1"
-                      disabled={loading}
+                      disabled={selectingRole}
                     >
-                      {loading ? (
+                      {selectingRole ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
                         <Target className="mr-2 h-4 w-4" />

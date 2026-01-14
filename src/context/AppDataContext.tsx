@@ -71,7 +71,7 @@ interface AppDataContextType extends AppDataState {
   loadMasterSkills: () => Promise<void>;
   
   // Roles methods
-  selectRole: (role: JobRole) => void;
+  selectRole: (role: JobRole) => Promise<void>;
   loadJobRoles: () => Promise<void>;
   
   // Analysis methods
@@ -80,6 +80,7 @@ interface AppDataContextType extends AppDataState {
   markRoadmapItemComplete: (itemId: string) => Promise<void>;
   resetProgress: () => void;
   loadRoadmapProgress: () => Promise<void>;
+  refreshRoleData: () => Promise<void>;
   
   // Utility methods
   clearError: () => void;
@@ -151,20 +152,31 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
       if (initialData.hasData || initialData.masterSkills?.length > 0) {
         console.log('✅ Initial data loaded from backend');
         
+        // Check if we have a target role and validate it's still in the available roles
+        const targetRole = initialData.userState?.targetRole;
+        const isValidRole = targetRole && initialData.jobRoles?.some(role => role.id === targetRole.id);
+        
+        if (targetRole && !isValidRole) {
+          console.warn('⚠️ Stored target role is no longer valid, clearing role-specific data');
+        }
+        
         setState(prev => ({
           ...prev,
           userSkills: initialData.userSkills || [],
           masterSkills: initialData.masterSkills || [],
           jobRoles: initialData.jobRoles || [],
-          selectedRole: initialData.userState?.targetRole || null,
-          analysis: initialData.skillGapAnalysis || null,
-          analysisProgress: initialData.userState?.analysisProgress || null,
-          roadmapProgress: initialData.userState?.roadmapProgress || null,
-          roadmap: initialData.userState?.roadmapProgress?.roadmapItems || [],
+          selectedRole: isValidRole ? targetRole : null,
+          analysis: isValidRole ? initialData.skillGapAnalysis || null : null,
+          analysisProgress: isValidRole ? initialData.userState?.analysisProgress || null : null,
+          roadmapProgress: isValidRole ? initialData.userState?.roadmapProgress || null : null,
+          roadmap: isValidRole ? initialData.userState?.roadmapProgress?.roadmapItems || [] : [],
           loading: false
         }));
         
-        console.log('📈 Optimized data applied successfully');
+        console.log('📈 Optimized data applied successfully', {
+          hasValidRole: isValidRole,
+          roleName: targetRole?.title || 'None'
+        });
       } else {
         console.log('📝 No existing user state found - loading master data');
         await Promise.all([
@@ -282,11 +294,60 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     }
   }, []);
 
-  // Select role
-  const selectRole = useCallback((role: JobRole) => {
-    setState(prev => ({ ...prev, selectedRole: role }));
-    console.log('✅ Role selected:', role.title);
-  }, []);
+  // Select role - ENHANCED to handle role changes properly
+  const selectRole = useCallback(async (role: JobRole) => {
+    try {
+      console.log('🎯 Selecting new role:', role.title);
+      
+      // Check if this is actually a different role
+      const isDifferentRole = !state.selectedRole || state.selectedRole.id !== role.id;
+      
+      if (isDifferentRole) {
+        console.log('🔄 Role changed - clearing old data and updating');
+        
+        // Clear old role-specific data when changing roles
+        setState(prev => ({
+          ...prev,
+          selectedRole: role,
+          analysis: null,           // Clear old analysis
+          analysisProgress: null,   // Clear old progress
+          roadmap: [],             // Clear old roadmap
+          roadmapProgress: null,   // Clear old roadmap progress
+          loading: false,
+          error: null
+        }));
+        
+        // Persist role selection to backend
+        try {
+          await apiClient.put('/user-state/target-role', { 
+            targetRole: role
+          });
+          console.log('✅ Role selection persisted to backend');
+        } catch (error) {
+          console.warn('⚠️ Failed to persist role selection to backend:', error);
+          // Don't throw error here - local state is updated
+        }
+        
+        console.log('✅ Role changed successfully:', {
+          from: state.selectedRole?.title || 'None',
+          to: role.title,
+          clearedData: ['analysis', 'analysisProgress', 'roadmap', 'roadmapProgress']
+        });
+      } else {
+        // Same role selected - just update state
+        setState(prev => ({ ...prev, selectedRole: role }));
+        console.log('ℹ️ Same role selected:', role.title);
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Failed to select role:', error);
+      setState(prev => ({
+        ...prev,
+        error: 'Failed to select role. Please try again.'
+      }));
+      throw error;
+    }
+  }, [state.selectedRole]);
 
   // Analyze skill gap
   const analyzeSkillGap = useCallback(async () => {
@@ -616,6 +677,78 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     }
   }, []);
 
+  // Refresh role-dependent data - NEW utility function
+  const refreshRoleData = useCallback(async () => {
+    if (!state.selectedRole) {
+      console.log('ℹ️ No role selected, skipping role data refresh');
+      return;
+    }
+    
+    try {
+      console.log('🔄 Refreshing role-dependent data for:', state.selectedRole.title);
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      
+      // Clear existing role data
+      setState(prev => ({
+        ...prev,
+        analysis: null,
+        analysisProgress: null,
+        roadmap: [],
+        roadmapProgress: null
+      }));
+      
+      // Load fresh analysis if user has skills
+      if (state.userSkills.length > 0) {
+        try {
+          const analysisResponse = await apiClient.get<{
+            roleId: string;
+            analysis: SkillGapAnalysis;
+            progress: AnalysisProgress;
+            hasProgress: boolean;
+          }>(`/skills/analyze/${state.selectedRole.id}`);
+          
+          setState(prev => ({
+            ...prev,
+            analysis: analysisResponse.analysis,
+            analysisProgress: analysisResponse.progress
+          }));
+          
+          console.log('✅ Fresh analysis loaded for new role');
+        } catch (error) {
+          console.log('ℹ️ No existing analysis for new role, user can create one');
+        }
+      }
+      
+      // Load fresh roadmap
+      const fixedRoadmapItems = getFixedRoadmap(state.selectedRole.id);
+      if (fixedRoadmapItems.length > 0) {
+        setState(prev => ({
+          ...prev,
+          roadmap: fixedRoadmapItems,
+          roadmapProgress: {
+            targetRole: state.selectedRole?.id || '',
+            totalItems: fixedRoadmapItems.length,
+            completedItems: 0,
+            progress: 0,
+            roadmapItems: fixedRoadmapItems
+          }
+        }));
+        console.log('✅ Fresh roadmap loaded for new role');
+      }
+      
+      setState(prev => ({ ...prev, loading: false }));
+      console.log('✅ Role data refresh completed');
+      
+    } catch (error: any) {
+      console.error('❌ Failed to refresh role data:', error);
+      setState(prev => ({
+        ...prev,
+        error: 'Failed to refresh role data. Please try again.',
+        loading: false
+      }));
+    }
+  }, [state.selectedRole, state.userSkills]);
+
   // Clear error
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
@@ -639,6 +772,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     markRoadmapItemComplete,
     resetProgress,
     loadRoadmapProgress,
+    refreshRoleData,
     clearError
   };
 
