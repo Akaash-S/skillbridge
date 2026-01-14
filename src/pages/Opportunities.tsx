@@ -572,11 +572,14 @@ export const Opportunities = () => {
             <div className="flex gap-4">
               <div className="flex-1 relative">
                 <Input
+                  id="job-search"
+                  name="job-search"
                   placeholder="Search any job title (e.g., React Developer, Data Analyst, Product Manager)"
                   value={jobSearchQuery}
                   onChange={(e) => setJobSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleJobSearch()}
                   className="pr-20"
+                  autoComplete="off"
                 />
                 {jobSearchQuery && (
                   <Button

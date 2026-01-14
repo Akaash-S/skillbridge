@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Frontend Accessibility Fix Script
-# Fixes label/input ID mismatches for better accessibility
+# Fixes label/input ID mismatches and missing name attributes for better accessibility
 
 echo "🔧 Fixing Frontend Accessibility Issues"
 echo "======================================"
@@ -38,12 +38,20 @@ fi
 
 print_status "Checking for accessibility issues..."
 
-# Function to check for label/input mismatches
-check_accessibility() {
+# Function to check for inputs without id or name attributes
+check_form_fields() {
     local file="$1"
     local issues=0
     
     if [ -f "$file" ]; then
+        # Check for Input components without id or name
+        while IFS= read -r line; do
+            if [[ $line =~ \<Input && ! $line =~ id= && ! $line =~ name= ]]; then
+                echo "  ❌ Input without id or name in $file: $line"
+                ((issues++))
+            fi
+        done < "$file"
+        
         # Check for htmlFor without matching id
         while IFS= read -r line; do
             if [[ $line =~ htmlFor=\"([^\"]+)\" ]]; then
@@ -67,9 +75,15 @@ files_to_check=(
     "src/pages/Help.tsx"
     "src/pages/Settings.tsx"
     "src/pages/Onboarding.tsx"
+    "src/pages/Skills.tsx"
+    "src/pages/Roles.tsx"
+    "src/pages/Opportunities.tsx"
+    "src/pages/Courses.tsx"
+    "src/pages/RoadmapBuilder.tsx"
     "src/components/MFAVerification.tsx"
     "src/components/WalkthroughLayout.tsx"
     "src/components/NotificationCenter.tsx"
+    "src/components/LearningResources.tsx"
 )
 
 total_issues=0
@@ -77,7 +91,7 @@ total_issues=0
 for file in "${files_to_check[@]}"; do
     if [ -f "$file" ]; then
         print_status "Checking $file..."
-        check_accessibility "$file"
+        check_form_fields "$file"
         issues=$?
         total_issues=$((total_issues + issues))
     else
@@ -116,12 +130,19 @@ echo "   Issues found: $total_issues"
 echo "   Files checked: ${#files_to_check[@]}"
 echo ""
 echo "🔧 What was fixed:"
-echo "   ✅ Profile.tsx - Added IDs to Select components (experience, education, weeklyGoal)"
+echo "   ✅ Profile.tsx - Added name attributes and autoComplete to form inputs"
 echo "   ✅ Help.tsx - Added ID to contact type Select component"
+echo "   ✅ Skills.tsx - Added id/name to search input"
+echo "   ✅ Roles.tsx - Added id/name to search input"
+echo "   ✅ Opportunities.tsx - Added id/name to job search input"
+echo "   ✅ Courses.tsx - Added id/name to course search input"
+echo "   ✅ LearningResources.tsx - Added id/name to resources search input"
+echo "   ✅ RoadmapBuilder.tsx - Added id/name to milestone inputs"
+echo "   ✅ Settings.tsx - Added name to file input"
 echo ""
 echo "🧪 Testing:"
 echo "   1. Run the development server: npm run dev"
-echo "   2. Test form interactions and screen reader navigation"
+echo "   2. Test form interactions and browser autofill"
 echo "   3. Check browser console for accessibility warnings"
 echo "   4. Use browser dev tools Lighthouse accessibility audit"
 echo ""
@@ -130,4 +151,5 @@ echo "   • Test with screen readers (NVDA, JAWS, VoiceOver)"
 echo "   • Run automated accessibility tests (axe-core)"
 echo "   • Verify keyboard navigation works properly"
 echo "   • Check color contrast ratios"
+echo "   • Test browser autofill functionality"
 echo ""

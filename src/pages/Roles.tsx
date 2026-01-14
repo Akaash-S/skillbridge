@@ -337,10 +337,13 @@ export const Roles = () => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
+              id="roles-search"
+              name="roles-search"
               placeholder="Search roles..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
+              autoComplete="off"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">

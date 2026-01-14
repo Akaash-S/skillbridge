@@ -375,10 +375,13 @@ export const Skills = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                id="skills-search"
+                name="skills-search"
                 placeholder="Search skills..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-10"
+                autoComplete="off"
               />
             </div>
 

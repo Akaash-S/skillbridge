@@ -207,6 +207,8 @@ export const RoadmapBuilder = () => {
                           <div className="space-y-1">
                             <label className="text-xs text-muted-foreground">Deadline</label>
                             <Input
+                              id={`milestone-deadline-${milestone.id}`}
+                              name={`milestone-deadline-${milestone.id}`}
                               type="date"
                               value={milestone.deadline}
                               onChange={(e) => updateMilestone(milestone.id, { deadline: e.target.value })}
@@ -216,10 +218,13 @@ export const RoadmapBuilder = () => {
                           <div className="space-y-1">
                             <label className="text-xs text-muted-foreground">Notes</label>
                             <Input
+                              id={`milestone-notes-${milestone.id}`}
+                              name={`milestone-notes-${milestone.id}`}
                               placeholder="Add notes..."
                               value={milestone.notes}
                               onChange={(e) => updateMilestone(milestone.id, { notes: e.target.value })}
                               className="h-8"
+                              autoComplete="off"
                             />
                           </div>
                         </div>

@@ -760,19 +760,23 @@ export const Profile = () => {
                     <Label htmlFor="name">Full Name</Label>
                     <Input
                       id="name"
+                      name="name"
                       value={profileData.name}
                       onChange={(e) => setProfileData(prev => ({ ...prev, name: e.target.value }))}
                       disabled={!isEditing}
+                      autoComplete="name"
                     />
                   </div>
                   <div>
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
+                      name="email"
                       type="email"
                       value={profileData.email}
                       disabled={true}
                       className="bg-muted/50 cursor-not-allowed"
+                      autoComplete="email"
                     />
                     {/* <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                       <Mail className="h-3 w-3" />
@@ -798,10 +802,12 @@ export const Profile = () => {
                     <Label htmlFor="location">Location</Label>
                     <Input
                       id="location"
+                      name="location"
                       value={profileData.location}
                       onChange={(e) => setProfileData(prev => ({ ...prev, location: e.target.value }))}
                       disabled={!isEditing}
                       placeholder="e.g., Remote, New York, etc."
+                      autoComplete="address-level2"
                     />
                   </div>
                   <div>

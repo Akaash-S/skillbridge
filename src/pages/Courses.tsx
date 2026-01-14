@@ -517,11 +517,14 @@ export const Courses = () => {
                 {/* Search Input */}
                 <div className="flex gap-2">
                   <Input
+                    id="course-search"
+                    name="course-search"
                     placeholder="Search for courses (e.g., React, Python, Machine Learning)"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyPress={handleKeyPress}
                     className="flex-1"
+                    autoComplete="off"
                   />
                   <Button onClick={searchCourses} disabled={loading}>
                     {loading ? (

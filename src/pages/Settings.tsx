@@ -834,6 +834,7 @@ export const Settings = () => {
                         onChange={handleImportSettings}
                         className="hidden"
                         id="import-settings"
+                        name="import-settings"
                       />
                       <Button variant="outline" asChild>
                         <label htmlFor="import-settings" className="cursor-pointer">
