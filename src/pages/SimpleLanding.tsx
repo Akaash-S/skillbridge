@@ -74,13 +74,7 @@ const features = [
 const testimonials = [
   {
     quote: "SkillBridge showed me exactly which skills I was missing for my dream job. I got promoted within 3 months!",
-    author: "Akaash S, Sanjay R",
-    role: "Students @ MSEC",
-    rating: 5,
-  },
-  {
-    quote: "The personalized roadmap was a game-changer. No more random tutorials - just focused learning that actually matters.",
-    author: "Raj Priyan S K, Lokesh Y",
+    author: "Akaash S",
     role: "Students @ MSEC",
     rating: 5,
   },
