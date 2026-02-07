@@ -51,24 +51,12 @@ export const Roadmap = () => {
   const [localLoading, setLocalLoading] = useState(false);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
 
-  // Debug logging
-  console.log('🔍 Roadmap Component State:', {
-    selectedRole: selectedRole?.title || 'None',
-    hasAnalysis: !!analysis,
-    roadmapLength: roadmap.length,
-    loading,
-    localLoading,
-    error: error || 'None'
-  });
-
   // Simplified initialization logic - Allow roadmap to render even with 0% progress
   useEffect(() => {
     const initializeRoadmap = async () => {
-      console.log('🔄 Initializing roadmap component...');
       
       // Check prerequisites - but allow users with analysis to proceed even with 0% progress
       if (!selectedRole) {
-        console.log('❌ No role selected, redirecting to roles page');
         navigate("/roles");
         return;
       }
@@ -76,25 +64,21 @@ export const Roadmap = () => {
       // Allow users to access roadmap if they have a selected role, even without analysis
       // This enables the roadmap template to render for users with 0% progress
       if (!analysis && !hasRoadmapTemplate(selectedRole.id)) {
-        console.log('❌ No analysis and no roadmap template, redirecting to analysis page');
         navigate("/analysis");
         return;
       }
 
       // Load roadmap if not already loaded and not currently loading
       if (roadmap.length === 0 && !loading && !localLoading) {
-        console.log('📋 Loading roadmap for role:', selectedRole.id);
         setLocalLoading(true);
         try {
           await loadFixedRoadmap();
-          console.log('✅ Roadmap loaded successfully');
         } catch (error) {
           console.error('❌ Failed to load roadmap:', error);
         } finally {
           setLocalLoading(false);
         }
       } else if (roadmap.length > 0) {
-        console.log('✅ Roadmap already loaded with', roadmap.length, 'items');
       }
     };
 
@@ -112,14 +96,12 @@ export const Roadmap = () => {
     
     try {
       await markRoadmapItemComplete(itemId);
-      console.log('✅ Roadmap item updated successfully:', itemId);
       
       // Show success message with analysis update info
       const roadmapItem = roadmap.find(item => item.id === itemId);
       if (roadmapItem?.completed) {
         // Item was just completed
         setTimeout(() => {
-          console.log('🎯 Analysis will be updated based on skill completion');
         }, 1000);
       }
     } catch (error) {
@@ -261,9 +243,7 @@ export const Roadmap = () => {
 
   // Main roadmap content - only render if we have valid roadmap data
   if (roadmap.length > 0) {
-    console.log('✅ Rendering roadmap with', roadmap.length, 'items');
   } else {
-    console.log('⚠️ No roadmap items to render');
   }
 
   return (

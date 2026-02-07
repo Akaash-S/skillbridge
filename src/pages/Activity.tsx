@@ -48,7 +48,6 @@ export const Activity = () => {
     
     setLoading(true);
     try {
-      console.log('📊 Loading user activity...');
       
       // Load activity data and summary
       const [activityResponse, summaryResponse] = await Promise.all([
@@ -98,7 +97,6 @@ export const Activity = () => {
         }
       });
       
-      console.log('✅ User activity loaded successfully');
       
     } catch (error) {
       console.error('❌ Failed to load user activity:', error);

@@ -30,19 +30,16 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // If MFA is required, redirect to login to handle MFA
   if (mfaRequired) {
-    console.log('🔐 MFA required, redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // If not authenticated, redirect to login with return URL
   if (!isAuthenticated || !user) {
-    console.log('🔒 Not authenticated, redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // If user hasn't completed onboarding, redirect to onboarding
   if (user && (!user.name || user.name.trim() === '') && location.pathname !== '/onboarding') {
-    console.log('👋 User needs onboarding, redirecting');
     return <Navigate to="/onboarding" replace />;
   }
 

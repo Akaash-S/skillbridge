@@ -169,7 +169,6 @@ export const Opportunities = () => {
     if (!forceRefresh) {
       const cached = jobsCache[currentCacheKey];
       if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-        console.log(`📦 Cache hit for: ${roleToSearch}`);
         setJobs(cached.jobs);
         setTotalJobs(cached.totalJobs || cached.jobs.length);
         setIsInitialLoad(false);
@@ -198,7 +197,6 @@ export const Opportunities = () => {
     abortControllerRef.current = new AbortController();
     
     try {
-      console.log(`🚀 Fast search for: "${roleToSearch}" in ${location}`);
       
       const params = new URLSearchParams();
       params.append('role', roleToSearch);
@@ -224,7 +222,6 @@ export const Opportunities = () => {
       const source = response.results?.source || 'api';
       
       const searchDuration = Date.now() - startTime;
-      console.log(`⚡ Found ${jobsData.length} jobs in ${searchDuration}ms (${source})`);
       
       // Calculate match scores in batches for better performance
       const jobsWithScores = jobsData.map((job: Job) => {
@@ -283,7 +280,6 @@ export const Opportunities = () => {
         }
       }));
       
-      console.log(`✅ Loaded ${jobsWithScores.length} jobs with match scores`);
       
       // Show success toast for manual searches
       if (!isInitialLoad && forceRefresh) {
@@ -295,7 +291,6 @@ export const Opportunities = () => {
       
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        console.log('🚫 Search request aborted');
         return;
       }
       
@@ -316,12 +311,6 @@ export const Opportunities = () => {
 
   // Load jobs on component mount and when target role changes - FIXED dependencies
   useEffect(() => {
-    console.log('🔄 Opportunities page mounted/updated', {
-      selectedRole: selectedRole?.title,
-      isAuthenticated,
-      userSkillsCount: userSkills?.length || 0
-    });
-    
     // Load jobs immediately when component mounts
     if (selectedRole?.id) {
       loadJobs(selectedRole.title, jobLocation, false);
@@ -333,7 +322,6 @@ export const Opportunities = () => {
   // Auto-search when debounced query changes - FIXED dependencies
   useEffect(() => {
     if (debouncedSearchQuery.trim() && debouncedSearchQuery !== (selectedRole?.title || "")) {
-      console.log(`🔍 Auto-searching for: "${debouncedSearchQuery}"`);
       loadJobs(debouncedSearchQuery, jobLocation, false);
     }
   }, [debouncedSearchQuery, jobLocation, selectedRole?.title]); // Removed loadJobs from dependencies
@@ -341,7 +329,6 @@ export const Opportunities = () => {
   // Enhanced job search with immediate feedback - FIXED dependencies
   const handleJobSearch = useCallback(() => {
     const searchTerm = jobSearchQuery.trim() || selectedRole?.title || "Software Developer";
-    console.log(`🚀 Manual search triggered: "${searchTerm}"`);
     loadJobs(searchTerm, jobLocation, true);
   }, [jobSearchQuery, jobLocation, selectedRole?.title]); // Removed loadJobs from dependencies
 
@@ -349,7 +336,6 @@ export const Opportunities = () => {
   const handleLocationChange = useCallback((newLocation: string) => {
     setJobLocation(newLocation);
     const searchTerm = debouncedSearchQuery.trim() || selectedRole?.title || "Software Developer";
-    console.log(`🌍 Location changed to ${newLocation}, searching: "${searchTerm}"`);
     // Use setTimeout to avoid stale closure
     setTimeout(() => {
       loadJobs(searchTerm, newLocation, true);
@@ -359,7 +345,6 @@ export const Opportunities = () => {
   // Enhanced refresh with performance tracking - FIXED dependencies
   const handleRefresh = useCallback(() => {
     const searchTerm = debouncedSearchQuery.trim() || selectedRole?.title || "Software Developer";
-    console.log(`🔄 Refreshing jobs for: "${searchTerm}"`);
     loadJobs(searchTerm, jobLocation, true);
   }, [debouncedSearchQuery, selectedRole?.title, jobLocation]); // Removed loadJobs from dependencies
 

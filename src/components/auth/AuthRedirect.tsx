@@ -32,7 +32,6 @@ export const AuthRedirect: React.FC = () => {
 
   // If MFA is required, redirect to login to handle MFA
   if (mfaRequired) {
-    console.log('🔐 MFA required, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
@@ -40,16 +39,13 @@ export const AuthRedirect: React.FC = () => {
   if (isAuthenticated && user) {
     // If user hasn't completed onboarding, redirect to onboarding first
     if (!user.name || user.name.trim() === '') {
-      console.log('👋 Authenticated user needs onboarding, redirecting');
       return <Navigate to="/onboarding" replace />;
     }
     
-    console.log('✅ Authenticated user, redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
 
   // User is not authenticated - show the landing page
-  console.log('🏠 User not authenticated, showing landing page');
   return <SimpleLanding />;
 };
 

@@ -39,7 +39,6 @@ export const Login: React.FC = () => {
   // Handle successful authentication
   useEffect(() => {
     if (isAuthenticated && user && !mfaRequired && !isLoading) {
-      console.log('✅ User authenticated, redirecting to:', from);
       
       // Only redirect once
       const timer = setTimeout(() => {

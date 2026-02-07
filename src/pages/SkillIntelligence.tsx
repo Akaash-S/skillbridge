@@ -48,23 +48,18 @@ export const SkillIntelligence = () => {
       try {
         const analyticsResponse = await apiClient.get('/skills/analytics');
         setSkillAnalytics(analyticsResponse);
-        console.log('✅ Loaded skill analytics from backend');
       } catch (error) {
-        console.log('ℹ️ Skills analytics endpoint not available, using enhanced mock data');
         setSkillAnalytics(null);
       }
       
       try {
         const trendsResponse = await apiClient.get('/skills/market-trends');
         setMarketTrends(trendsResponse);
-        console.log('✅ Loaded market trends from backend');
       } catch (error) {
-        console.log('ℹ️ Market trends endpoint not available, using enhanced mock data');
         setMarketTrends(null);
       }
       
     } catch (error) {
-      console.log('ℹ️ Using enhanced mock data for skill intelligence');
     } finally {
       setLoading(false);
     }

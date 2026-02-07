@@ -124,11 +124,9 @@ export const Settings = () => {
     
     setLoading(true);
     try {
-      console.log('📊 Loading user settings...');
       const response = await apiClient.get<{ settings: any }>('/settings');
       setSettings(response.settings);
       setHasUnsavedChanges(false);
-      console.log('✅ Settings loaded successfully');
     } catch (error) {
       console.error('❌ Failed to load settings:', error);
       toast({
@@ -147,7 +145,6 @@ export const Settings = () => {
     
     setSaving(true);
     try {
-      console.log('💾 Saving settings...');
       await apiClient.put('/settings', settings);
       
       setLastSaved(new Date());
@@ -158,7 +155,6 @@ export const Settings = () => {
         description: "Your preferences have been updated successfully.",
       });
       
-      console.log('✅ Settings saved successfully');
     } catch (error) {
       console.error('❌ Failed to save settings:', error);
       toast({
@@ -177,7 +173,6 @@ export const Settings = () => {
     
     setResetting(true);
     try {
-      console.log('🔄 Resetting settings...');
       const response = await apiClient.post<{ settings: any }>('/settings/reset');
       setSettings(response.settings);
       setHasUnsavedChanges(false);
@@ -187,7 +182,6 @@ export const Settings = () => {
         description: "All settings have been reset to defaults.",
       });
       
-      console.log('✅ Settings reset successfully');
     } catch (error) {
       console.error('❌ Failed to reset settings:', error);
       toast({

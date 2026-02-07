@@ -161,21 +161,13 @@ export const Roles = () => {
 
   // Initialize data on component mount
   useEffect(() => {
-    console.log('💼 Roles page initializing...', {
-      jobRolesCount: jobRoles.length,
-      userSkillsCount: userSkills.length,
-      isAuthenticated
-    });
-
     // Use job roles from context if available
     if (jobRoles.length > 0) {
-      console.log('✅ Using job roles from context');
       setRolesWithSkillMatch(processedRoles);
       setCategories(availableCategories);
       setUserSkillsCount(userSkills.length);
       setInitialDataLoaded(true);
     } else if (isAuthenticated) {
-      console.log('🔄 Loading roles from API...');
       loadRolesWithSkillMatchFromAPI();
       loadCategories();
     }

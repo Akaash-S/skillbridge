@@ -436,12 +436,6 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
   const analytics = useMemo(() => {
     if (roadmap.length === 0 || !selectedRole) return null;
     
-    console.log('📊 Calculating analytics for role:', selectedRole.title, {
-      roadmapLength: roadmap.length,
-      completedItems: roadmap.filter(item => item.completed === true).length,
-      hasRoadmapProgress: !!roadmapProgress
-    });
-    
     return AnalyticsService.calculateLearningAnalytics(
       roadmap,
       roadmapProgress,
@@ -521,33 +515,19 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
   // Auto-load roadmap when role changes
   useEffect(() => {
     if (selectedRole && roadmap.length === 0) {
-      console.log('🔄 Dashboard: Auto-loading roadmap for new role:', selectedRole.title);
       loadFixedRoadmap();
     }
   }, [selectedRole, roadmap.length, loadFixedRoadmap]);
 
-  // Track role changes for debugging
+  // Track role changes
   useEffect(() => {
-    console.log('🎯 Dashboard: Role change detected:', {
-      selectedRole: selectedRole?.title || 'None',
-      roadmapLength: roadmap.length,
-      hasRoadmapProgress: !!roadmapProgress,
-      hasAnalytics: !!analytics
-    });
+    // Role tracking
   }, [selectedRole, roadmap.length, roadmapProgress, analytics]);
 
   // Track analytics changes
   useEffect(() => {
     if (analytics) {
-      console.log('📊 Dashboard: Analytics updated:', {
-        role: selectedRole?.title,
-        progressPercent: analytics.progressPercent,
-        learningVelocity: analytics.learningVelocity,
-        currentStreak: analytics.currentStreak,
-        completionLikelihood: analytics.completionLikelihood
-      });
-    } else {
-      console.log('📊 Dashboard: Analytics cleared (no roadmap or role)');
+      // Analytics tracked
     }
   }, [analytics, selectedRole]);
 
@@ -557,16 +537,7 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
   // Debug logging for roadmap progress calculation
   useEffect(() => {
     if (roadmap.length > 0) {
-      console.log('🔍 Dashboard Progress Debug:', {
-        totalItems: roadmap.length,
-        completedItems,
-        roadmapProgressPercent,
-        roadmapItems: roadmap.map(item => ({
-          id: item.id,
-          skillName: item.skillName,
-          completed: item.completed
-        }))
-      });
+      // Roadmap tracked
     }
   }, [roadmap, completedItems, roadmapProgressPercent]);
   

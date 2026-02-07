@@ -31,11 +31,10 @@ const googleProvider = new GoogleAuthProvider();
 googleProvider.addScope('email');
 googleProvider.addScope('profile');
 
-// Storage keys
-const AUTH_TOKEN_KEY = 'sb_auth_token';
-const AUTH_USER_KEY = 'sb_auth_user';
-const MFA_VERIFIED_KEY = 'sb_mfa_verified';
-const SESSION_TYPE_KEY = 'sb_session_type';
+// Storage keys - ONLY for non-sensitive data
+// Auth tokens and user data are now in httpOnly cookies (server-side)
+const SESSION_TYPE_KEY = 'sb_session_type'; // Safe: only tracks session type
+const MFA_VERIFIED_KEY = 'sb_mfa_verified_temp'; // Temporary MFA verification flag
 
 // Types
 export interface AuthUser {
@@ -96,7 +95,6 @@ class AuthService {
   // Initialize Firebase auth state listener
   private initializeAuthListener(): void {
     onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log('🔄 Auth state changed:', firebaseUser?.email || 'No user');
       
       if (firebaseUser) {
         await this.handleAuthenticatedUser(firebaseUser);
@@ -124,13 +122,11 @@ class AuthService {
       
       // Determine session type
       const sessionType = this.getSessionType();
-      console.log('🔍 Session type:', sessionType);
 
       // Call backend login
       const response = await this.callBackendLogin(idToken, sessionType);
       
       if (response.mfa_required) {
-        console.log('🔐 MFA verification required');
         this.updateState({
           user: null,
           isAuthenticated: false,
@@ -160,16 +156,15 @@ class AuthService {
         error: null
       });
 
-      // Store auth data
-      this.storeAuthData(idToken, authUser);
-      
-      // Mark session as restored if it was session restoration
+      // Store session type for future reference
       if (sessionType === SessionType.SESSION_RESTORE) {
         localStorage.setItem(SESSION_TYPE_KEY, SessionType.SESSION_RESTORE);
       }
 
     } catch (error: any) {
-      console.error('❌ Auth error:', error);
+      if (env.debugMode) {
+        console.error('Auth error:', error);
+      }
       this.updateState({
         user: null,
         isAuthenticated: false,
@@ -183,11 +178,10 @@ class AuthService {
 
   // Determine session type
   private getSessionType(): SessionType {
-    const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
-    const storedUser = localStorage.getItem(AUTH_USER_KEY);
+    const sessionType = localStorage.getItem(SESSION_TYPE_KEY);
     
-    // If we have stored auth data, this is session restoration
-    if (storedToken && storedUser) {
+    // Check if this is a session restoration
+    if (sessionType === SessionType.SESSION_RESTORE) {
       return SessionType.SESSION_RESTORE;
     }
     
@@ -202,6 +196,7 @@ class AuthService {
       headers: {
         'Content-Type': 'application/json',
       },
+      credentials: 'include', // Send cookies with request
       body: JSON.stringify({ 
         idToken,
         sessionType,
@@ -222,30 +217,27 @@ class AuthService {
     try {
       const result = await getRedirectResult(auth);
       if (result?.user) {
-        console.log('✅ Redirect authentication successful');
         localStorage.setItem(SESSION_TYPE_KEY, SessionType.REDIRECT_COMPLETE);
       }
     } catch (error: any) {
-      console.log('ℹ️ No redirect result or redirect failed:', error.message);
     }
   }
 
   // Sign in with Google (popup method)
   public async signInWithPopup(): Promise<void> {
     try {
-      console.log('🔑 Starting popup authentication...');
       localStorage.setItem(SESSION_TYPE_KEY, SessionType.EXPLICIT_LOGIN);
       
-      const result = await signInWithPopup(auth, googleProvider);
-      console.log('✅ Popup authentication successful');
+      await signInWithPopup(auth, googleProvider);
       
       // Auth state listener will handle the rest
     } catch (error: any) {
-      console.error('❌ Popup authentication failed:', error);
+      if (env.debugMode) {
+        console.error('Popup authentication failed:', error);
+      }
       
       // Check if we should fallback to redirect
       if (this.shouldFallbackToRedirect(error)) {
-        console.log('🔄 Falling back to redirect authentication...');
         await this.signInWithRedirect();
         return;
       }
@@ -257,11 +249,12 @@ class AuthService {
   // Sign in with redirect (fallback method)
   public async signInWithRedirect(): Promise<void> {
     try {
-      console.log('🔄 Starting redirect authentication...');
       localStorage.setItem(SESSION_TYPE_KEY, SessionType.EXPLICIT_LOGIN);
       await signInWithRedirect(auth, googleProvider);
     } catch (error: any) {
-      console.error('❌ Redirect authentication failed:', error);
+      if (env.debugMode) {
+        console.error('Redirect authentication failed:', error);
+      }
       throw error;
     }
   }
@@ -291,17 +284,25 @@ class AuthService {
   // Complete MFA login
   public async completeMFALogin(mfaToken: string, code: string, isRecoveryCode: boolean = false): Promise<void> {
     try {
-      console.log('🔐 Completing MFA login...');
+      // Get current Firebase user's ID token
+      const firebaseUser = auth.currentUser;
+      if (!firebaseUser) {
+        throw new Error('No Firebase user found');
+      }
+      
+      const idToken = await firebaseUser.getIdToken();
       
       const response = await fetch(`${env.apiBaseUrl}/auth/login/mfa`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Send cookies with request
         body: JSON.stringify({
           mfa_token: mfaToken,
           code,
-          is_recovery_code: isRecoveryCode
+          is_recovery_code: isRecoveryCode,
+          idToken // Required for backend to set cookie
         })
       });
 
@@ -333,15 +334,10 @@ class AuthService {
         error: null
       });
 
-      // Store auth data
-      const firebaseUser = auth.currentUser;
-      if (firebaseUser) {
-        const idToken = await firebaseUser.getIdToken();
-        this.storeAuthData(idToken, authUser);
-      }
-
     } catch (error: any) {
-      console.error('❌ MFA login failed:', error);
+      if (env.debugMode) {
+        console.error('MFA login failed:', error);
+      }
       throw error;
     }
   }
@@ -349,9 +345,18 @@ class AuthService {
   // Sign out
   public async signOut(): Promise<void> {
     try {
-      console.log('🔓 Signing out...');
+      // Call backend logout to clear httpOnly cookie
+      await fetch(`${env.apiBaseUrl}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include' // Send cookie to be cleared
+      }).catch(() => {
+        // Ignore errors - proceed with local logout anyway
+      });
       
+      // Sign out from Firebase
       await signOut(auth);
+      
+      // Clear local storage
       this.clearStoredAuth();
       this.clearMFAVerified();
       
@@ -364,9 +369,10 @@ class AuthService {
         mfaToken: null
       });
       
-      console.log('✅ Sign out successful');
     } catch (error: any) {
-      console.error('❌ Sign out failed:', error);
+      if (env.debugMode) {
+        console.error('Sign out failed:', error);
+      }
       throw error;
     }
   }
@@ -379,21 +385,15 @@ class AuthService {
     try {
       return await user.getIdToken(true);
     } catch (error) {
-      console.error('❌ Failed to get current token:', error);
+      if (env.debugMode) {
+        console.error('Failed to get current token:', error);
+      }
       return null;
     }
   }
 
-  // Store auth data
-  private storeAuthData(token: string, user: AuthUser): void {
-    localStorage.setItem(AUTH_TOKEN_KEY, token);
-    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
-  }
-
-  // Clear stored auth data
+  // Clear stored auth data (only non-sensitive session info)
   private clearStoredAuth(): void {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    localStorage.removeItem(AUTH_USER_KEY);
     localStorage.removeItem(SESSION_TYPE_KEY);
   }
 

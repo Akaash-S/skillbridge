@@ -134,7 +134,7 @@ export const Profile = () => {
           updatedAt: profile.updatedAt
         });
       } else {
-        console.warn('Failed to load profile:', profileResponse.reason);
+        // console.warn('Failed to load profile:', profileResponse.reason);
         // Use fallback data from auth context
         setProfileData(prev => ({
           ...prev,
@@ -148,7 +148,7 @@ export const Profile = () => {
       if (statsResponse.status === 'fulfilled') {
         setUserStats(statsResponse.value.stats);
       } else {
-        console.warn('Failed to load stats:', statsResponse.reason);
+        // console.warn('Failed to load stats:', statsResponse.reason);
         // Use fallback data from context
         setUserStats({
           skillsCount: userSkills.length,

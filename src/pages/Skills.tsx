@@ -126,22 +126,13 @@ export const Skills = () => {
 
   // Initialize data on component mount
   useEffect(() => {
-    console.log('🎯 Skills page initializing...', {
-      masterSkillsCount: masterSkills.length,
-      userSkillsCount: userSkills.length,
-      hasSelectedRole: !!selectedRole,
-      isAuthenticated
-    });
-
     // Use master skills from context if available
     if (masterSkills.length > 0) {
-      console.log('✅ Using master skills from context');
       const result = getAvailableSkillsFromMaster;
       setAvailableSkills(result.skills);
       setPagination(result.pagination);
       setInitialDataLoaded(true);
     } else if (isAuthenticated) {
-      console.log('🔄 Loading skills from API...');
       loadAvailableSkillsFromAPI(1, search);
     }
 

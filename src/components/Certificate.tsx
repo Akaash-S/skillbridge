@@ -51,8 +51,6 @@ export const Certificate: React.FC<CertificateProps> = ({
         onDownload();
       } else {
         // Default download implementation with debug info
-        console.log('Starting PDF download process...');
-        console.log('Certificate ref:', certificateRef.current);
         await downloadAsPDF();
       }
     } catch (error) {

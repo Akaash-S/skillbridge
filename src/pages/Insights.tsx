@@ -49,7 +49,6 @@ export const Insights = () => {
     
     setLoading(true);
     try {
-      console.log('📊 Loading user insights...');
       
       // Load user stats and activity summary in parallel
       const [statsResponse, activityResponse] = await Promise.all([
@@ -86,7 +85,6 @@ export const Insights = () => {
         }
       });
       
-      console.log('✅ User insights loaded successfully');
       
     } catch (error) {
       console.error('❌ Failed to load user insights:', error);

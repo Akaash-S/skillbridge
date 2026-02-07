@@ -101,19 +101,3 @@ export const env = createConfig();
 // Export types
 export type { EnvConfig };
 
-// Development helper
-if (env.debugMode && env.appEnv === 'development') {
-  console.log('🔧 Environment Configuration:', {
-    appName: env.appName,
-    appVersion: env.appVersion,
-    appEnv: env.appEnv,
-    apiBaseUrl: env.apiBaseUrl,
-    firebaseProjectId: env.firebaseProjectId,
-    features: {
-      aiRoadmap: env.enableAiRoadmap,
-      jobSearch: env.enableJobSearch,
-      skillAssessments: env.enableSkillAssessments,
-      resumeAnalysis: env.enableResumeAnalysis,
-    }
-  });
-}

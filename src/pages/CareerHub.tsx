@@ -257,7 +257,6 @@ export const CareerHub = () => {
     
     setLoadingJobs(true);
     try {
-      console.log(`🎯 Loading enhanced jobs for: ${selectedRole.title}`);
       const params = new URLSearchParams();
       params.append('role', selectedRole.title);
       params.append('country', 'in');

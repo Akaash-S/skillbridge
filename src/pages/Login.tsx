@@ -86,7 +86,6 @@ export const Login = () => {
 
   // Redirect authenticated users immediately
   useEffect(() => {
-    console.log('🔍 Login page - Auth state check:', { 
       isAuthenticated, 
       user: !!user, 
       userName: user?.name,
@@ -98,12 +97,10 @@ export const Login = () => {
     
     // If user is fully authenticated and not in MFA flow, redirect immediately
     if (isAuthenticated && user && !mfaRequired && !hasRedirected) {
-      console.log('✅ User already authenticated, redirecting...');
       setHasRedirected(true);
       
       // Immediate redirect without delay
       const redirectPath = (!user.name || user.name === '') ? "/onboarding" : from;
-      console.log('🔄 Redirecting to:', redirectPath);
       
       // Try multiple redirect methods to ensure it works
       navigate(redirectPath, { replace: true });
@@ -111,13 +108,11 @@ export const Login = () => {
       // Fallback redirect after short delay
       setTimeout(() => {
         if (window.location.pathname === '/login') {
-          console.log('🔄 Fallback redirect triggered');
           window.location.href = redirectPath;
         }
       }, 500);
       
     } else {
-      console.log('❌ Not redirecting because:', {
         isAuthenticated: isAuthenticated ? '✅' : '❌',
         hasUser: user ? '✅' : '❌',
         notLoading: !loading ? '✅' : '❌',
@@ -143,7 +138,6 @@ export const Login = () => {
 
   // If user is authenticated but we're still here, show loading while redirecting
   if (isAuthenticated && user && !mfaRequired) {
-    console.log('🔄 Authenticated user on login page, showing redirect loading...');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">

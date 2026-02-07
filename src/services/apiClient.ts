@@ -47,32 +47,20 @@ class ApiClient {
     // Build full URL
     const url = `${API_BASE_URL}${endpoint}`;
     
-    // Debug logging
-    if (env.debugMode) {
-      console.log(`🌐 API Request: ${method} ${url}`);
-      console.log(`🔧 API Base URL: ${API_BASE_URL}`);
-      console.log(`🔧 Endpoint: ${endpoint}`);
-    }
-    
     // Prepare headers
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       ...headers
     };
 
-    // Add auth header if required
-    if (requireAuth) {
-      const token = await authService.getCurrentToken();
-      if (!token) {
-        throw new Error('Authentication required - please log in');
-      }
-      requestHeaders['Authorization'] = `Bearer ${token}`;
-    }
+    // Note: Auth token is now in httpOnly cookie (sb_session)
+    // No need to add Authorization header - cookie is sent automatically
 
     // Prepare request options
     const requestOptions: RequestInit = {
       method,
       headers: requestHeaders,
+      credentials: 'include', // CRITICAL: Send cookies with cross-origin requests
       ...(body && { body: JSON.stringify(body) })
     };
 
@@ -81,8 +69,6 @@ class ApiClient {
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
-      console.log(`🌐 API ${method} ${endpoint}`, body ? { body } : '');
-      
       const response = await fetch(url, {
         ...requestOptions,
         signal: controller.signal
@@ -96,8 +82,6 @@ class ApiClient {
         
         // Handle 401 - token expired or invalid
         if (response.status === 401) {
-          console.log('🔒 401 Unauthorized - token may be expired');
-          // Auth service will handle token refresh automatically
           throw new Error('Authentication expired - please log in again');
         }
         
@@ -107,7 +91,6 @@ class ApiClient {
 
       // Parse response
       const data = await response.json();
-      console.log(`✅ API ${method} ${endpoint} success`);
       
       return data;
 
@@ -118,7 +101,9 @@ class ApiClient {
         throw new Error(`Request timeout after ${timeout}ms`);
       }
       
-      console.error(`❌ API ${method} ${endpoint} failed:`, error.message);
+      if (env.debugMode) {
+        console.error(`API ${method} ${endpoint} failed:`, error.message);
+      }
       throw error;
     }
   }
@@ -131,7 +116,6 @@ class ApiClient {
     if (useCache) {
       const cached = this.getCachedData<T>(cacheKey);
       if (cached) {
-        console.log(`📦 Cache hit for ${endpoint}`);
         return cached;
       }
     }
@@ -189,10 +173,8 @@ class ApiClient {
     if (pattern) {
       const keysToDelete = Array.from(this.cache.keys()).filter(key => key.includes(pattern));
       keysToDelete.forEach(key => this.cache.delete(key));
-      console.log(`🧹 Cleared cache for pattern: ${pattern}`);
     } else {
       this.cache.clear();
-      console.log('🧹 Cleared all cache');
     }
   }
 

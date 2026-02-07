@@ -33,7 +33,6 @@ export const runBrowserDiagnostics = (): BrowserDiagnostics => {
       (window as any).adblockDetected
     );
   } catch (error) {
-    console.log('Extension detection failed:', error);
   }
 
   // Check if popups are blocked (basic test)
@@ -119,17 +118,9 @@ export const logBrowserDiagnostics = (): void => {
   const diagnostics = runBrowserDiagnostics();
   
   console.group('🔍 Browser Diagnostics for Authentication');
-  console.log('Extensions detected:', diagnostics.hasExtensions);
-  console.log('Popups blocked:', diagnostics.popupsBlocked);
-  console.log('Cookies enabled:', diagnostics.cookiesEnabled);
-  console.log('LocalStorage enabled:', diagnostics.localStorageEnabled);
-  console.log('Security policies detected:', diagnostics.hasSecurityPolicies);
-  console.log('User Agent:', diagnostics.userAgent);
   
   if (diagnostics.recommendations.length > 0) {
-    console.log('Recommendations:');
     diagnostics.recommendations.forEach((rec, index) => {
-      console.log(`  ${index + 1}. ${rec}`);
     });
   }
   

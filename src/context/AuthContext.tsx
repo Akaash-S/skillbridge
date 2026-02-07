@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { authService, AuthState, AuthUser } from '@/services/auth';
+import { env } from '@/config/env';
 
 interface AuthContextType extends AuthState {
   // Auth methods
@@ -24,24 +25,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState>(authService.getCurrentState());
 
   useEffect(() => {
-    console.log('🔄 AuthProvider: Setting up auth state listener');
-    
     // Subscribe to auth state changes
     const unsubscribe = authService.onAuthStateChange((state) => {
-      console.log('🔄 AuthProvider: Auth state updated', {
-        isAuthenticated: state.isAuthenticated,
-        hasUser: !!state.user,
-        userEmail: state.user?.email,
-        isLoading: state.isLoading,
-        mfaRequired: state.mfaRequired,
-        hasError: !!state.error
-      });
-      
       setAuthState(state);
     });
 
     return () => {
-      console.log('🔄 AuthProvider: Cleaning up auth state listener');
       unsubscribe();
     };
   }, []);
@@ -51,7 +40,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authService.signInWithPopup();
     } catch (error: any) {
-      console.error('❌ AuthProvider: Popup sign-in failed:', error);
+      if (env.debugMode) {
+        console.error('AuthProvider: Popup sign-in failed:', error);
+      }
       throw error;
     }
   };
@@ -60,7 +51,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authService.signInWithRedirect();
     } catch (error: any) {
-      console.error('❌ AuthProvider: Redirect sign-in failed:', error);
+      if (env.debugMode) {
+        console.error('AuthProvider: Redirect sign-in failed:', error);
+      }
       throw error;
     }
   };
@@ -69,7 +62,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authService.completeMFALogin(mfaToken, code, isRecoveryCode);
     } catch (error: any) {
-      console.error('❌ AuthProvider: MFA login failed:', error);
+      if (env.debugMode) {
+        console.error('AuthProvider: MFA login failed:', error);
+      }
       throw error;
     }
   };
@@ -78,7 +73,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       await authService.signOut();
     } catch (error: any) {
-      console.error('❌ AuthProvider: Sign out failed:', error);
+      if (env.debugMode) {
+        console.error('AuthProvider: Sign out failed:', error);
+      }
       throw error;
     }
   };
