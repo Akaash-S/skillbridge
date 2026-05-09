@@ -47,7 +47,17 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="skillbridge-theme">
+    <ThemeProvider 
+      attribute="class" 
+      defaultTheme="dark" 
+      enableSystem={true} 
+      storageKey="skillbridge-theme"
+      value={{
+        light: "light",
+        dark: "dark",
+        system: "dark"
+      }}
+    >
       <AuthProvider>
         <AppDataProvider>
           <ErrorBoundary>

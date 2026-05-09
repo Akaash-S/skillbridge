@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { apiClient } from "@/services/apiClient";
+import { useTheme } from "next-themes";
 import { 
   Palette, 
   Bell, 
@@ -106,6 +107,7 @@ const timezones = [
 
 export const Settings = () => {
   const { toast } = useToast();
+  const { theme: currentTheme, setTheme } = useTheme();
   const { isAuthenticated, signOut } = useAuth();
   
   // Loading states
@@ -430,7 +432,10 @@ export const Settings = () => {
                   <Label className="text-sm font-medium">Theme Mode</Label>
                   <RadioGroup 
                     value={settings?.theme || 'system'} 
-                    onValueChange={(value) => updateSetting('theme', value)} 
+                    onValueChange={(value) => {
+                      updateSetting('theme', value);
+                      setTheme(value);
+                    }} 
                     className="flex gap-4"
                   >
                     <div className="flex items-center space-x-2">
