@@ -14,10 +14,10 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { apiClient } from "@/services/apiClient";
 import { useTheme } from "next-themes";
-import { 
-  Palette, 
-  Bell, 
-  Shield, 
+import {
+  Palette,
+  Bell,
+  Shield,
   User,
   Sun,
   Moon,
@@ -107,14 +107,15 @@ const timezones = [
 
 export const Settings = () => {
   const { toast } = useToast();
-  const { theme: currentTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { isAuthenticated, signOut } = useAuth();
-  
+
   // Loading states
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [resetting, setResetting] = useState(false);
-  
+
   // Settings state
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -123,11 +124,14 @@ export const Settings = () => {
   // Load user settings from backend
   const loadSettings = useCallback(async () => {
     if (!isAuthenticated) return;
-    
+
     setLoading(true);
     try {
       const response = await apiClient.get<{ settings: any }>('/settings');
       setSettings(response.settings);
+      if (response.settings.theme) {
+        setTheme(response.settings.theme);
+      }
       setHasUnsavedChanges(false);
     } catch (error) {
       console.error('❌ Failed to load settings:', error);
@@ -144,19 +148,19 @@ export const Settings = () => {
   // Save settings to backend
   const saveSettings = useCallback(async () => {
     if (!settings || !isAuthenticated) return;
-    
+
     setSaving(true);
     try {
       await apiClient.put('/settings', settings);
-      
+
       setLastSaved(new Date());
       setHasUnsavedChanges(false);
-      
+
       toast({
         title: "Settings saved",
         description: "Your preferences have been updated successfully.",
       });
-      
+
     } catch (error) {
       console.error('❌ Failed to save settings:', error);
       toast({
@@ -172,18 +176,18 @@ export const Settings = () => {
   // Reset settings to defaults
   const resetSettings = useCallback(async () => {
     if (!isAuthenticated) return;
-    
+
     setResetting(true);
     try {
       const response = await apiClient.post<{ settings: any }>('/settings/reset');
       setSettings(response.settings);
       setHasUnsavedChanges(false);
-      
+
       toast({
         title: "Settings reset",
         description: "All settings have been reset to defaults.",
       });
-      
+
     } catch (error) {
       console.error('❌ Failed to reset settings:', error);
       toast({
@@ -199,11 +203,11 @@ export const Settings = () => {
   // Update setting helper
   const updateSetting = useCallback((path: string, value: any) => {
     if (!settings) return;
-    
+
     const keys = path.split('.');
     const newSettings = { ...settings };
     let current: any = newSettings;
-    
+
     // Navigate to the nested property
     for (let i = 0; i < keys.length - 1; i++) {
       if (!current[keys[i]]) {
@@ -211,10 +215,10 @@ export const Settings = () => {
       }
       current = current[keys[i]];
     }
-    
+
     // Set the value
     current[keys[keys.length - 1]] = value;
-    
+
     setSettings(newSettings);
     setHasUnsavedChanges(true);
   }, [settings]);
@@ -222,12 +226,12 @@ export const Settings = () => {
   // Toggle job country
   const toggleJobCountry = useCallback((countryCode: string) => {
     if (!settings) return;
-    
+
     const currentCountries = settings.jobCountries || [];
     const newCountries = currentCountries.includes(countryCode)
       ? currentCountries.filter(c => c !== countryCode)
       : [...currentCountries, countryCode];
-    
+
     updateSetting('jobCountries', newCountries);
   }, [settings, updateSetting]);
 
@@ -244,7 +248,7 @@ export const Settings = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast({
         title: "Settings exported",
         description: "Your settings have been downloaded as a JSON file.",
@@ -263,16 +267,16 @@ export const Settings = () => {
   const handleImportSettings = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
     try {
       const text = await file.text();
       const importedData = JSON.parse(text);
-      
+
       // Validate imported settings structure
       if (importedData.settings) {
         setSettings(importedData.settings);
         setHasUnsavedChanges(true);
-        
+
         toast({
           title: "Settings imported",
           description: "Settings have been imported successfully. Click Save to apply them.",
@@ -288,13 +292,14 @@ export const Settings = () => {
         variant: "destructive",
       });
     }
-    
+
     // Reset file input
     event.target.value = '';
   }, [toast]);
 
   // Load settings on component mount
   useEffect(() => {
+    setMounted(true);
     if (isAuthenticated) {
       loadSettings();
     }
@@ -430,30 +435,50 @@ export const Settings = () => {
                 {/* Theme Mode */}
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Theme Mode</Label>
-                  <RadioGroup 
-                    value={settings?.theme || 'system'} 
+                  <RadioGroup
+                    value={mounted ? theme : 'system'}
                     onValueChange={(value) => {
                       updateSetting('theme', value);
                       setTheme(value);
-                    }} 
-                    className="flex gap-4"
+                    }}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-4"
                   >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="light" id="light" />
-                      <Label htmlFor="light" className="flex items-center gap-2 cursor-pointer">
-                        <Sun className="h-4 w-4" /> Light
+                      <RadioGroupItem value="light" id="theme-light" className="sr-only" />
+                      <Label
+                        htmlFor="theme-light"
+                        className={`flex items-center justify-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all w-full
+                          ${theme === 'light' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+                      >
+                        <Sun className={`h-5 w-5 ${theme === 'light' ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <span className="font-semibold">Light Mode</span>
                       </Label>
                     </div>
+
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="dark" id="dark" />
-                      <Label htmlFor="dark" className="flex items-center gap-2 cursor-pointer">
-                        <Moon className="h-4 w-4" /> Dark
+                      <RadioGroupItem value="dark" id="theme-dark" className="sr-only" />
+                      <Label
+                        htmlFor="theme-dark"
+                        className={`flex items-center justify-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all w-full
+                          ${theme === 'dark' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+                      >
+                        <Moon className={`h-5 w-5 ${theme === 'dark' ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <span className="font-semibold">Dark Mode</span>
                       </Label>
                     </div>
+
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="system" id="system" />
-                      <Label htmlFor="system" className="flex items-center gap-2 cursor-pointer">
-                        <Monitor className="h-4 w-4" /> System
+                      <RadioGroupItem value="system" id="theme-system" className="sr-only" />
+                      <Label
+                        htmlFor="theme-system"
+                        className={`flex items-center justify-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all w-full
+                          ${theme === 'system' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+                      >
+                        <Monitor className={`h-5 w-5 ${theme === 'system' ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-center">System Default</span>
+                          <span className="text-[10px] text-muted-foreground text-center">(Follows Dark)</span>
+                        </div>
                       </Label>
                     </div>
                   </RadioGroup>
@@ -476,8 +501,8 @@ export const Settings = () => {
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <Label className="text-sm font-medium">Language</Label>
-                    <Select 
-                      value={settings?.preferences?.language || 'en'} 
+                    <Select
+                      value={settings?.preferences?.language || 'en'}
                       onValueChange={(value) => updateSetting('preferences.language', value)}
                     >
                       <SelectTrigger>
@@ -495,8 +520,8 @@ export const Settings = () => {
 
                   <div className="space-y-3">
                     <Label className="text-sm font-medium">Timezone</Label>
-                    <Select 
-                      value={settings?.preferences?.timezone || 'UTC'} 
+                    <Select
+                      value={settings?.preferences?.timezone || 'UTC'}
                       onValueChange={(value) => updateSetting('preferences.timezone', value)}
                     >
                       <SelectTrigger>
@@ -533,9 +558,9 @@ export const Settings = () => {
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Learning Pace</Label>
                   <p className="text-xs text-muted-foreground">Affects roadmap timelines and recommendations</p>
-                  <RadioGroup 
-                    value={settings?.learningPace || 'balanced'} 
-                    onValueChange={(value) => updateSetting('learningPace', value)} 
+                  <RadioGroup
+                    value={settings?.learningPace || 'balanced'}
+                    onValueChange={(value) => updateSetting('learningPace', value)}
                     className="flex gap-4"
                   >
                     <div className="flex items-center space-x-2">
@@ -582,9 +607,9 @@ export const Settings = () => {
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Skill Difficulty Preference</Label>
                   <p className="text-xs text-muted-foreground">How challenging should new skills be?</p>
-                  <RadioGroup 
-                    value={settings?.preferences?.difficultyPreference || 'adaptive'} 
-                    onValueChange={(value) => updateSetting('preferences.difficultyPreference', value)} 
+                  <RadioGroup
+                    value={settings?.preferences?.difficultyPreference || 'adaptive'}
+                    onValueChange={(value) => updateSetting('preferences.difficultyPreference', value)}
                     className="flex gap-4"
                   >
                     <div className="flex items-center space-x-2">
@@ -739,9 +764,9 @@ export const Settings = () => {
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Profile Visibility</Label>
                   <p className="text-xs text-muted-foreground">Control who can see your profile information</p>
-                  <RadioGroup 
-                    value={settings?.privacy?.profileVisibility || 'private'} 
-                    onValueChange={(value) => updateSetting('privacy.profileVisibility', value)} 
+                  <RadioGroup
+                    value={settings?.privacy?.profileVisibility || 'private'}
+                    onValueChange={(value) => updateSetting('privacy.profileVisibility', value)}
                     className="flex gap-4"
                   >
                     <div className="flex items-center space-x-2">
@@ -761,9 +786,9 @@ export const Settings = () => {
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Skills Visibility</Label>
                   <p className="text-xs text-muted-foreground">Control who can see your skills and progress</p>
-                  <RadioGroup 
-                    value={settings?.privacy?.skillsVisibility || 'private'} 
-                    onValueChange={(value) => updateSetting('privacy.skillsVisibility', value)} 
+                  <RadioGroup
+                    value={settings?.privacy?.skillsVisibility || 'private'}
+                    onValueChange={(value) => updateSetting('privacy.skillsVisibility', value)}
                     className="flex gap-4"
                   >
                     <div className="flex items-center space-x-2">
@@ -783,9 +808,9 @@ export const Settings = () => {
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Progress Visibility</Label>
                   <p className="text-xs text-muted-foreground">Control who can see your learning progress</p>
-                  <RadioGroup 
-                    value={settings?.privacy?.progressVisibility || 'private'} 
-                    onValueChange={(value) => updateSetting('privacy.progressVisibility', value)} 
+                  <RadioGroup
+                    value={settings?.privacy?.progressVisibility || 'private'}
+                    onValueChange={(value) => updateSetting('privacy.progressVisibility', value)}
                     className="flex gap-4"
                   >
                     <div className="flex items-center space-x-2">
@@ -825,7 +850,7 @@ export const Settings = () => {
                       <Download className="h-4 w-4 mr-2" />
                       Export Settings
                     </Button>
-                    
+
                     <div>
                       <input
                         type="file"
@@ -842,7 +867,7 @@ export const Settings = () => {
                         </label>
                       </Button>
                     </div>
-                    
+
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="outline" disabled={resetting}>

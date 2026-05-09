@@ -49,7 +49,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider 
       attribute="class" 
-      defaultTheme="dark" 
+      defaultTheme="system" 
       enableSystem={true} 
       storageKey="skillbridge-theme"
       value={{
