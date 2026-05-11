@@ -22,11 +22,25 @@ import {
   AlertCircle,
   RefreshCw,
   BarChart3,
-  TrendingUp
+  TrendingUp,
+  Trophy,
+  Award,
+  Sparkles
 } from "lucide-react";
 import { cn, isRoadmapCompleted } from "@/lib/utils";
 import { hasRoadmapTemplate } from "@/data/fixedRoadmaps";
 import { CompletionMessage } from "@/components/CompletionMessage";
+import { ProfessionalCertificate } from "@/components/ProfessionalCertificate";
+import { certificateService, Certificate } from "@/services/certificateService";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogHeader, 
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 const resourceTypeIcons = {
   course: GraduationCap,
@@ -50,6 +64,9 @@ export const Roadmap = () => {
   const navigate = useNavigate();
   const [localLoading, setLocalLoading] = useState(false);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
+  const [issuedCertificate, setIssuedCertificate] = useState<Certificate | null>(null);
+  const [isCertModalOpen, setIsCertModalOpen] = useState(false);
+  const [isIssuing, setIsIssuing] = useState(false);
 
   // Simplified initialization logic - Allow roadmap to render even with 0% progress
   useEffect(() => {
@@ -113,6 +130,23 @@ export const Roadmap = () => {
         newSet.delete(itemId);
         return newSet;
       });
+    }
+  };
+
+  const handleClaimCertificate = async () => {
+    if (!selectedRole) return;
+    
+    setIsIssuing(true);
+    try {
+      const certificate = await certificateService.verifyAndIssue(selectedRole.id);
+      setIssuedCertificate(certificate);
+      setIsCertModalOpen(true);
+      toast.success("Certificate issued successfully!");
+    } catch (error: any) {
+      console.error('❌ Failed to claim certificate:', error);
+      toast.error(error.message || "Failed to issue certificate. Please ensure roadmap is complete.");
+    } finally {
+      setIsIssuing(false);
     }
   };
 
@@ -302,12 +336,33 @@ export const Roadmap = () => {
 
         {/* Success Message */}
         {progressPercent === 100 && (
-          <Alert className="border-green-200 bg-green-50 dark:bg-green-950">
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800 dark:text-green-200">
-              🎉 Congratulations! You've completed your roadmap for {selectedRole.title}. 
-              You're now ready to apply for positions in this role!
-            </AlertDescription>
+          <Alert className="border-green-200 bg-green-50 dark:bg-green-950 p-6">
+            <div className="flex flex-col md:flex-row items-center gap-6">
+              <div className="h-16 w-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
+                <Trophy className="h-8 w-8 text-green-600" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <AlertDescription className="text-green-800 dark:text-green-200 text-lg font-semibold mb-2">
+                  🎉 Congratulations! You've completed your roadmap for {selectedRole.title}.
+                </AlertDescription>
+                <p className="text-green-700 dark:text-green-300 mb-4">
+                  Your dedication has paid off. You have mastered all the required skills and are now officially ready for this role!
+                </p>
+                <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                  <Button 
+                    onClick={handleClaimCertificate} 
+                    className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                    disabled={isIssuing}
+                  >
+                    {isIssuing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Award className="h-4 w-4" />}
+                    Claim Your Professional Certificate
+                  </Button>
+                  <Button variant="outline" className="border-green-300 text-green-700 hover:bg-green-100" asChild>
+                    <Link to="/analysis">View Final Analysis</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
           </Alert>
         )}
 
@@ -463,6 +518,38 @@ export const Roadmap = () => {
           </Link>
         </div>
       </div>
+
+      {/* Certificate Success Modal */}
+      <Dialog open={isCertModalOpen} onOpenChange={setIsCertModalOpen}>
+        <DialogContent className="max-w-3xl sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-center flex items-center justify-center gap-2">
+              <Sparkles className="h-6 w-6 text-yellow-500" />
+              Professional Certificate Earned!
+            </DialogTitle>
+            <DialogDescription className="text-center text-lg">
+              You've officially completed the {selectedRole.title} Learning Path.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {issuedCertificate && (
+            <div className="py-6">
+              <ProfessionalCertificate 
+                userName={issuedCertificate.userName}
+                roleName={issuedCertificate.roleName}
+                completionDate={issuedCertificate.completionDate}
+                certificateId={issuedCertificate.certificateId}
+              />
+            </div>
+          )}
+          
+          <div className="flex justify-center pb-4">
+            <Button variant="ghost" onClick={() => setIsCertModalOpen(false)}>
+              Close Preview
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
