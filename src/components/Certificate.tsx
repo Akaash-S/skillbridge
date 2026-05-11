@@ -173,6 +173,11 @@ export const Certificate: React.FC<CertificateProps> = ({
 
   return (
     <div className={`flex flex-col items-center gap-6 w-full ${className}`}>
+      {/* Import EB Garamond font */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap');
+      `}} />
+      
       <div 
         ref={containerRef}
         className="w-full flex justify-center overflow-hidden"
@@ -197,7 +202,7 @@ export const Certificate: React.FC<CertificateProps> = ({
               top: '43.5%', 
               left: '50%', 
               transform: 'translate(-50%, -50%)',
-              fontFamily: "'Playfair Display', serif",
+              fontFamily: "'EB Garamond', serif",
               color: '#1a1a1a',
               fontWeight: 700,
               fontSize: getNameFontSize(userName),
@@ -211,10 +216,10 @@ export const Certificate: React.FC<CertificateProps> = ({
           <div 
             className="absolute w-[80%] text-center"
             style={{ 
-              top: '54%', 
+              top: '56%', 
               left: '50%', 
               transform: 'translate(-50%, -50%)',
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "'EB Garamond', serif",
               color: '#1a1a1a',
               fontWeight: 700,
               fontSize: getRoleFontSize(roleName),
@@ -229,12 +234,12 @@ export const Certificate: React.FC<CertificateProps> = ({
             className="absolute"
             style={{ 
               top: '68.5%', 
-              left: '46.5%', 
+              left: '44.5%', 
               transform: 'translateY(-50%)',
-              fontFamily: "'Inter', sans-serif",
+              fontFamily: "'EB Garamond', serif",
               color: '#444',
               fontWeight: 500,
-              fontSize: '0.85rem',
+              fontSize: '1rem',
             }}
           >
             {displayDate}
@@ -245,12 +250,12 @@ export const Certificate: React.FC<CertificateProps> = ({
             className="absolute"
             style={{ 
               top: '74.5%', 
-              left: '48%', 
+              left: '46.5%', 
               transform: 'translateY(-50%)',
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: "'EB Garamond', serif",
               color: '#555',
               fontWeight: 500,
-              fontSize: '0.75rem',
+              fontSize: '0.9rem',
             }}
           >
             {certificateId}
