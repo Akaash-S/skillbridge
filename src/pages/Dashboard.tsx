@@ -625,22 +625,22 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
     <Layout>
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Welcome Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-3 md:gap-4">
             <Link to="/profile">
-              <Avatar className="h-16 w-16 border-4 border-primary/20 cursor-pointer hover:border-primary/40 transition-colors">
+              <Avatar className="h-12 w-12 md:h-16 md:w-16 border-2 md:border-4 border-primary/20 cursor-pointer hover:border-primary/40 transition-colors">
                 <AvatarImage src={user?.avatar} alt={user?.name} />
-                <AvatarFallback className="text-xl bg-primary/10 text-primary">
+                <AvatarFallback className="text-lg md:text-xl bg-primary/10 text-primary">
                   {getInitials(user?.name || "User")}
                 </AvatarFallback>
               </Avatar>
             </Link>
             <div>
-              <p className="text-muted-foreground">{getGreeting()},</p>
-              <h1 className="text-3xl font-bold">{user?.name || "User"}</h1>
+              <p className="text-xs md:text-sm text-muted-foreground">{getGreeting()},</p>
+              <h1 className="text-xl md:text-3xl font-bold truncate max-w-[200px] sm:max-w-none">{user?.name || "User"}</h1>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
             {/* <div className="flex items-center gap-2">
               <Button 
                 variant={showNotifications ? "default" : "ghost"} 
@@ -697,7 +697,7 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border">
               {journeySteps.map((step) => {
                 const Icon = step.icon;
                 
@@ -705,35 +705,35 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
                   <Link
                     key={step.step}
                     to={step.path}
-                    className="p-6 hover:bg-muted/50 transition-colors group"
+                    className="p-4 md:p-6 hover:bg-muted/50 transition-colors group"
                   >
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start justify-between mb-2 md:mb-4">
                       <div className={cn(
-                        "h-10 w-10 rounded-xl flex items-center justify-center",
+                        "h-8 w-8 md:h-10 md:w-10 rounded-lg md:rounded-xl flex items-center justify-center",
                         step.completed 
                           ? step.step === 4 
-                            ? "bg-green-100 dark:bg-green-900" // Special green background for completed roadmap
+                            ? "bg-green-100 dark:bg-green-900" 
                             : "bg-accent/10"
                           : "bg-muted"
                       )}>
                         {step.completed ? (
                           <CheckCircle2 className={cn(
-                            "h-5 w-5",
+                            "h-4 w-4 md:h-5 md:w-5",
                             step.step === 4 
-                              ? "text-green-600 dark:text-green-400" // Special green color for completed roadmap
+                              ? "text-green-600 dark:text-green-400" 
                               : "text-accent"
                           )} />
                         ) : (
-                          <Icon className="h-5 w-5 text-muted-foreground" />
+                          <Icon className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground" />
                         )}
                       </div>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                      <ChevronRight className="h-4 w-4 md:h-5 md:w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                     </div>
-                    <h3 className="font-semibold mb-1">{step.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-3">{step.description}</p>
+                    <h3 className="font-semibold text-sm md:text-base mb-1">{step.title}</h3>
+                    <p className="text-xs text-muted-foreground mb-2 md:mb-3">{step.description}</p>
                     <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-bold text-primary">{step.count}</span>
-                      <span className="text-sm text-muted-foreground">{step.label}</span>
+                      <span className="text-xl md:text-2xl font-bold text-primary">{step.count}</span>
+                      <span className="text-[10px] md:text-sm text-muted-foreground">{step.label}</span>
                     </div>
                   </Link>
                 );

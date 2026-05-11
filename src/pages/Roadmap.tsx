@@ -287,9 +287,9 @@ export const Roadmap = () => {
         <StepIndicator currentStep={4} />
 
         {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold">Your Path to {selectedRole.title}</h1>
-          <p className="text-muted-foreground max-w-xl mx-auto">
+        <div className="text-center space-y-2 px-4">
+          <h1 className="text-2xl md:text-3xl font-bold">Your Path to {selectedRole.title}</h1>
+          <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto">
             Follow this curated roadmap to master the essential skills for your target role. 
             Mark items as complete as you progress through your learning journey.
           </p>
@@ -341,30 +341,30 @@ export const Roadmap = () => {
               <div className="h-16 w-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center flex-shrink-0">
                 <Trophy className="h-8 w-8 text-green-600" />
               </div>
-              <div className="flex-1 text-center md:text-left">
-                <AlertDescription className="text-green-800 dark:text-green-200 text-lg font-semibold mb-2">
-                  🎉 Congratulations! You've completed your roadmap for {selectedRole.title}.
-                </AlertDescription>
-                <p className="text-green-700 dark:text-green-300 mb-4">
-                  Your dedication has paid off. You have mastered all the required skills and are now officially ready for this role!
-                </p>
-                <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                  <Button 
-                    onClick={handleClaimCertificate} 
-                    className="gap-2 bg-green-600 hover:bg-green-700 text-white"
-                    disabled={isIssuing}
-                  >
-                    {isIssuing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Award className="h-4 w-4" />}
-                    Claim Your Professional Certificate
-                  </Button>
-                  <Button variant="outline" className="border-green-300 text-green-700 hover:bg-green-100" asChild>
-                    <Link to="/analysis">View Final Analysis</Link>
-                  </Button>
+                <div className="flex-1 text-center md:text-left space-y-2">
+                  <AlertDescription className="text-green-800 dark:text-green-200 text-base md:text-lg font-semibold">
+                    🎉 Congratulations! You've completed your roadmap for {selectedRole.title}.
+                  </AlertDescription>
+                  <p className="text-xs md:text-sm text-green-700 dark:text-green-300">
+                    Your dedication has paid off. You have mastered all the required skills and are now officially ready for this role!
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start pt-2">
+                    <Button 
+                      onClick={handleClaimCertificate} 
+                      className="gap-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
+                      disabled={isIssuing}
+                    >
+                      {isIssuing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Award className="h-4 w-4" />}
+                      Claim Your Certificate
+                    </Button>
+                    <Button variant="outline" className="border-green-300 text-green-700 hover:bg-green-100 w-full sm:w-auto" asChild>
+                      <Link to="/analysis">View Final Analysis</Link>
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Alert>
-        )}
+            </Alert>
+          )}
 
         {/* Real-time Analysis Updates Info */}
         {roadmap.some(item => item.completed) && (
@@ -397,7 +397,7 @@ export const Roadmap = () => {
 
                 <Card
                   className={cn(
-                    "relative ml-10 mb-4 transition-all duration-300",
+                    "relative ml-8 md:ml-12 mb-4 transition-all duration-300",
                     item.completed && "opacity-75 bg-muted/30",
                     isUpdating && "opacity-50"
                   )}
@@ -405,10 +405,10 @@ export const Roadmap = () => {
                   {/* Timeline Node */}
                   <div
                     className={cn(
-                      "absolute -left-10 top-6 h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
+                      "absolute -left-8 md:-left-12 top-6 h-8 w-8 md:h-10 md:w-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
                       item.completed
                         ? "bg-gradient-to-r from-primary to-accent border-primary text-white shadow-lg"
-                        : "bg-background border-border text-muted-foreground hover:border-primary/50"
+                        : "bg-background border-border text-muted-foreground"
                     )}
                   >
                     {isUpdating ? (

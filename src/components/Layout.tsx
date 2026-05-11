@@ -13,6 +13,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LayoutProps {
@@ -54,13 +62,56 @@ export const Layout = ({ children, showNav = true }: LayoutProps) => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/dashboard" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">S</span>
-            </div>
-            <span className="font-semibold text-lg hidden sm:block">SkillBridge</span>
-          </Link>
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
+            {isAuthenticated && (
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[280px] p-0">
+                  <SheetHeader className="p-6 border-b">
+                    <SheetTitle className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                        <span className="text-primary-foreground font-bold text-lg">S</span>
+                      </div>
+                      SkillBridge
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col py-4">
+                    {navItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = location.pathname === item.path;
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className={cn(
+                            "flex items-center gap-3 px-6 py-3 text-sm font-medium transition-colors",
+                            isActive
+                              ? "bg-primary/10 text-primary border-r-4 border-primary"
+                              : "text-muted-foreground hover:bg-muted"
+                          )}
+                        >
+                          <Icon className="h-5 w-5" />
+                          {item.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+            
+            <Link to="/dashboard" className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-lg">S</span>
+              </div>
+              <span className="font-semibold text-lg hidden xs:block">SkillBridge</span>
+            </Link>
+          </div>
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -115,10 +166,10 @@ export const Layout = ({ children, showNav = true }: LayoutProps) => {
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Desktop Navigation */}
         {isAuthenticated && (
-          <nav className="container mx-auto px-4 overflow-x-auto">
-            <div className="flex gap-1 pb-2">
+          <nav className="container mx-auto px-4 hidden md:block">
+            <div className="flex gap-1 pb-2 overflow-x-auto no-scrollbar">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = location.pathname === item.path;
