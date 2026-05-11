@@ -209,16 +209,17 @@ export const Certificate: React.FC<CertificateProps> = ({
 
             {/* User Name - Centered below "This Certificate is Proudly Presented To" */}
             <div 
-              className="absolute w-full text-center px-12"
+              className="absolute w-full px-12"
               style={{ 
-                top: '43.5%', 
-                left: '50%', 
-                transform: 'translate(-50%, -50%)',
+                top: '39%', // Direct position without translateY
+                left: '0',
+                textAlign: 'center',
                 fontFamily: "'EB Garamond', serif",
                 color: '#1a1a1a',
                 fontWeight: 700,
                 fontSize: getNameFontSize(userName),
                 letterSpacing: '0.01em',
+                lineHeight: 1,
               }}
             >
               {userName}
@@ -226,16 +227,16 @@ export const Certificate: React.FC<CertificateProps> = ({
 
             {/* Role Name - Centered below the description sentence */}
             <div 
-              className="absolute w-[80%] text-center"
+              className="absolute w-full px-12"
               style={{ 
-                top: '56%', 
-                left: '50%', 
-                transform: 'translate(-50%, -50%)',
+                top: '52.5%', // Direct position without translateY
+                left: '0',
+                textAlign: 'center',
                 fontFamily: "'EB Garamond', serif",
                 color: '#1a1a1a',
                 fontWeight: 700,
                 fontSize: getRoleFontSize(roleName),
-                lineHeight: 1.2,
+                lineHeight: 1,
               }}
             >
               {roleName}
@@ -245,13 +246,13 @@ export const Certificate: React.FC<CertificateProps> = ({
             <div 
               className="absolute"
               style={{ 
-                top: '68.5%', 
+                top: '67.5%', 
                 left: '44.5%', 
-                transform: 'translateY(-50%)',
                 fontFamily: "'EB Garamond', serif",
                 color: '#444',
                 fontWeight: 500,
                 fontSize: '1rem',
+                lineHeight: 1,
               }}
             >
               {displayDate}
@@ -261,13 +262,13 @@ export const Certificate: React.FC<CertificateProps> = ({
             <div 
               className="absolute"
               style={{ 
-                top: '74.5%', 
+                top: '73.5%', 
                 left: '46.5%', 
-                transform: 'translateY(-50%)',
                 fontFamily: "'EB Garamond', serif",
                 color: '#555',
                 fontWeight: 500,
                 fontSize: '0.9rem',
+                lineHeight: 1,
               }}
             >
               {certificateId}
