@@ -151,7 +151,7 @@ export const TestFeatures = () => {
                     userName={mockUser.name}
                     userEmail={mockUser.email}
                     roleName={mockRole.title}
-                    completionDate={new Date()}
+                    completionDate={new Date().toISOString()}
                     skillsCompleted={15}
                     totalHours={120}
                     readinessScore={95}

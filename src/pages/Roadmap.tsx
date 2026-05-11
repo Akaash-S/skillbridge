@@ -30,8 +30,8 @@ import {
 import { cn, isRoadmapCompleted } from "@/lib/utils";
 import { hasRoadmapTemplate } from "@/data/fixedRoadmaps";
 import { CompletionMessage } from "@/components/CompletionMessage";
-import { ProfessionalCertificate } from "@/components/ProfessionalCertificate";
-import { certificateService, Certificate } from "@/services/certificateService";
+import { Certificate } from "@/components/Certificate";
+import { certificateService, Certificate as CertificateData } from "@/services/certificateService";
 import { 
   Dialog, 
   DialogContent, 
@@ -64,7 +64,7 @@ export const Roadmap = () => {
   const navigate = useNavigate();
   const [localLoading, setLocalLoading] = useState(false);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
-  const [issuedCertificate, setIssuedCertificate] = useState<Certificate | null>(null);
+  const [issuedCertificate, setIssuedCertificate] = useState<CertificateData | null>(null);
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [isIssuing, setIsIssuing] = useState(false);
 
@@ -534,7 +534,7 @@ export const Roadmap = () => {
           
           {issuedCertificate && (
             <div className="py-6">
-              <ProfessionalCertificate 
+              <Certificate 
                 userName={issuedCertificate.userName}
                 roleName={issuedCertificate.roleName}
                 completionDate={issuedCertificate.completionDate}

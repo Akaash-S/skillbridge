@@ -1394,7 +1394,7 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
             userName={user?.name || 'Learner'}
             userEmail={user?.email}
             roleName={selectedRole?.title || 'Career Development'}
-            completionDate={new Date()}
+            completionDate={new Date().toISOString()}
             skillsCompleted={completedItems}
             totalHours={Math.round(analytics?.totalTimeSpent || 0)}
             readinessScore={analysis?.readinessScore || 100}

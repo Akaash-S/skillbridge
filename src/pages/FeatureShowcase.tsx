@@ -276,7 +276,7 @@ export const FeatureShowcase = () => {
                   userName={mockUser.name}
                   userEmail={mockUser.email}
                   roleName={mockRole.title}
-                  completionDate={new Date()}
+                  completionDate={new Date().toISOString()}
                   skillsCompleted={18}
                   totalHours={89}
                   readinessScore={92}
