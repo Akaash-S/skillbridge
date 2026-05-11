@@ -233,7 +233,7 @@ export const Certificate: React.FC<CertificateProps> = ({
           <div 
             className="absolute"
             style={{ 
-              top: '68.5%', 
+              top: '67.6%', 
               left: '44.5%', 
               transform: 'translateY(-50%)',
               fontFamily: "'EB Garamond', serif",
@@ -249,7 +249,7 @@ export const Certificate: React.FC<CertificateProps> = ({
           <div 
             className="absolute"
             style={{ 
-              top: '74.5%', 
+              top: '75.2%', 
               left: '46.5%', 
               transform: 'translateY(-50%)',
               fontFamily: "'EB Garamond', serif",
