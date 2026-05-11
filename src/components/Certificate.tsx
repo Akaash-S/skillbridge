@@ -211,7 +211,7 @@ export const Certificate: React.FC<CertificateProps> = ({
           <div 
             className="absolute w-[80%] text-center"
             style={{ 
-              top: '52.5%', 
+              top: '54%', 
               left: '50%', 
               transform: 'translate(-50%, -50%)',
               fontFamily: "'Inter', sans-serif",
@@ -228,8 +228,8 @@ export const Certificate: React.FC<CertificateProps> = ({
           <div 
             className="absolute"
             style={{ 
-              top: '67.4%', 
-              left: '46.5%', // Adjust based on "Issued on" label position
+              top: '68.5%', 
+              left: '46.5%', 
               transform: 'translateY(-50%)',
               fontFamily: "'Inter', sans-serif",
               color: '#444',
@@ -244,8 +244,8 @@ export const Certificate: React.FC<CertificateProps> = ({
           <div 
             className="absolute"
             style={{ 
-              top: '73%', 
-              left: '48%', // Adjust based on "Certificate ID:" label position
+              top: '74.5%', 
+              left: '48%', 
               transform: 'translateY(-50%)',
               fontFamily: "'JetBrains Mono', monospace",
               color: '#555',
@@ -254,11 +254,6 @@ export const Certificate: React.FC<CertificateProps> = ({
             }}
           >
             {certificateId}
-          </div>
-
-          <div className="absolute bottom-4 right-4 opacity-50 flex items-center gap-1">
-            <CheckCircle2 className="h-3 w-3 text-primary" />
-            <span className="text-[8px] font-mono uppercase tracking-widest text-muted-foreground">Verified by SkillBridge</span>
           </div>
         </div>
       </div>
