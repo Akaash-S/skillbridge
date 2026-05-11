@@ -78,29 +78,38 @@ export const Certificate: React.FC<CertificateProps> = ({
     
     try {
       setIsGenerating(true);
-      toast.info("Generating high-quality PDF...");
+      toast.info("Generating high-resolution PDF...");
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait a bit for fonts to be absolutely ready
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       const canvas = await html2canvas(certificateRef.current, {
-        scale: 3,
+        scale: 4, // High-fidelity scaling
         useCORS: true,
         allowTaint: true,
-        backgroundColor: null,
+        backgroundColor: "#ffffff",
         logging: false,
+        onclone: (clonedDoc) => {
+          const exportElement = clonedDoc.getElementById('certificate-export-container');
+          if (exportElement) {
+            exportElement.style.transform = 'scale(1)';
+            exportElement.style.width = '800px';
+            exportElement.style.height = '566px';
+          }
+        }
       });
 
       const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
         orientation: 'landscape',
         unit: 'px',
-        format: [canvas.width, canvas.height]
+        format: [800, 566]
       });
 
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.addImage(imgData, 'PNG', 0, 0, 800, 566);
       pdf.save(`SkillBridge-Certificate-${certificateId}.pdf`);
       
-      toast.success("Certificate downloaded as PDF!");
+      toast.success("Professional PDF downloaded!");
       onDownloadComplete?.();
     } catch (error) {
       console.error("PDF generation failed:", error);
@@ -115,20 +124,30 @@ export const Certificate: React.FC<CertificateProps> = ({
     
     try {
       setIsGenerating(true);
-      toast.info("Generating high-quality image...");
+      toast.info("Generating high-resolution image...");
+
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const canvas = await html2canvas(certificateRef.current, {
-        scale: 3,
+        scale: 4,
         useCORS: true,
         logging: false,
+        onclone: (clonedDoc) => {
+          const exportElement = clonedDoc.getElementById('certificate-export-container');
+          if (exportElement) {
+            exportElement.style.transform = 'scale(1)';
+            exportElement.style.width = '800px';
+            exportElement.style.height = '566px';
+          }
+        }
       });
 
       const link = document.createElement('a');
       link.download = `SkillBridge-Certificate-${certificateId}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = canvas.toDataURL('image/png', 1.0);
       link.click();
       
-      toast.success("Certificate downloaded as Image!");
+      toast.success("High-quality image downloaded!");
       onDownloadComplete?.();
     } catch (error) {
       console.error("Image generation failed:", error);
@@ -185,6 +204,7 @@ export const Certificate: React.FC<CertificateProps> = ({
       >
         <div 
           ref={certificateRef}
+          id="certificate-export-container"
           className="relative w-[800px] h-[566px] bg-white shadow-2xl rounded-sm overflow-hidden select-none origin-top"
           style={{
             backgroundImage: "url('/skillbridge-certificate.png')",
