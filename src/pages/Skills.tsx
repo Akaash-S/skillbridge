@@ -11,8 +11,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, ArrowRight, Target, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import { apiClient } from "@/services/apiClient";
+import { cn } from "@/lib/utils";
 
 export const Skills = () => {
   const [search, setSearch] = useState("");
@@ -24,16 +31,16 @@ export const Skills = () => {
   const [loadingSkills, setLoadingSkills] = useState(false);
   const [roleAnalysis, setRoleAnalysis] = useState<any>(null);
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
-  
-  const { 
-    userSkills, 
-    masterSkills, 
-    selectedRole, 
-    addSkill, 
-    removeSkill, 
-    updateSkillProficiency, 
-    loading, 
-    error, 
+
+  const {
+    userSkills,
+    masterSkills,
+    selectedRole,
+    addSkill,
+    removeSkill,
+    updateSkillProficiency,
+    loading,
+    error,
     clearError
   } = useAppData();
   const { isAuthenticated } = useAuth();
@@ -42,7 +49,7 @@ export const Skills = () => {
   // Filter master skills to exclude user skills
   const getFilteredMasterSkills = useMemo(() => {
     if (!masterSkills.length) return [];
-    
+
     const userSkillIds = new Set(userSkills.map(skill => skill.id));
     return masterSkills.filter(skill => !userSkillIds.has(skill.id));
   }, [masterSkills, userSkills]);
@@ -50,16 +57,16 @@ export const Skills = () => {
   // Apply search and pagination to filtered master skills
   const getAvailableSkillsFromMaster = useMemo(() => {
     let filtered = getFilteredMasterSkills;
-    
+
     // Apply search filter
     if (search.trim()) {
       const searchLower = search.toLowerCase();
-      filtered = filtered.filter(skill => 
+      filtered = filtered.filter(skill =>
         skill.name.toLowerCase().includes(searchLower) ||
         skill.category.toLowerCase().includes(searchLower)
       );
     }
-    
+
     // Calculate pagination
     const itemsPerPage = 20;
     const totalItems = filtered.length;
@@ -67,7 +74,7 @@ export const Skills = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedSkills = filtered.slice(startIndex, endIndex);
-    
+
     return {
       skills: paginatedSkills,
       pagination: {
@@ -87,19 +94,21 @@ export const Skills = () => {
     if (masterSkills.length > 0 && !searchQuery) {
       return; // Use master skills instead
     }
-    
+
     setLoadingSkills(true);
     try {
       const params = new URLSearchParams();
       params.append('page', page.toString());
       params.append('limit', '20');
       if (searchQuery) params.append('search', searchQuery);
-      params.append('excludeUserSkills', 'true');
-      
-      const result = await apiClient.get(`/skills/master/paginated?${params.toString()}`);
-      
-      setAvailableSkills(result.skills);
-      setPagination(result.pagination);
+      params.append('exclude_user_skills', 'true');
+
+      const result = await apiClient.get<any>(`/skills/master/paginated?${params.toString()}`);
+
+      if (result) {
+        setAvailableSkills(result.skills || []);
+        setPagination(result.pagination || null);
+      }
     } catch (error) {
       console.error('Failed to load available skills:', error);
       toast({
@@ -116,8 +125,10 @@ export const Skills = () => {
   const loadSkillsWithRoleAnalysis = async () => {
     if (selectedRole && isAuthenticated) {
       try {
-        const result = await apiClient.get(`/skills/with-role-analysis?roleId=${selectedRole.id}`);
-        setRoleAnalysis(result.roleAnalysis);
+        const result = await apiClient.get<any>(`/skills/with-role-analysis?roleId=${selectedRole.id}`);
+        if (result && result.roleAnalysis) {
+          setRoleAnalysis(result.roleAnalysis);
+        }
       } catch (error) {
         console.error('Failed to load role analysis:', error);
       }
@@ -156,7 +167,7 @@ export const Skills = () => {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       setCurrentPage(1);
-      
+
       if (masterSkills.length > 0) {
         // Use local filtering for master skills
         const result = getAvailableSkillsFromMaster;
@@ -174,7 +185,7 @@ export const Skills = () => {
   // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    
+
     if (masterSkills.length > 0) {
       // Page change will be handled by the useMemo effect
       return;
@@ -208,15 +219,15 @@ export const Skills = () => {
       await addSkill(selectedSkill, proficiency);
       setSelectedSkill("");
       setProficiency("intermediate");
-      
+
       // Skills will be automatically updated via AppContext
       // Available skills will be updated via useEffect when userSkills changes
-      
+
       // Reload role analysis if target role is selected
       if (selectedRole) {
         loadSkillsWithRoleAnalysis();
       }
-      
+
       toast({
         title: "Skill added",
         description: "Your skill has been added successfully.",
@@ -229,15 +240,15 @@ export const Skills = () => {
   const handleRemoveSkill = async (skillId: string) => {
     try {
       await removeSkill(skillId);
-      
+
       // Skills will be automatically updated via AppContext
       // Available skills will be updated via useEffect when userSkills changes
-      
+
       // Reload role analysis if target role is selected
       if (selectedRole) {
         loadSkillsWithRoleAnalysis();
       }
-      
+
       toast({
         title: "Skill removed",
         description: "Your skill has been removed successfully.",
@@ -250,12 +261,12 @@ export const Skills = () => {
   const handleUpdateProficiency = async (skillId: string, newProficiency: ProficiencyLevel) => {
     try {
       await updateSkillProficiency(skillId, newProficiency);
-      
+
       // Reload role analysis if target role is selected
       if (selectedRole) {
         loadSkillsWithRoleAnalysis();
       }
-      
+
       toast({
         title: "Skill updated",
         description: "Your skill proficiency has been updated.",
@@ -316,7 +327,7 @@ export const Skills = () => {
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">Add Your Skills</h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Tell us what skills you already have. Be honest about your proficiency levels 
+            Tell us what skills you already have. Be honest about your proficiency levels
             for the most accurate analysis.
           </p>
           {masterSkills.length > 0 && (
@@ -418,8 +429,8 @@ export const Skills = () => {
               </Select>
             </div>
 
-            <div className="flex items-center justify-between">
-              <Button onClick={handleAddSkill} disabled={loading || loadingSkills}>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+              <Button onClick={handleAddSkill} disabled={loading || loadingSkills} className="w-full sm:w-auto">
                 {loading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -472,34 +483,36 @@ export const Skills = () => {
                 <p className="text-sm">Search and add skills above to get started.</p>
               </div>
             ) : (
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 {userSkills.map((skill) => (
-                  <div key={skill.id} className="group relative">
-                    <SkillChip
-                      name={skill.name}
-                      proficiency={skill.proficiency}
-                      onRemove={() => handleRemoveSkill(skill.id)}
-                    />
-                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                      <div className="bg-popover border border-border rounded-lg shadow-lg p-2 flex gap-1">
-                        {(["beginner", "intermediate", "advanced"] as ProficiencyLevel[]).map(
-                          (level) => (
-                            <button
-                              key={level}
-                              onClick={() => handleUpdateProficiency(skill.id, level)}
-                              className={`px-2 py-1 text-xs rounded capitalize ${
-                                skill.proficiency === level
-                                  ? "bg-primary text-primary-foreground"
-                                  : "hover:bg-muted"
-                              }`}
-                            >
-                              {level}
-                            </button>
-                          )
-                        )}
+                  <DropdownMenu key={skill.id}>
+                    <DropdownMenuTrigger asChild>
+                      <div className="cursor-pointer">
+                        <SkillChip
+                          name={skill.name}
+                          proficiency={skill.proficiency}
+                          onRemove={() => handleRemoveSkill(skill.id)}
+                        />
                       </div>
-                    </div>
-                  </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="center" className="w-48">
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground border-b mb-1">
+                        Update Proficiency
+                      </div>
+                      {(["beginner", "intermediate", "advanced"] as ProficiencyLevel[]).map((level) => (
+                        <DropdownMenuItem
+                          key={level}
+                          onClick={() => handleUpdateProficiency(skill.id, level)}
+                          className={cn(
+                            "capitalize cursor-pointer",
+                            skill.proficiency === level && "bg-primary/10 text-primary font-medium"
+                          )}
+                        >
+                          {level}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 ))}
               </div>
             )}

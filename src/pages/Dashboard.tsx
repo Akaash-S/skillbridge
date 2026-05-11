@@ -640,7 +640,7 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
               <h1 className="text-xl md:text-3xl font-bold truncate max-w-[200px] sm:max-w-none">{user?.name || "User"}</h1>
             </div>
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
             {/* <div className="flex items-center gap-2">
               <Button 
                 variant={showNotifications ? "default" : "ghost"} 

@@ -396,28 +396,30 @@ export const Settings = () => {
         </div>
 
         <Tabs defaultValue="general" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="general" className="flex items-center gap-2">
-              <SettingsIcon className="h-4 w-4" />
-              General
-            </TabsTrigger>
-            <TabsTrigger value="learning" className="flex items-center gap-2">
-              <Brain className="h-4 w-4" />
-              Learning
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="flex items-center gap-2">
-              <Bell className="h-4 w-4" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="privacy" className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Privacy
-            </TabsTrigger>
-            <TabsTrigger value="account" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Account
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+            <TabsList className="inline-flex w-full md:grid md:grid-cols-5 min-w-max md:min-w-0">
+              <TabsTrigger value="general" className="flex items-center gap-2">
+                <SettingsIcon className="h-4 w-4" />
+                General
+              </TabsTrigger>
+              <TabsTrigger value="learning" className="flex items-center gap-2">
+                <Brain className="h-4 w-4" />
+                Learning
+              </TabsTrigger>
+              <TabsTrigger value="notifications" className="flex items-center gap-2">
+                <Bell className="h-4 w-4" />
+                Notifications
+              </TabsTrigger>
+              <TabsTrigger value="privacy" className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Privacy
+              </TabsTrigger>
+              <TabsTrigger value="account" className="flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Account
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* General Settings Tab */}
           <TabsContent value="general" className="space-y-6">

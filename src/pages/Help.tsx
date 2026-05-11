@@ -298,15 +298,16 @@ const Help = () => {
                     }}
                     aria-label={`Learn more about: ${step.title}`}
                   >
-                    <CardContent className="flex items-center gap-4 p-5">
+                    <CardContent className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-5 text-center sm:text-left">
                       <motion.div 
                         className="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-primary-foreground font-bold text-lg shrink-0 group-hover:shadow-md group-hover:shadow-primary/30 transition-shadow duration-200"
                         variants={badgeVariants}
                       >
                         {index + 1}
                       </motion.div>
-                      <div className="flex items-center gap-3 flex-1">
+                      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 flex-1">
                         <motion.div
+                          className="mt-1"
                           whileHover={prefersReducedMotion ? {} : { rotate: 5, y: -3 }}
                           transition={{ duration: 0.2, ease: "easeInOut" }}
                         >
@@ -317,7 +318,7 @@ const Help = () => {
                           <p className="text-sm text-muted-foreground">{step.description}</p>
                         </div>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground/50 hidden sm:block transition-transform duration-200 group-hover:translate-x-1 group-hover:text-primary/70" />
+                      <ArrowRight className="w-4 h-4 text-muted-foreground/50 hidden sm:block transition-transform duration-200 group-hover:translate-x-1 group-hover:text-primary/70 self-center" />
                     </CardContent>
                   </Card>
                 </motion.div>

@@ -89,7 +89,7 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ data, clas
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -182,8 +182,8 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ data, clas
             Track your learning consistency and skill acquisition over time
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
+        <CardContent className="p-0 sm:p-6">
+          <div className="h-[250px] sm:h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={weeklyProgress}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -233,8 +233,8 @@ export const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ data, clas
               When you're most productive during the day
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-[200px]">
+        <CardContent className="p-0 sm:p-6">
+          <div className="h-[200px] sm:h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={learningPattern}>
                   <CartesianGrid strokeDasharray="3 3" />

@@ -661,18 +661,18 @@ export const Profile = () => {
         {/* Profile Header */}
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-6">
-              <Avatar className="h-24 w-24">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+              <Avatar className="h-24 w-24 border-4 border-primary/10">
                 <AvatarImage src={profileData.avatar} alt={profileData.name} />
-                <AvatarFallback className="text-2xl">
+                <AvatarFallback className="text-2xl bg-primary/10 text-primary">
                   {getInitials(profileData.name)}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
+              <div className="flex-1 text-center md:text-left w-full">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <h1 className="text-3xl font-bold">{profileData.name}</h1>
-                    <div className="flex items-center gap-2">
+                    <h1 className="text-2xl md:text-3xl font-bold">{profileData.name}</h1>
+                    <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mt-1">
                       <p className="text-muted-foreground">{profileData.email}</p>
                       <Badge variant="outline" className="text-xs px-2 py-0.5">
                         <svg className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="currentColor">
@@ -685,25 +685,29 @@ export const Profile = () => {
                       </Badge>
                     </div>
                     {profileData.location && (
-                      <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                      <p className="text-sm text-muted-foreground flex items-center justify-center md:justify-start gap-1 mt-1">
                         <MapPin className="h-3 w-3" />
                         {profileData.location}
                       </p>
                     )}
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap items-center justify-center gap-2">
                     <Button 
                       variant="outline"
+                      size="sm"
                       onClick={() => loadProfileData()}
                       disabled={loading}
+                      className="flex-1 sm:flex-none"
                     >
                       <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                       Refresh
                     </Button>
                     <Button 
                       variant={isEditing ? "default" : "outline"}
+                      size="sm"
                       onClick={() => isEditing ? handleSaveProfile() : setIsEditing(true)}
                       disabled={saving}
+                      className="flex-1 sm:flex-none"
                     >
                       {saving ? (
                         <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -716,25 +720,21 @@ export const Profile = () => {
                     </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-4 mt-4">
-                  <Badge variant="secondary" className="gap-1">
-                    <Trophy className="h-3 w-3" />
-                    {userStats.skillsCount} Skills
+                <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-6">
+                  <Badge variant="secondary" className="gap-1 px-3 py-1">
+                    <Trophy className="h-3.5 w-3.5 text-primary" />
+                    <span className="font-semibold">{userStats.skillsCount}</span>
+                    <span className="text-xs text-muted-foreground">Skills</span>
                   </Badge>
-                  <Badge variant="secondary" className="gap-1">
-                    <Target className="h-3 w-3" />
-                    {userStats.roadmapProgress}% Progress
+                  <Badge variant="secondary" className="gap-1 px-3 py-1">
+                    <Target className="h-3.5 w-3.5 text-accent" />
+                    <span className="font-semibold">{userStats.roadmapProgress}%</span>
+                    <span className="text-xs text-muted-foreground">Progress</span>
                   </Badge>
-                  <Badge variant="secondary" className="gap-1">
-                    <Calendar className="h-3 w-3" />
-                    Member since {formatDate(profileData.createdAt)}
+                  <Badge variant="secondary" className="gap-1 px-3 py-1">
+                    <Calendar className="h-3.5 w-3.5 text-orange-500" />
+                    <span className="text-xs">Joined {formatDate(profileData.createdAt)}</span>
                   </Badge>
-                  {profileData.onboardingCompleted && (
-                    <Badge variant="outline" className="gap-1 text-green-600">
-                      <GraduationCap className="h-3 w-3" />
-                      Onboarded
-                    </Badge>
-                  )}
                 </div>
               </div>
             </div>

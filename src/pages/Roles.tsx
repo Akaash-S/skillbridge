@@ -330,7 +330,7 @@ export const Roles = () => {
         )}
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -339,15 +339,16 @@ export const Roles = () => {
               placeholder="Search roles..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-11 md:h-10"
               autoComplete="off"
             />
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
             <Button
               variant={categoryFilter === null ? "default" : "outline"}
               size="sm"
               onClick={() => setCategoryFilter(null)}
+              className="flex-shrink-0"
             >
               All
             </Button>
@@ -357,6 +358,7 @@ export const Roles = () => {
                 variant={categoryFilter === category ? "default" : "outline"}
                 size="sm"
                 onClick={() => setCategoryFilter(category)}
+                className="flex-shrink-0"
               >
                 {category}
               </Button>

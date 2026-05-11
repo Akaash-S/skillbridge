@@ -193,15 +193,18 @@ export const Analysis = () => {
 
         {/* Readiness Score */}
         <Card className="overflow-hidden">
-          <div className="bg-gradient-to-br from-primary/5 to-accent/5 p-8">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <ProgressCircle value={currentAnalysis.readinessScore} size="xl" />
-              <div className="text-center md:text-left">
-                <h2 className="text-2xl font-bold mb-2">Role Readiness Score</h2>
-                <p className={`text-xl font-semibold ${scoreColor}`}>
+          <div className="bg-gradient-to-br from-primary/5 to-accent/5 p-6 md:p-8">
+            <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
+              <div className="shrink-0">
+                <ProgressCircle value={currentAnalysis.readinessScore} size="lg" className="md:hidden" />
+                <ProgressCircle value={currentAnalysis.readinessScore} size="xl" className="hidden md:block" />
+              </div>
+              <div className="text-center md:text-left flex-1">
+                <h2 className="text-xl md:text-2xl font-bold mb-2">Role Readiness Score</h2>
+                <p className={`text-lg md:text-xl font-semibold ${scoreColor}`}>
                   {scoreMessage}
                 </p>
-                <p className="text-muted-foreground mt-2">
+                <p className="text-sm md:text-base text-muted-foreground mt-2">
                   You have {currentAnalysis.matchedSkills?.length || 0} of {currentAnalysis.totalRequired || 0} required skills at the needed level.
                 </p>
                 
