@@ -190,90 +190,70 @@ export const Certificate: React.FC<CertificateProps> = ({
           }}
           onLoad={() => setIsLoaded(true)}
         >
-          {/* %%USER_NAME%% */}
+          {/* User Name - Centered below "This Certificate is Proudly Presented To" */}
           <div 
             className="absolute w-full text-center px-12"
             style={{ 
-              top: '41%', 
+              top: '43.5%', 
               left: '50%', 
               transform: 'translate(-50%, -50%)',
-            }}
-          >
-            <span style={{
-              fontFamily: "'Playfair Display', 'Georgia', serif",
+              fontFamily: "'Playfair Display', serif",
               color: '#1a1a1a',
               fontWeight: 700,
               fontSize: getNameFontSize(userName),
-              letterSpacing: '0.02em',
-              backgroundColor: 'white',
-              padding: '0 20px',
-            }}>
-              {userName}
-            </span>
+              letterSpacing: '0.01em',
+            }}
+          >
+            {userName}
           </div>
 
-          {/* %%ROLE_NAME%% */}
+          {/* Role Name - Centered below the description sentence */}
           <div 
             className="absolute w-[80%] text-center"
             style={{ 
               top: '52.5%', 
               left: '50%', 
               transform: 'translate(-50%, -50%)',
-            }}
-          >
-            <span style={{
               fontFamily: "'Inter', sans-serif",
               color: '#1a1a1a',
-              fontWeight: 600,
+              fontWeight: 700,
               fontSize: getRoleFontSize(roleName),
               lineHeight: 1.2,
-              backgroundColor: 'white',
-              padding: '0 15px',
-            }}>
-              {roleName}
-            </span>
+            }}
+          >
+            {roleName}
           </div>
 
-          {/* %%COMPLETION_DATE%% */}
+          {/* Completion Date - Inline beside "Issued on" */}
           <div 
             className="absolute"
             style={{ 
-              top: '60.5%', 
-              left: '50%', 
-              transform: 'translateX(-50%)',
-            }}
-          >
-            <span style={{
+              top: '67.4%', 
+              left: '46.5%', // Adjust based on "Issued on" label position
+              transform: 'translateY(-50%)',
               fontFamily: "'Inter', sans-serif",
               color: '#444',
               fontWeight: 500,
-              fontSize: '0.9rem',
-              backgroundColor: 'white',
-              padding: '0 10px',
-            }}>
-              {displayDate}
-            </span>
+              fontSize: '0.85rem',
+            }}
+          >
+            {displayDate}
           </div>
 
-          {/* %%CERTIFICATE_ID%% */}
+          {/* Certificate ID - Inline beside "Certificate ID:" */}
           <div 
             className="absolute"
             style={{ 
-              top: '66%', 
-              left: '50%', 
-              transform: 'translateX(-50%)',
+              top: '73%', 
+              left: '48%', // Adjust based on "Certificate ID:" label position
+              transform: 'translateY(-50%)',
+              fontFamily: "'JetBrains Mono', monospace",
+              color: '#555',
+              fontWeight: 500,
+              fontSize: '0.75rem',
             }}
           >
-            <span style={{
-              fontFamily: "'JetBrains Mono', monospace",
-              color: '#666',
-              fontWeight: 400,
-              fontSize: '0.75rem',
-              backgroundColor: 'white',
-              padding: '0 10px',
-            }}>
-              {certificateId}
-            </span>
+            {certificateId}
           </div>
 
           <div className="absolute bottom-4 right-4 opacity-50 flex items-center gap-1">
