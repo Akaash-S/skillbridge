@@ -80,23 +80,17 @@ export const Certificate: React.FC<CertificateProps> = ({
       setIsGenerating(true);
       toast.info("Generating high-resolution PDF...");
 
-      // Wait a bit for fonts to be absolutely ready
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Ensure fonts and images are fully settled
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       const canvas = await html2canvas(certificateRef.current, {
-        scale: 4, // High-fidelity scaling
+        scale: 5, // Maximum fidelity
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         backgroundColor: "#ffffff",
         logging: false,
-        onclone: (clonedDoc) => {
-          const exportElement = clonedDoc.getElementById('certificate-export-container');
-          if (exportElement) {
-            exportElement.style.transform = 'scale(1)';
-            exportElement.style.width = '800px';
-            exportElement.style.height = '566px';
-          }
-        }
+        width: 800,
+        height: 566,
       });
 
       const imgData = canvas.toDataURL('image/png', 1.0);
@@ -109,7 +103,7 @@ export const Certificate: React.FC<CertificateProps> = ({
       pdf.addImage(imgData, 'PNG', 0, 0, 800, 566);
       pdf.save(`SkillBridge-Certificate-${certificateId}.pdf`);
       
-      toast.success("Professional PDF downloaded!");
+      toast.success("Professional PDF generated!");
       onDownloadComplete?.();
     } catch (error) {
       console.error("PDF generation failed:", error);
@@ -126,20 +120,16 @@ export const Certificate: React.FC<CertificateProps> = ({
       setIsGenerating(true);
       toast.info("Generating high-resolution image...");
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       const canvas = await html2canvas(certificateRef.current, {
-        scale: 4,
+        scale: 5, // Maximum fidelity
         useCORS: true,
+        allowTaint: false,
+        backgroundColor: "#ffffff",
         logging: false,
-        onclone: (clonedDoc) => {
-          const exportElement = clonedDoc.getElementById('certificate-export-container');
-          if (exportElement) {
-            exportElement.style.transform = 'scale(1)';
-            exportElement.style.width = '800px';
-            exportElement.style.height = '566px';
-          }
-        }
+        width: 800,
+        height: 566,
       });
 
       const link = document.createElement('a');
@@ -147,7 +137,7 @@ export const Certificate: React.FC<CertificateProps> = ({
       link.href = canvas.toDataURL('image/png', 1.0);
       link.click();
       
-      toast.success("High-quality image downloaded!");
+      toast.success("High-fidelity image generated!");
       onDownloadComplete?.();
     } catch (error) {
       console.error("Image generation failed:", error);
@@ -202,83 +192,86 @@ export const Certificate: React.FC<CertificateProps> = ({
         className="w-full flex justify-center overflow-hidden"
         style={{ height: `${566 * scale}px` }}
       >
-        <div 
-          ref={certificateRef}
-          id="certificate-export-container"
-          className="relative w-[800px] h-[566px] bg-white shadow-2xl rounded-sm overflow-hidden select-none origin-top"
-          style={{
-            backgroundImage: "url('/skillbridge-certificate.png')",
-            backgroundSize: 'contain',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            transform: `scale(${scale})`,
-          }}
-          onLoad={() => setIsLoaded(true)}
-        >
-          {/* User Name - Centered below "This Certificate is Proudly Presented To" */}
+        <div style={{ transform: `scale(${scale})`, transformOrigin: 'top' }}>
           <div 
-            className="absolute w-full text-center px-12"
-            style={{ 
-              top: '43.5%', 
-              left: '50%', 
-              transform: 'translate(-50%, -50%)',
-              fontFamily: "'EB Garamond', serif",
-              color: '#1a1a1a',
-              fontWeight: 700,
-              fontSize: getNameFontSize(userName),
-              letterSpacing: '0.01em',
-            }}
+            ref={certificateRef}
+            id="certificate-export-container"
+            className="relative w-[800px] h-[566px] bg-white shadow-2xl rounded-sm overflow-hidden select-none"
           >
-            {userName}
-          </div>
+            {/* Background Image as <img> tag for better export clarity */}
+            <img 
+              src="/skillbridge-certificate.png" 
+              alt="Certificate Background"
+              className="absolute inset-0 w-full h-full object-contain"
+              onLoad={() => setIsLoaded(true)}
+              crossOrigin="anonymous"
+            />
 
-          {/* Role Name - Centered below the description sentence */}
-          <div 
-            className="absolute w-[80%] text-center"
-            style={{ 
-              top: '56%', 
-              left: '50%', 
-              transform: 'translate(-50%, -50%)',
-              fontFamily: "'EB Garamond', serif",
-              color: '#1a1a1a',
-              fontWeight: 700,
-              fontSize: getRoleFontSize(roleName),
-              lineHeight: 1.2,
-            }}
-          >
-            {roleName}
-          </div>
+            {/* User Name - Centered below "This Certificate is Proudly Presented To" */}
+            <div 
+              className="absolute w-full text-center px-12"
+              style={{ 
+                top: '43.5%', 
+                left: '50%', 
+                transform: 'translate(-50%, -50%)',
+                fontFamily: "'EB Garamond', serif",
+                color: '#1a1a1a',
+                fontWeight: 700,
+                fontSize: getNameFontSize(userName),
+                letterSpacing: '0.01em',
+              }}
+            >
+              {userName}
+            </div>
 
-          {/* Completion Date - Inline beside "Issued on" */}
-          <div 
-            className="absolute"
-            style={{ 
-              top: '68.5%', 
-              left: '44.5%', 
-              transform: 'translateY(-50%)',
-              fontFamily: "'EB Garamond', serif",
-              color: '#444',
-              fontWeight: 500,
-              fontSize: '1rem',
-            }}
-          >
-            {displayDate}
-          </div>
+            {/* Role Name - Centered below the description sentence */}
+            <div 
+              className="absolute w-[80%] text-center"
+              style={{ 
+                top: '56%', 
+                left: '50%', 
+                transform: 'translate(-50%, -50%)',
+                fontFamily: "'EB Garamond', serif",
+                color: '#1a1a1a',
+                fontWeight: 700,
+                fontSize: getRoleFontSize(roleName),
+                lineHeight: 1.2,
+              }}
+            >
+              {roleName}
+            </div>
 
-          {/* Certificate ID - Inline beside "Certificate ID:" */}
-          <div 
-            className="absolute"
-            style={{ 
-              top: '74.5%', 
-              left: '46.5%', 
-              transform: 'translateY(-50%)',
-              fontFamily: "'EB Garamond', serif",
-              color: '#555',
-              fontWeight: 500,
-              fontSize: '0.9rem',
-            }}
-          >
-            {certificateId}
+            {/* Completion Date - Inline beside "Issued on" */}
+            <div 
+              className="absolute"
+              style={{ 
+                top: '68.5%', 
+                left: '44.5%', 
+                transform: 'translateY(-50%)',
+                fontFamily: "'EB Garamond', serif",
+                color: '#444',
+                fontWeight: 500,
+                fontSize: '1rem',
+              }}
+            >
+              {displayDate}
+            </div>
+
+            {/* Certificate ID - Inline beside "Certificate ID:" */}
+            <div 
+              className="absolute"
+              style={{ 
+                top: '74.5%', 
+                left: '46.5%', 
+                transform: 'translateY(-50%)',
+                fontFamily: "'EB Garamond', serif",
+                color: '#555',
+                fontWeight: 500,
+                fontSize: '0.9rem',
+              }}
+            >
+              {certificateId}
+            </div>
           </div>
         </div>
       </div>
