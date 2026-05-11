@@ -190,67 +190,90 @@ export const Certificate: React.FC<CertificateProps> = ({
           }}
           onLoad={() => setIsLoaded(true)}
         >
+          {/* %%USER_NAME%% */}
           <div 
             className="absolute w-full text-center px-12"
             style={{ 
-              top: '47%', 
+              top: '41%', 
               left: '50%', 
               transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <span style={{
               fontFamily: "'Playfair Display', 'Georgia', serif",
               color: '#1a1a1a',
               fontWeight: 700,
               fontSize: getNameFontSize(userName),
               letterSpacing: '0.02em',
-              textShadow: '0 1px 1px rgba(0,0,0,0.05)'
-            }}
-          >
-            {userName}
+              backgroundColor: 'white',
+              padding: '0 20px',
+            }}>
+              {userName}
+            </span>
           </div>
 
+          {/* %%ROLE_NAME%% */}
           <div 
-            className="absolute w-[60%] text-center"
+            className="absolute w-[80%] text-center"
             style={{ 
-              top: '63%', 
+              top: '52.5%', 
               left: '50%', 
               transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <span style={{
               fontFamily: "'Inter', sans-serif",
-              color: '#444',
+              color: '#1a1a1a',
               fontWeight: 600,
               fontSize: getRoleFontSize(roleName),
-              lineHeight: 1.2
-            }}
-          >
-            {roleName}
+              lineHeight: 1.2,
+              backgroundColor: 'white',
+              padding: '0 15px',
+            }}>
+              {roleName}
+            </span>
           </div>
 
+          {/* %%COMPLETION_DATE%% */}
           <div 
             className="absolute"
             style={{ 
-              top: '80%', 
-              left: '26%', 
+              top: '60.5%', 
+              left: '50%', 
               transform: 'translateX(-50%)',
+            }}
+          >
+            <span style={{
               fontFamily: "'Inter', sans-serif",
-              color: '#666',
+              color: '#444',
               fontWeight: 500,
-              fontSize: '0.9rem'
-            }}
-          >
-            {displayDate}
+              fontSize: '0.9rem',
+              backgroundColor: 'white',
+              padding: '0 10px',
+            }}>
+              {displayDate}
+            </span>
           </div>
 
+          {/* %%CERTIFICATE_ID%% */}
           <div 
             className="absolute"
             style={{ 
-              top: '80%', 
-              left: '74%', 
+              top: '66%', 
+              left: '50%', 
               transform: 'translateX(-50%)',
-              fontFamily: "'JetBrains Mono', monospace",
-              color: '#888',
-              fontWeight: 400,
-              fontSize: '0.75rem'
             }}
           >
-            {certificateId}
+            <span style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              color: '#666',
+              fontWeight: 400,
+              fontSize: '0.75rem',
+              backgroundColor: 'white',
+              padding: '0 10px',
+            }}>
+              {certificateId}
+            </span>
           </div>
 
           <div className="absolute bottom-4 right-4 opacity-50 flex items-center gap-1">
