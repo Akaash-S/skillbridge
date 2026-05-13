@@ -17,7 +17,7 @@ const features = [
 ];
 
 export const Login = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [hasRedirected, setHasRedirected] = useState(false);
   const [showAuthError, setShowAuthError] = useState(false);
   const [authError, setAuthError] = useState<string>('');
@@ -25,7 +25,7 @@ export const Login = () => {
     signInWithPopup, 
     signInWithRedirect, 
     user, 
-    isLoading, 
+    isLoading: authLoading, 
     error, 
     clearError, 
     isAuthenticated, 
@@ -41,7 +41,7 @@ export const Login = () => {
   }, [location.state?.from?.pathname]);
 
   const handleGoogleLogin = async () => {
-    setIsLoading(true);
+    setIsLoggingIn(true);
     setShowAuthError(false);
     setAuthError('');
     
@@ -56,12 +56,12 @@ export const Login = () => {
         setShowAuthError(true);
       }
     } finally {
-      setIsLoading(false);
+      setIsLoggingIn(false);
     }
   };
 
   const handleUseRedirect = async () => {
-    setIsLoading(true);
+    setIsLoggingIn(true);
     setShowAuthError(false);
     
     try {
@@ -74,7 +74,7 @@ export const Login = () => {
         setShowAuthError(true);
       }
     } finally {
-      setIsLoading(false);
+      setIsLoggingIn(false);
     }
   };
 
@@ -86,11 +86,12 @@ export const Login = () => {
 
   // Redirect authenticated users immediately
   useEffect(() => {
+    console.log('Login state check:', {
       isAuthenticated, 
       user: !!user, 
       userName: user?.name,
       userEmail: user?.email,
-      loading, 
+      authLoading, 
       mfaRequired,
       hasRedirected
     });
@@ -113,17 +114,18 @@ export const Login = () => {
       }, 500);
       
     } else {
+      console.log('Login condition not met:', {
         isAuthenticated: isAuthenticated ? '✅' : '❌',
         hasUser: user ? '✅' : '❌',
-        notLoading: !loading ? '✅' : '❌',
+        notLoading: !authLoading ? '✅' : '❌',
         noMFA: !mfaRequired ? '✅' : '❌',
         notRedirected: !hasRedirected ? '✅' : '❌'
       });
     }
-  }, [isAuthenticated, user, loading, mfaRequired, navigate, from, hasRedirected]);
+  }, [isAuthenticated, user, authLoading, mfaRequired, navigate, from, hasRedirected]);
 
   // Show loading while checking authentication status
-  if (isLoading) {
+  if (isLoggingIn) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -146,7 +148,7 @@ export const Login = () => {
           </div>
           <p className="text-muted-foreground">Redirecting to dashboard...</p>
           <p className="text-xs text-muted-foreground/60 mt-2">
-            User: {user.email} | Auth: {isAuthenticated ? 'Yes' : 'No'}
+            User: {user?.email} | Auth: {isAuthenticated ? 'Yes' : 'No'}
           </p>
         </div>
         {/* <AuthDebug /> */}
@@ -313,11 +315,11 @@ export const Login = () => {
               <CardContent className="space-y-6 pt-4">
                 <Button
                   onClick={handleGoogleLogin}
-                  disabled={isLoading}
+                  disabled={isLoggingIn}
                   className="w-full h-14 text-base font-medium group"
                   variant="outline"
                 >
-                  {isLoading ? (
+                  {isLoggingIn ? (
                     <>
                       <Loader2 className="mr-3 h-5 w-5 animate-spin" />
                       Signing in...

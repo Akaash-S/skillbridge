@@ -1,19 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { authService, AuthState, AuthUser } from '@/services/auth';
+import { authService } from '@/services/auth';
+import { AuthState, AuthContextType } from '@/services/auth.types';
 import { env } from '@/config/env';
-
-interface AuthContextType extends AuthState {
-  // Auth methods
-  signInWithPopup: () => Promise<void>;
-  signInWithRedirect: () => Promise<void>;
-  completeMFALogin: (mfaToken: string, code: string, isRecoveryCode?: boolean) => Promise<void>;
-  signOut: () => Promise<void>;
-  clearError: () => void;
-  
-  // Utility methods
-  getCurrentToken: () => Promise<string | null>;
-  isMFAVerified: () => boolean;
-}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -22,27 +10,44 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [authState, setAuthState] = useState<AuthState>(authService.getCurrentState());
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    isAuthenticated: false,
+    isLoading: true,
+    error: null,
+    mfaRequired: false,
+    mfaToken: null
+  });
 
   useEffect(() => {
+    // Set initial state from service
+    const initialState = authService.getCurrentState();
+    
+    // Bypass auth in development if configured
+    if (!initialState.isAuthenticated && import.meta.env.VITE_BYPASS_AUTH === 'true') {
+      setAuthState({
+        user: {
+          uid: 'dev-user-123',
+          email: 'dev@example.com',
+          name: 'Development User',
+          avatar: '',
+          emailVerified: true
+        },
+        isAuthenticated: true,
+        isLoading: false,
+        error: null,
+        mfaRequired: false,
+        mfaToken: null
+      });
+    } else {
+      setAuthState(initialState);
+    }
+
     // Subscribe to auth state changes
     const unsubscribe = authService.onAuthStateChange((state) => {
       // Bypass auth in development if configured
       if (!state.isAuthenticated && import.meta.env.VITE_BYPASS_AUTH === 'true') {
-        setAuthState({
-          user: {
-            uid: 'dev-user-123',
-            email: 'dev@example.com',
-            name: 'Development User',
-            avatar: '',
-            emailVerified: true
-          },
-          isAuthenticated: true,
-          isLoading: false,
-          error: null,
-          mfaRequired: false,
-          mfaToken: null
-        });
+        // Already handled by initial state check or will be handled by future updates
       } else {
         setAuthState(state);
       }

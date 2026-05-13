@@ -11,6 +11,12 @@ import {
   AuthError
 } from 'firebase/auth';
 import { env } from '@/config/env';
+import { 
+  AuthUser, 
+  AuthState, 
+  LoginResponse, 
+  SessionType 
+} from './auth.types';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -32,43 +38,10 @@ googleProvider.addScope('email');
 googleProvider.addScope('profile');
 
 // Storage keys - ONLY for non-sensitive data
-// Auth tokens and user data are now in httpOnly cookies (server-side)
-const SESSION_TYPE_KEY = 'sb_session_type'; // Safe: only tracks session type
-const MFA_VERIFIED_KEY = 'sb_mfa_verified_temp'; // Temporary MFA verification flag
+const SESSION_TYPE_KEY = 'sb_session_type';
+const MFA_VERIFIED_KEY = 'sb_mfa_verified_temp';
 
-// Types
-export interface AuthUser {
-  uid: string;
-  email: string;
-  name: string;
-  avatar: string;
-  emailVerified: boolean;
-}
-
-export interface AuthState {
-  user: AuthUser | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
-  mfaRequired: boolean;
-  mfaToken: string | null;
-}
-
-export interface LoginResponse {
-  user: AuthUser;
-  isNewUser: boolean;
-  mfa_required?: boolean;
-  mfa_token?: string;
-}
-
-// Session types
-export enum SessionType {
-  EXPLICIT_LOGIN = 'explicit_login',
-  SESSION_RESTORE = 'session_restore',
-  REDIRECT_COMPLETE = 'redirect_complete'
-}
-
-class AuthService {
+export class AuthService {
   private static instance: AuthService;
   private authStateListeners: ((state: AuthState) => void)[] = [];
   private currentState: AuthState = {

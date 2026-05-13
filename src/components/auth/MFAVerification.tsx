@@ -10,12 +10,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 
-interface MFAVerificationProps {
-  mfaToken: string;
-}
+export const MFAVerification: React.FC = () => {
+  const { completeMFALogin, signOut, error, clearError, mfaToken } = useAuth();
 
-export const MFAVerification: React.FC<MFAVerificationProps> = ({ mfaToken }) => {
-  const { completeMFALogin, signOut, error, clearError } = useAuth();
+  if (!mfaToken) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">MFA session expired. Please log in again.</p>
+      </div>
+    );
+  }
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
