@@ -48,24 +48,24 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider 
-      attribute="class" 
-      defaultTheme="system" 
-      enableSystem={true} 
-      storageKey="skillbridge-theme"
-      value={{
-        light: "light",
-        dark: "dark",
-        system: "dark"
-      }}
-    >
-      <AuthProvider>
-        <AppDataProvider>
-          <ErrorBoundary>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
+    <BrowserRouter>
+      <ThemeProvider 
+        attribute="class" 
+        defaultTheme="system" 
+        enableSystem={true} 
+        storageKey="skillbridge-theme"
+        value={{
+          light: "light",
+          dark: "dark",
+          system: "dark"
+        }}
+      >
+        <AuthProvider>
+          <AppDataProvider>
+            <ErrorBoundary>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<AuthRedirect />} />
@@ -268,12 +268,12 @@ const App = () => (
                   {/* Catch all route */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </ErrorBoundary>
-        </AppDataProvider>
-      </AuthProvider>
-    </ThemeProvider>
+              </TooltipProvider>
+            </ErrorBoundary>
+          </AppDataProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
