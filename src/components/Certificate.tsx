@@ -5,7 +5,6 @@ import {
   Share2, 
   Image as ImageIcon,
   Loader2,
-  CheckCircle2,
   ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
@@ -19,7 +18,7 @@ interface CertificateProps {
   certificateId?: string;
   className?: string;
   onDownloadComplete?: () => void;
-  // Compatibility props (ignored in new design but kept for types)
+  // Compatibility props
   userEmail?: string;
   skillsCompleted?: number;
   totalHours?: number;
@@ -36,13 +35,11 @@ export const Certificate: React.FC<CertificateProps> = ({
   className = "",
   onDownloadComplete
 }) => {
-  const certificateRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [scale, setScale] = useState(1);
 
-  // Format date for display
   const dateObj = typeof completionDate === 'string' ? new Date(completionDate) : completionDate;
   const displayDate = dateObj.toLocaleDateString('en-US', {
     year: 'numeric',
@@ -50,12 +47,11 @@ export const Certificate: React.FC<CertificateProps> = ({
     day: 'numeric'
   });
 
-  // Handle responsiveness via scaling
   useEffect(() => {
     const updateScale = () => {
       if (containerRef.current) {
         const containerWidth = containerRef.current.offsetWidth;
-        const baseWidth = 800; // Original design width
+        const baseWidth = 800;
         if (containerWidth < baseWidth) {
           setScale(containerWidth / baseWidth);
         } else {
@@ -68,30 +64,42 @@ export const Certificate: React.FC<CertificateProps> = ({
     if (containerRef.current) {
       observer.observe(containerRef.current);
     }
-    
     updateScale();
     return () => observer.disconnect();
   }, []);
 
-  const handleDownloadPDF = async () => {
-    if (!certificateRef.current) return;
+  const captureCertificate = async () => {
+    if (!exportRef.current) return null;
     
+    // Ensure high fidelity capture from the hidden unscaled container
+    return await html2canvas(exportRef.current, {
+      scale: 3,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: "#ffffff",
+      logging: false,
+      width: 800,
+      height: 566,
+      onclone: (clonedDoc) => {
+        // Fix for potential font loading issues in the clone
+        const exportContainer = clonedDoc.getElementById('certificate-export-portal');
+        if (exportContainer) {
+          exportContainer.style.position = 'static';
+          exportContainer.style.left = '0';
+          exportContainer.style.top = '0';
+        }
+      }
+    });
+  };
+
+  const handleDownloadPDF = async () => {
     try {
       setIsGenerating(true);
-      toast.info("Generating high-resolution PDF...");
+      toast.info("Generating high-resolution certificate...");
+      await new Promise(resolve => setTimeout(resolve, 800));
 
-      // Ensure fonts and images are fully settled
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const canvas = await html2canvas(certificateRef.current, {
-        scale: 5, // Maximum fidelity
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: "#ffffff",
-        logging: false,
-        width: 800,
-        height: 566,
-      });
+      const canvas = await captureCertificate();
+      if (!canvas) throw new Error("Capture failed");
 
       const imgData = canvas.toDataURL('image/png', 1.0);
       const pdf = new jsPDF({
@@ -102,8 +110,7 @@ export const Certificate: React.FC<CertificateProps> = ({
 
       pdf.addImage(imgData, 'PNG', 0, 0, 800, 566);
       pdf.save(`SkillBridge-Certificate-${certificateId}.pdf`);
-      
-      toast.success("Professional PDF generated!");
+      toast.success("Certificate saved as PDF!");
       onDownloadComplete?.();
     } catch (error) {
       console.error("PDF generation failed:", error);
@@ -114,30 +121,19 @@ export const Certificate: React.FC<CertificateProps> = ({
   };
 
   const handleDownloadImage = async () => {
-    if (!certificateRef.current) return;
-    
     try {
       setIsGenerating(true);
-      toast.info("Generating high-resolution image...");
+      toast.info("Generating professional image...");
+      await new Promise(resolve => setTimeout(resolve, 800));
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const canvas = await html2canvas(certificateRef.current, {
-        scale: 5, // Maximum fidelity
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: "#ffffff",
-        logging: false,
-        width: 800,
-        height: 566,
-      });
+      const canvas = await captureCertificate();
+      if (!canvas) throw new Error("Capture failed");
 
       const link = document.createElement('a');
       link.download = `SkillBridge-Certificate-${certificateId}.png`;
       link.href = canvas.toDataURL('image/png', 1.0);
       link.click();
-      
-      toast.success("High-fidelity image generated!");
+      toast.success("Certificate saved as image!");
       onDownloadComplete?.();
     } catch (error) {
       console.error("Image generation failed:", error);
@@ -160,120 +156,114 @@ export const Certificate: React.FC<CertificateProps> = ({
         });
       } catch (err) {
         await navigator.clipboard.writeText(shareText);
-        toast.success("Certificate link copied to clipboard!");
+        toast.success("Link copied to clipboard!");
       }
     } else {
       await navigator.clipboard.writeText(shareText);
-      toast.success("Certificate link copied to clipboard!");
+      toast.success("Link copied to clipboard!");
     }
   };
 
   const getNameFontSize = (name: string) => {
-    if (name.length > 25) return '1.8rem';
-    if (name.length > 20) return '2.2rem';
-    return '2.8rem';
+    if (name.length > 25) return '28px';
+    if (name.length > 20) return '34px';
+    return '42px';
   };
 
   const getRoleFontSize = (role: string) => {
-    if (role.length > 30) return '1.2rem';
-    if (role.length > 20) return '1.5rem';
-    return '1.8rem';
+    if (role.length > 30) return '18px';
+    if (role.length > 20) return '22px';
+    return '26px';
   };
+
+  const CertificateContent = ({ id }: { id?: string }) => (
+    <div 
+      id={id}
+      className="relative w-[800px] h-[566px] bg-white rounded-sm overflow-hidden select-none"
+      style={{ fontFamily: "'EB Garamond', serif" }}
+    >
+      <img 
+        src="/skillbridge-certificate.png" 
+        alt="Certificate Background"
+        className="absolute inset-0 w-full h-full object-contain"
+        crossOrigin="anonymous"
+      />
+
+      {/* User Name */}
+      <div 
+        className="absolute w-full top-[39.5%] left-0 text-center px-20 font-bold"
+        style={{ 
+          color: '#1a1a1a',
+          fontSize: getNameFontSize(userName),
+          letterSpacing: '0.01em',
+          lineHeight: 1.1,
+        }}
+      >
+        {userName}
+      </div>
+
+      {/* Role Name */}
+      <div 
+        className="absolute w-full top-[53.5%] left-0 text-center px-20 font-bold"
+        style={{ 
+          color: '#1a1a1a',
+          fontSize: getRoleFontSize(roleName),
+          lineHeight: 1.1,
+        }}
+      >
+        {roleName}
+      </div>
+
+      {/* Completion Date */}
+      <div 
+        className="absolute top-[67.8%] left-[44.4%] font-semibold"
+        style={{ 
+          color: '#444',
+          fontSize: '15px',
+          lineHeight: 1,
+        }}
+      >
+        {displayDate}
+      </div>
+
+      {/* Certificate ID */}
+      <div 
+        className="absolute top-[73.6%] left-[46.4%] font-semibold"
+        style={{ 
+          color: '#555',
+          fontSize: '14px',
+          lineHeight: 1,
+        }}
+      >
+        {certificateId}
+      </div>
+    </div>
+  );
 
   return (
     <div className={`flex flex-col items-center gap-6 w-full ${className}`}>
-      {/* Import EB Garamond font */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700;800&display=swap');
       `}} />
       
+      {/* 1. PREVIEW CONTAINER (SCALED FOR VIEWPORT) */}
       <div 
         ref={containerRef}
         className="w-full flex justify-center overflow-hidden"
         style={{ height: `${566 * scale}px` }}
       >
-        <div style={{ transform: `scale(${scale})`, transformOrigin: 'top' }}>
-          <div 
-            ref={certificateRef}
-            id="certificate-export-container"
-            className="relative w-[800px] h-[566px] bg-white shadow-2xl rounded-sm overflow-hidden select-none"
-          >
-            {/* Background Image as <img> tag for better export clarity */}
-            <img 
-              src="/skillbridge-certificate.png" 
-              alt="Certificate Background"
-              className="absolute inset-0 w-full h-full object-contain"
-              onLoad={() => setIsLoaded(true)}
-              crossOrigin="anonymous"
-            />
+        <div style={{ transform: `scale(${scale})`, transformOrigin: 'top', width: '800px', height: '566px' }}>
+          <CertificateContent />
+        </div>
+      </div>
 
-            {/* User Name - Centered below "This Certificate is Proudly Presented To" */}
-            <div 
-              className="absolute w-full px-12"
-              style={{ 
-                top: '39%', // Direct position without translateY
-                left: '0',
-                textAlign: 'center',
-                fontFamily: "'EB Garamond', serif",
-                color: '#1a1a1a',
-                fontWeight: 700,
-                fontSize: getNameFontSize(userName),
-                letterSpacing: '0.01em',
-                lineHeight: 1,
-              }}
-            >
-              {userName}
-            </div>
-
-            {/* Role Name - Centered below the description sentence */}
-            <div 
-              className="absolute w-full px-12"
-              style={{ 
-                top: '52.5%', // Direct position without translateY
-                left: '0',
-                textAlign: 'center',
-                fontFamily: "'EB Garamond', serif",
-                color: '#1a1a1a',
-                fontWeight: 700,
-                fontSize: getRoleFontSize(roleName),
-                lineHeight: 1,
-              }}
-            >
-              {roleName}
-            </div>
-
-            {/* Completion Date - Inline beside "Issued on" */}
-            <div 
-              className="absolute"
-              style={{ 
-                top: '67.5%', 
-                left: '44.5%', 
-                fontFamily: "'EB Garamond', serif",
-                color: '#444',
-                fontWeight: 500,
-                fontSize: '1rem',
-                lineHeight: 1,
-              }}
-            >
-              {displayDate}
-            </div>
-
-            {/* Certificate ID - Inline beside "Certificate ID:" */}
-            <div 
-              className="absolute"
-              style={{ 
-                top: '73.5%', 
-                left: '46.5%', 
-                fontFamily: "'EB Garamond', serif",
-                color: '#555',
-                fontWeight: 500,
-                fontSize: '0.9rem',
-                lineHeight: 1,
-              }}
-            >
-              {certificateId}
-            </div>
-          </div>
+      {/* 2. HIDDEN EXPORT PORTAL (ALWAYS 1:1 RATIO FOR CAPTURE) */}
+      <div 
+        className="fixed opacity-0 pointer-events-none" 
+        style={{ left: '-2000px', top: '0' }}
+      >
+        <div ref={exportRef}>
+          <CertificateContent id="certificate-export-portal" />
         </div>
       </div>
 
@@ -295,11 +285,7 @@ export const Certificate: React.FC<CertificateProps> = ({
           <ImageIcon className="h-4 w-4" />
           Download PNG
         </Button>
-        <Button 
-          variant="secondary" 
-          onClick={handleShare}
-          className="gap-2"
-        >
+        <Button variant="secondary" onClick={handleShare} className="gap-2">
           <Share2 className="h-4 w-4" />
           Share
         </Button>
