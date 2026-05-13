@@ -387,7 +387,7 @@ export const ProctoredAssessment = () => {
           </div>
         </header>
 
-        <main className="flex-1 max-w-5xl w-full mx-auto p-6 md:p-12 space-y-12 overflow-y-auto">
+        <main className="flex-1 max-w-5xl w-full mx-auto p-6 md:p-12 space-y-12 overflow-y-auto pb-48">
           {/* Progress Architecture */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -410,7 +410,7 @@ export const ProctoredAssessment = () => {
 
           {/* Question Display */}
           {questions.length > 0 ? (
-            <div className="space-y-12 pb-24">
+            <div className="space-y-12">
               <div className="space-y-8">
                 <h1 className="text-2xl md:text-4xl font-medium leading-[1.4] text-slate-100">
                   {currentQuestion?.text}
@@ -448,37 +448,7 @@ export const ProctoredAssessment = () => {
                 </div>
               </div>
 
-              {/* Navigation Controls */}
-              <div className="flex items-center justify-between gap-6 pt-12 border-t border-white/5">
-                <Button
-                  variant="ghost"
-                  disabled={currentQuestionIndex === 0}
-                  onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
-                  className="h-16 px-10 rounded-2xl text-slate-500 hover:text-white transition-all"
-                >
-                  <ArrowLeft className="mr-3 h-5 w-5" />
-                  Previous Question
-                </Button>
-                
-                {currentQuestionIndex < questions.length - 1 ? (
-                  <Button
-                    disabled={!answers[currentQuestion?.id]}
-                    onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
-                    className="h-16 px-12 rounded-2xl bg-primary hover:bg-primary/90 font-black uppercase tracking-widest text-lg group"
-                  >
-                    Next Step
-                    <ChevronRight className="ml-3 h-6 w-6 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={loading || Object.keys(answers).length < questions.length}
-                    className="h-16 px-16 rounded-2xl bg-green-600 hover:bg-green-700 font-black tracking-[0.2em] uppercase text-lg shadow-[0_20px_40px_rgba(22,163,74,0.3)] animate-pulse hover:animate-none"
-                  >
-                    {loading ? <RefreshCw className="h-6 w-6 animate-spin" /> : "FINALIZE SUBMISSION"}
-                  </Button>
-                )}
-              </div>
+
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-24 space-y-6">
@@ -487,6 +457,73 @@ export const ProctoredAssessment = () => {
             </div>
           )}
         </main>
+
+        {/* Fixed Bottom Navigation Bar - Always visible */}
+        {questions.length > 0 && (
+          <footer className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-2xl border-t border-white/5">
+            {/* Question Dot Navigator */}
+            <div className="max-w-5xl mx-auto px-6 pt-4 pb-2">
+              <div className="flex items-center justify-center gap-2 flex-wrap">
+                {questions.map((q, idx) => (
+                  <button
+                    key={q.id}
+                    onClick={() => setCurrentQuestionIndex(idx)}
+                    title={`Question ${idx + 1}${answers[q.id] ? ' (Answered)' : ''}`}
+                    className={cn(
+                      "h-3 w-3 rounded-full transition-all duration-300 hover:scale-125",
+                      idx === currentQuestionIndex
+                        ? "bg-primary scale-125 ring-2 ring-primary/30"
+                        : answers[q.id]
+                          ? "bg-green-500"
+                          : "bg-slate-700 hover:bg-slate-500"
+                    )}
+                  />
+                ))}
+              </div>
+              <p className="text-center text-[10px] text-slate-500 mt-1">
+                {Object.keys(answers).length} of {questions.length} answered
+              </p>
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="max-w-5xl mx-auto px-6 pb-5 flex items-center justify-between gap-4">
+              <Button
+                variant="ghost"
+                disabled={currentQuestionIndex === 0}
+                onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+                className="h-14 px-8 rounded-2xl text-slate-500 hover:text-white transition-all"
+              >
+                <ArrowLeft className="mr-2 h-5 w-5" />
+                Previous
+              </Button>
+
+              <div className="text-center">
+                <span className="text-sm font-bold text-slate-400">
+                  {currentQuestionIndex + 1} / {questions.length}
+                </span>
+              </div>
+
+              {currentQuestionIndex < questions.length - 1 ? (
+                <Button
+                  disabled={!answers[currentQuestion?.id]}
+                  onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+                  className="h-14 px-10 rounded-2xl bg-primary hover:bg-primary/90 font-black uppercase tracking-widest group"
+                >
+                  Next
+                  <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleSubmit}
+                  disabled={loading || Object.keys(answers).length < questions.length}
+                  className="h-14 px-12 rounded-2xl bg-green-600 hover:bg-green-700 font-black tracking-[0.15em] uppercase shadow-[0_10px_30px_rgba(22,163,74,0.3)] animate-pulse hover:animate-none"
+                >
+                  {loading ? <RefreshCw className="h-5 w-5 animate-spin" /> : "Submit"}
+                </Button>
+              )}
+            </div>
+          </footer>
+        )}
 
         {/* Security Warning Overlay - Non-dismissible */}
         {(!proctoring.isFullscreen || !proctoring.isFocused || !proctoring.isVisible) && (
