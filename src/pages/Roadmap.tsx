@@ -71,6 +71,10 @@ export const Roadmap = () => {
   const [isIssuing, setIsIssuing] = useState(false);
   const [assessmentStatus, setAssessmentStatus] = useState<{ passed: boolean; checked: boolean }>({ passed: false, checked: false });
 
+  // Calculate progress - MUST be declared before any useEffect that references it
+  const completedCount = roadmap.filter((item) => item.completed).length;
+  const progressPercent = roadmap.length > 0 ? Math.round((completedCount / roadmap.length) * 100) : 0;
+
   // Simplified initialization logic - Allow roadmap to render even with 0% progress
   useEffect(() => {
     const initializeRoadmap = async () => {
@@ -171,9 +175,7 @@ export const Roadmap = () => {
     }
   };
 
-  // Calculate progress
-  const completedCount = roadmap.filter((item) => item.completed).length;
-  const progressPercent = roadmap.length > 0 ? Math.round((completedCount / roadmap.length) * 100) : 0;
+  // progressPercent and completedCount are declared above, before the useEffect hooks
 
   // Early return for missing prerequisites (before any rendering)
   if (!selectedRole) {
