@@ -20,6 +20,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   });
 
   useEffect(() => {
+    // Initialize auth service listeners and check for redirect results
+    // These are now explicitly called to ensure initialization order
+    authService.initializeAuth();
+    authService.handleRedirectResult();
+
     // Set initial state from service
     const initialState = authService.getCurrentState();
     

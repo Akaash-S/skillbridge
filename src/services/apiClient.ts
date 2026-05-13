@@ -1,5 +1,4 @@
 import { env } from '@/config/env';
-import { authService } from '@/services/auth';
 
 // API Configuration
 const API_BASE_URL = env.apiBaseUrl;

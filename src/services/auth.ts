@@ -30,12 +30,8 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
 
-// Google Auth Provider
-const googleProvider = new GoogleAuthProvider();
-googleProvider.addScope('email');
-googleProvider.addScope('profile');
+// Google Auth Provider is now initialized lazily within the AuthService class
 
 // Storage keys - ONLY for non-sensitive data
 const SESSION_TYPE_KEY = 'sb_session_type';
@@ -53,9 +49,29 @@ export class AuthService {
     mfaToken: null
   };
 
+  private _auth: any;
+  private _googleProvider: any;
+
   private constructor() {
-    this.initializeAuthListener();
-    this.handleRedirectResult();
+    // Note: Initialization is deferred until methods are called
+  }
+
+  // Lazy getter for Firebase Auth
+  private get auth() {
+    if (!this._auth) {
+      this._auth = getAuth(app);
+    }
+    return this._auth;
+  }
+
+  // Lazy getter for Google Provider
+  private get googleProvider() {
+    if (!this._googleProvider) {
+      this._googleProvider = new GoogleAuthProvider();
+      this._googleProvider.addScope('email');
+      this._googleProvider.addScope('profile');
+    }
+    return this._googleProvider;
   }
 
   public static getInstance(): AuthService {
@@ -66,8 +82,8 @@ export class AuthService {
   }
 
   // Initialize Firebase auth state listener
-  private initializeAuthListener(): void {
-    onAuthStateChanged(auth, async (firebaseUser) => {
+  public initializeAuth(): void {
+    onAuthStateChanged(this.auth, async (firebaseUser) => {
       
       if (firebaseUser) {
         await this.handleAuthenticatedUser(firebaseUser);
@@ -186,9 +202,9 @@ export class AuthService {
   }
 
   // Handle redirect result on app initialization
-  private async handleRedirectResult(): Promise<void> {
+  public async handleRedirectResult(): Promise<void> {
     try {
-      const result = await getRedirectResult(auth);
+      const result = await getRedirectResult(this.auth);
       if (result?.user) {
         localStorage.setItem(SESSION_TYPE_KEY, SessionType.REDIRECT_COMPLETE);
       }
@@ -201,7 +217,7 @@ export class AuthService {
     try {
       localStorage.setItem(SESSION_TYPE_KEY, SessionType.EXPLICIT_LOGIN);
       
-      await signInWithPopup(auth, googleProvider);
+      await signInWithPopup(this.auth, this.googleProvider);
       
       // Auth state listener will handle the rest
     } catch (error: any) {
@@ -223,7 +239,7 @@ export class AuthService {
   public async signInWithRedirect(): Promise<void> {
     try {
       localStorage.setItem(SESSION_TYPE_KEY, SessionType.EXPLICIT_LOGIN);
-      await signInWithRedirect(auth, googleProvider);
+      await signInWithRedirect(this.auth, this.googleProvider);
     } catch (error: any) {
       if (env.debugMode) {
         console.error('Redirect authentication failed:', error);
@@ -258,7 +274,7 @@ export class AuthService {
   public async completeMFALogin(mfaToken: string, code: string, isRecoveryCode: boolean = false): Promise<void> {
     try {
       // Get current Firebase user's ID token
-      const firebaseUser = auth.currentUser;
+      const firebaseUser = this.auth.currentUser;
       if (!firebaseUser) {
         throw new Error('No Firebase user found');
       }
@@ -318,6 +334,9 @@ export class AuthService {
   // Sign out
   public async signOut(): Promise<void> {
     try {
+      // Sign out from Firebase
+      await signOut(this.auth);
+
       // Call backend logout to clear httpOnly cookie
       await fetch(`${env.apiBaseUrl}/auth/logout`, {
         method: 'POST',
@@ -325,9 +344,6 @@ export class AuthService {
       }).catch(() => {
         // Ignore errors - proceed with local logout anyway
       });
-      
-      // Sign out from Firebase
-      await signOut(auth);
       
       // Clear local storage
       this.clearStoredAuth();
@@ -352,10 +368,10 @@ export class AuthService {
 
   // Get current auth token
   public async getCurrentToken(): Promise<string | null> {
-    const user = auth.currentUser;
-    if (!user) return null;
-    
     try {
+      const user = this.auth.currentUser;
+      if (!user) return null;
+    
       return await user.getIdToken(true);
     } catch (error) {
       if (env.debugMode) {
