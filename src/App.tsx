@@ -36,6 +36,7 @@ import { Activity } from "@/pages/Activity";
 import { Settings } from "@/pages/Settings";
 import { Courses } from "@/pages/Courses";
 import Help from "@/pages/Help";
+import { ProctoredAssessment } from "@/pages/ProctoredAssessment";
 import NotFound from "./pages/NotFound";
 import AddSkillsGuide from "@/pages/guide/AddSkills";
 import CareerGoalGuide from "@/pages/guide/CareerGoal";
@@ -104,6 +105,12 @@ const App = () => (
                   <Route path="/roadmap" element={
                     <ProtectedRoute>
                       <Roadmap />
+                    </ProtectedRoute>
+                  } />
+
+                  <Route path="/assessment/:roleId" element={
+                    <ProtectedRoute>
+                      <ProctoredAssessment />
                     </ProtectedRoute>
                   } />
                   

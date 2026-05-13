@@ -27,7 +27,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // Subscribe to auth state changes
     const unsubscribe = authService.onAuthStateChange((state) => {
-      setAuthState(state);
+      // Bypass auth in development if configured
+      if (!state.isAuthenticated && import.meta.env.VITE_BYPASS_AUTH === 'true') {
+        setAuthState({
+          user: {
+            uid: 'dev-user-123',
+            email: 'dev@example.com',
+            name: 'Development User',
+            avatar: '',
+            emailVerified: true
+          },
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+          mfaRequired: false,
+          mfaToken: null
+        });
+      } else {
+        setAuthState(state);
+      }
     });
 
     return () => {

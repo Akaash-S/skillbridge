@@ -25,9 +25,11 @@ import {
   TrendingUp,
   Trophy,
   Award,
-  Sparkles
+  Sparkles,
+  Shield
 } from "lucide-react";
 import { cn, isRoadmapCompleted } from "@/lib/utils";
+import { apiClient } from "@/services/apiClient";
 import { hasRoadmapTemplate } from "@/data/fixedRoadmaps";
 import { CompletionMessage } from "@/components/CompletionMessage";
 import { Certificate } from "@/components/Certificate";
@@ -67,6 +69,7 @@ export const Roadmap = () => {
   const [issuedCertificate, setIssuedCertificate] = useState<CertificateData | null>(null);
   const [isCertModalOpen, setIsCertModalOpen] = useState(false);
   const [isIssuing, setIsIssuing] = useState(false);
+  const [assessmentStatus, setAssessmentStatus] = useState<{ passed: boolean; checked: boolean }>({ passed: false, checked: false });
 
   // Simplified initialization logic - Allow roadmap to render even with 0% progress
   useEffect(() => {
@@ -104,6 +107,24 @@ export const Roadmap = () => {
       initializeRoadmap();
     }
   }, [selectedRole?.id, loading]); // Removed analysis dependency to allow 0% users
+
+  // Check assessment eligibility and status when roadmap is 100%
+  useEffect(() => {
+    const checkAssessment = async () => {
+      if (progressPercent === 100 && selectedRole && !assessmentStatus.checked) {
+        try {
+          const res = await apiClient.get<any>(`/assessment/eligibility/${selectedRole.id}`);
+          setAssessmentStatus({ 
+            passed: res.reason === 'Assessment already passed', 
+            checked: true 
+          });
+        } catch (error) {
+          console.error("Failed to check assessment status:", error);
+        }
+      }
+    };
+    checkAssessment();
+  }, [progressPercent, selectedRole?.id, assessmentStatus.checked]);
 
   // Handle roadmap item completion with optimistic updates and analysis refresh
   const handleItemComplete = async (itemId: string) => {
@@ -349,14 +370,24 @@ export const Roadmap = () => {
                     Your dedication has paid off. You have mastered all the required skills and are now officially ready for this role!
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start pt-2">
-                    <Button 
-                      onClick={handleClaimCertificate} 
-                      className="gap-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
-                      disabled={isIssuing}
-                    >
-                      {isIssuing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Award className="h-4 w-4" />}
-                      Claim Your Certificate
-                    </Button>
+                    {assessmentStatus.passed ? (
+                      <Button 
+                        onClick={handleClaimCertificate} 
+                        className="gap-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
+                        disabled={isIssuing}
+                      >
+                        {isIssuing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Award className="h-4 w-4" />}
+                        Claim Your Certificate
+                      </Button>
+                    ) : (
+                      <Button 
+                        onClick={() => navigate(`/assessment/${selectedRole.id}`)} 
+                        className="gap-2 bg-primary hover:bg-primary/90 text-white w-full sm:w-auto"
+                      >
+                        <Shield className="h-4 w-4" />
+                        Take Final Assessment
+                      </Button>
+                    )}
                     <Button variant="outline" className="border-green-300 text-green-700 hover:bg-green-100 w-full sm:w-auto" asChild>
                       <Link to="/analysis">View Final Analysis</Link>
                     </Button>
