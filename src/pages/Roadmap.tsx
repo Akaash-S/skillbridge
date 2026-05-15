@@ -112,6 +112,11 @@ export const Roadmap = () => {
     }
   }, [selectedRole?.id, loading]); // Removed analysis dependency to allow 0% users
 
+  // Reset assessment status when role changes
+  useEffect(() => {
+    setAssessmentStatus({ passed: false, checked: false });
+  }, [selectedRole?.id]);
+
   // Check assessment eligibility and status when roadmap is 100%
   useEffect(() => {
     const checkAssessment = async () => {

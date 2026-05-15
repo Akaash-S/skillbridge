@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from "react";
 import { UserSkill, JobRole, RoadmapItem, ProficiencyLevel } from "@/data/mockData";
 import { getFixedRoadmap } from "@/data/fixedRoadmaps";
 import { apiClient } from "@/services/apiClient";
@@ -108,6 +108,27 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     error: null,
   });
 
+  // Use ref to track timeouts for cleanup to prevent memory leaks
+  const timeoutRefs = useRef<NodeJS.Timeout[]>([]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    const currentTimeouts = timeoutRefs.current;
+    return () => {
+      currentTimeouts.forEach(clearTimeout);
+    };
+  }, []);
+
+  const clearAllTimeouts = useCallback(() => {
+    timeoutRefs.current.forEach(clearTimeout);
+    timeoutRefs.current = [];
+  }, []);
+
+  const addTimeout = useCallback((fn: () => void, delay: number) => {
+    const timeoutId = setTimeout(fn, delay);
+    timeoutRefs.current.push(timeoutId);
+    return timeoutId;
+  }, []);
   // Load initial data when user is authenticated
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -186,7 +207,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
         
         // CRITICAL FIX: Auto-generate fresh roadmap if role exists but no valid roadmap
         if (isValidRole && processedRoadmapItems.length === 0) {
-          setTimeout(() => {
+          addTimeout(() => {
             try {
               const fixedRoadmapItems = getFixedRoadmap(targetRole.id);
               if (fixedRoadmapItems.length > 0) {
@@ -354,7 +375,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
         }
         
         // Auto-load roadmap for the new role
-        setTimeout(async () => {
+        addTimeout(async () => {
           try {
             const fixedRoadmapItems = getFixedRoadmap(role.id);
             if (fixedRoadmapItems.length > 0) {
@@ -496,50 +517,45 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     }
   }, [state.selectedRole]); // Removed loadRoadmapProgress dependency to prevent circular reference
 
-  // Mark roadmap item complete - ENHANCED with analysis updates
+  // Mark roadmap item complete - CONSOLIDATED state updates to prevent race conditions
   const markRoadmapItemComplete = useCallback(async (itemId: string) => {
+    // Find the roadmap item in current state to get skillId - MOVE OUTSIDE TRY
+    const roadmapItem = state.roadmap.find(item => item.id === itemId);
+    if (!roadmapItem) {
+      console.error('❌ Roadmap item not found:', itemId);
+      return;
+    }
+
+    const skillId = roadmapItem.skillId;
+    const newCompletedState = !roadmapItem.completed;
+
     try {
-      // Find the roadmap item to get skillId
-      const roadmapItem = state.roadmap.find(item => item.id === itemId);
-      if (!roadmapItem) {
-        console.error('❌ Roadmap item not found:', itemId);
-        throw new Error('Roadmap item not found');
-      }
-
-      const skillId = roadmapItem.skillId;
-      const newCompletedState = !roadmapItem.completed;
-
-      // Optimistically update local state first for immediate UI feedback
-      const updatedRoadmap = state.roadmap.map(item =>
-        item.id === itemId ? { ...item, completed: newCompletedState } : item
-      );
-      
-      setState(prev => ({
-        ...prev,
-        roadmap: updatedRoadmap
-      }));
-
-      // Calculate new progress
-      const completedItems = updatedRoadmap.filter(item => item.completed).length;
-      const totalItems = updatedRoadmap.length;
-      const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-
-      // Update roadmap progress
-      setState(prev => ({
-        ...prev,
-        roadmapProgress: prev.roadmapProgress ? {
-          ...prev.roadmapProgress,
-          completedItems,
-          progress,
-          roadmapItems: updatedRoadmap
-        } : null
-      }));
+      // Optimistically update local state using functional update to prevent race conditions
+      setState(prev => {
+        const updatedRoadmap = prev.roadmap.map(item =>
+          item.id === itemId ? { ...item, completed: newCompletedState } : item
+        );
+        
+        // Calculate new progress metrics
+        const completedItems = updatedRoadmap.filter(item => item.completed).length;
+        const totalItems = updatedRoadmap.length;
+        const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+        
+        return {
+          ...prev,
+          roadmap: updatedRoadmap,
+          roadmapProgress: prev.roadmapProgress ? {
+            ...prev.roadmapProgress,
+            completedItems,
+            progress,
+            roadmapItems: updatedRoadmap
+          } : null
+        };
+      });
 
       // If skill was completed, update user skills and recalculate analysis
       if (newCompletedState && state.selectedRole) {
-        
         try {
-          // Add the skill to user's skill list with intermediate proficiency
           const skillProficiency = roadmapItem.difficulty === 'advanced' ? 'advanced' : 
                                  roadmapItem.difficulty === 'beginner' ? 'beginner' : 'intermediate';
           
@@ -547,27 +563,16 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
           const existingSkill = state.userSkills.find(skill => skill.id === skillId);
           
           if (!existingSkill) {
-            // Add new skill
-            await apiClient.post('/skills', { 
-              skillId: skillId, 
-              level: skillProficiency 
-            });
-            
-            // Reload user skills
+            await apiClient.post('/skills', { skillId: skillId, level: skillProficiency });
             const updatedSkills = await apiClient.get<UserSkill[]>('/skills');
             setState(prev => ({ ...prev, userSkills: updatedSkills }));
-            
           } else if (existingSkill.proficiency !== skillProficiency) {
-            // Update existing skill proficiency if needed
             await apiClient.put(`/skills/${skillId}`, { level: skillProficiency });
-            
-            // Reload user skills
             const updatedSkills = await apiClient.get<UserSkill[]>('/skills');
             setState(prev => ({ ...prev, userSkills: updatedSkills }));
-            
           }
 
-          // Recalculate skill gap analysis with updated skills
+          // Recalculate skill gap analysis - only on successful skill update
           const analysisResponse = await apiClient.get<{
             roleId: string;
             analysis: SkillGapAnalysis;
@@ -582,42 +587,50 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
           }));
           
         } catch (analysisError) {
-          // console.warn('⚠️ Failed to update analysis after skill completion:', analysisError);
-          // Don't throw error here as the main roadmap update was successful
+          console.error('⚠️ Failed to update analysis after skill completion:', analysisError);
         }
       }
 
-      // Try to persist to backend (non-blocking for better UX)
+      // Persist to backend
       try {
         await apiClient.put('/roadmap/progress', {
           skillId: skillId,
           completed: newCompletedState
         });
-
       } catch (backendError) {
-        // console.warn('⚠️ Failed to persist to backend, but local state updated:', backendError);
-        // Don't throw error here - local state is already updated
-        // User can continue working offline
+        console.error('⚠️ Failed to persist to backend, but local state updated:', backendError);
       }
 
     } catch (error) {
       console.error('❌ Failed to update roadmap completion:', error);
       
       // Revert optimistic update on error
-      const roadmapItem = state.roadmap.find(item => item.id === itemId);
-      if (roadmapItem) {
-        setState(prev => ({
+      setState(prev => {
+        const itemToRevert = prev.roadmap.find(i => i.id === itemId);
+        if (!itemToRevert) return prev;
+        
+        const revertedRoadmap = prev.roadmap.map(item =>
+          item.id === itemId ? { ...item, completed: !newCompletedState } : item
+        );
+        
+        const completedItems = revertedRoadmap.filter(item => item.completed).length;
+        const progress = revertedRoadmap.length > 0 ? Math.round((completedItems / revertedRoadmap.length) * 100) : 0;
+        
+        return {
           ...prev,
-          roadmap: prev.roadmap.map(item =>
-            item.id === itemId ? { ...item, completed: roadmapItem.completed } : item
-          )
-        }));
-      }
+          roadmap: revertedRoadmap,
+          roadmapProgress: prev.roadmapProgress ? {
+            ...prev.roadmapProgress,
+            completedItems,
+            progress,
+            roadmapItems: revertedRoadmap
+          } : null
+        };
+      });
 
-      // Re-throw error so UI can handle it
       throw error;
     }
-  }, [state.roadmap, state.selectedRole, state.userSkills]);
+  }, [state.roadmap, state.selectedRole, state.userSkills, addTimeout]);
 
   // Reset progress
   const resetProgress = useCallback(() => {

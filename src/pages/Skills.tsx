@@ -26,11 +26,10 @@ export const Skills = () => {
   const [selectedSkill, setSelectedSkill] = useState("");
   const [proficiency, setProficiency] = useState<ProficiencyLevel>("intermediate");
   const [currentPage, setCurrentPage] = useState(1);
-  const [availableSkills, setAvailableSkills] = useState<any[]>([]);
-  const [pagination, setPagination] = useState<any>(null);
+  const [apiAvailableSkills, setApiAvailableSkills] = useState<any[]>([]);
+  const [apiPagination, setApiPagination] = useState<any>(null);
   const [loadingSkills, setLoadingSkills] = useState(false);
   const [roleAnalysis, setRoleAnalysis] = useState<any>(null);
-  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
 
   const {
     userSkills,
@@ -106,8 +105,8 @@ export const Skills = () => {
       const result = await apiClient.get<any>(`/skills/master/paginated?${params.toString()}`);
 
       if (result) {
-        setAvailableSkills(result.skills || []);
-        setPagination(result.pagination || null);
+        setApiAvailableSkills(result.skills || []);
+        setApiPagination(result.pagination || null);
       }
     } catch (error) {
       console.error('Failed to load available skills:', error);
@@ -135,52 +134,33 @@ export const Skills = () => {
     }
   };
 
-  // Initialize data on component mount
-  useEffect(() => {
-    // Use master skills from context if available
+  // Final derived skills and pagination - SINGLE SOURCE OF TRUTH
+  const { displayedSkills, displayedPagination } = useMemo(() => {
+    // If we have master skills in context, always derive from there for best performance
     if (masterSkills.length > 0) {
-      const result = getAvailableSkillsFromMaster;
-      setAvailableSkills(result.skills);
-      setPagination(result.pagination);
-      setInitialDataLoaded(true);
-    } else if (isAuthenticated) {
-      loadAvailableSkillsFromAPI(1, search);
+      return {
+        displayedSkills: getAvailableSkillsFromMaster.skills,
+        displayedPagination: getAvailableSkillsFromMaster.pagination
+      };
     }
+    // Fallback to API-fetched skills if master skills are not loaded yet
+    return {
+      displayedSkills: apiAvailableSkills,
+      displayedPagination: apiPagination
+    };
+  }, [masterSkills, getAvailableSkillsFromMaster, apiAvailableSkills, apiPagination]);
 
-    // Load role analysis if target role is selected
-    if (selectedRole) {
-      loadSkillsWithRoleAnalysis();
-    }
-  }, [masterSkills, userSkills, selectedRole, isAuthenticated]);
-
-  // Update available skills when master skills or user skills change
+  // Load role analysis and initial API data if needed
   useEffect(() => {
-    if (masterSkills.length > 0) {
-      const result = getAvailableSkillsFromMaster;
-      setAvailableSkills(result.skills);
-      setPagination(result.pagination);
-      setInitialDataLoaded(true);
-    }
-  }, [getAvailableSkillsFromMaster]);
-
-  // Handle search with debouncing
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setCurrentPage(1);
-
-      if (masterSkills.length > 0) {
-        // Use local filtering for master skills
-        const result = getAvailableSkillsFromMaster;
-        setAvailableSkills(result.skills);
-        setPagination(result.pagination);
-      } else {
-        // Use API for search
-        loadAvailableSkillsFromAPI(1, search);
+    if (isAuthenticated) {
+      if (masterSkills.length === 0) {
+        loadAvailableSkillsFromAPI(currentPage, search);
       }
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [search, getAvailableSkillsFromMaster, masterSkills.length]);
+      if (selectedRole) {
+        loadSkillsWithRoleAnalysis();
+      }
+    }
+  }, [masterSkills.length, selectedRole?.id, isAuthenticated, currentPage, search]);
 
   // Handle page change
   const handlePageChange = (page: number) => {
@@ -195,15 +175,15 @@ export const Skills = () => {
   };
 
   const groupedSkills = useMemo(() => {
-    const groups: Record<string, typeof availableSkills> = {};
-    availableSkills.forEach((skill) => {
+    const groups: Record<string, typeof displayedSkills> = {};
+    displayedSkills.forEach((skill) => {
       if (!groups[skill.category]) {
         groups[skill.category] = [];
       }
       groups[skill.category].push(skill);
     });
     return groups;
-  }, [availableSkills]);
+  }, [displayedSkills]);
 
   const handleAddSkill = async () => {
     if (!selectedSkill) {
@@ -302,7 +282,7 @@ export const Skills = () => {
   }
 
   // Show loading state only if we don't have any data yet
-  const isInitialLoading = !initialDataLoaded && loadingSkills && availableSkills.length === 0;
+  const isInitialLoading = loadingSkills && displayedSkills.length === 0;
 
   if (isInitialLoading) {
     return (
@@ -440,24 +420,24 @@ export const Skills = () => {
               </Button>
 
               {/* Pagination */}
-              {pagination && pagination.totalPages > 1 && (
+              {displayedPagination && displayedPagination.totalPages > 1 && (
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={!pagination.hasPrev || loadingSkills}
+                    disabled={!displayedPagination.hasPrev || loadingSkills}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <span className="text-sm text-muted-foreground">
-                    {currentPage} of {pagination.totalPages}
+                    {currentPage} of {displayedPagination.totalPages}
                   </span>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={!pagination.hasNext || loadingSkills}
+                    disabled={!displayedPagination.hasNext || loadingSkills}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
