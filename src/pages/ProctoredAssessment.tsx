@@ -9,7 +9,9 @@ import {
   Lock,
   ArrowLeft,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Maximize,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,10 +41,33 @@ export const ProctoredAssessment = () => {
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [result, setResult] = useState<{ score: number; passed: boolean } | null>(null);
+
+  // Monitor fullscreen state
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  const handleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {
+        toast.error("Fullscreen request denied. Please check your browser settings.");
+      });
+    }
+  };
 
   // Fetch questions and start session
   const startTest = async () => {
+    if (!document.fullscreenElement) {
+      toast.error("Please enable fullscreen mode to start the assessment.");
+      return;
+    }
+    
     setLoading(true);
     try {
       // Start session
@@ -151,7 +176,7 @@ export const ProctoredAssessment = () => {
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                    Ensure a stable internet connection before starting.
+                    Fullscreen mode is mandatory for session integrity.
                   </li>
                   <li className="flex items-center gap-2">
                     <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
@@ -167,7 +192,7 @@ export const ProctoredAssessment = () => {
 
             <div className="pt-2 space-y-2">
               <Button onClick={() => setStep("prep")} className="w-full h-11">
-                Begin Assessment
+                Proceed to Environment Check
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
               <Button variant="ghost" onClick={() => navigate(-1)} className="w-full h-10 text-muted-foreground">
@@ -186,28 +211,44 @@ export const ProctoredAssessment = () => {
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="max-w-xl w-full shadow-lg overflow-hidden">
           <CardHeader className="text-center space-y-2">
-            <CardTitle className="text-2xl font-bold">Ready to Start?</CardTitle>
-            <CardDescription>Confirm your readiness to begin the assessment.</CardDescription>
+            <CardTitle className="text-2xl font-bold">Environment Check</CardTitle>
+            <CardDescription>Verify your technical requirements before starting.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 p-6 md:p-8 text-center">
-            <div className="p-12 rounded-2xl bg-muted/30 border border-dashed flex flex-col items-center justify-center space-y-4">
-              <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center">
-                <Timer className="h-8 w-8 text-primary" />
+            <div className="p-12 rounded-2xl bg-muted/30 border border-dashed flex flex-col items-center justify-center space-y-6">
+              <div className={cn(
+                "h-20 w-20 rounded-full flex items-center justify-center transition-all duration-500",
+                isFullscreen ? "bg-green-500/10 text-green-600 scale-110" : "bg-primary/10 text-primary"
+              )}>
+                {isFullscreen ? <CheckCircle2 className="h-10 w-10" /> : <Maximize className="h-10 w-10" />}
               </div>
               <div className="space-y-1">
-                <p className="font-bold text-lg">10 Minutes Limit</p>
-                <p className="text-sm text-muted-foreground">The test will auto-submit on completion</p>
+                <p className="font-bold text-lg">{isFullscreen ? "Environment Secure" : "Fullscreen Required"}</p>
+                <p className="text-sm text-muted-foreground">
+                  {isFullscreen ? "You are ready to begin the assessment" : "Enable fullscreen to unlock the assessment session"}
+                </p>
               </div>
             </div>
 
             <div className="pt-4 space-y-4">
-              <Button 
-                onClick={startTest} 
-                disabled={loading}
-                className="w-full h-12 text-lg font-bold"
-              >
-                {loading ? <RefreshCw className="h-5 w-5 animate-spin mr-2" /> : "Start Assessment"}
-              </Button>
+              {isFullscreen ? (
+                <Button 
+                  onClick={startTest} 
+                  disabled={loading}
+                  className="w-full h-12 text-lg font-bold shadow-lg shadow-primary/20 animate-in zoom-in-95 duration-300"
+                >
+                  {loading ? <RefreshCw className="h-5 w-5 animate-spin mr-2" /> : "Start Assessment Now"}
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleFullscreen}
+                  className="w-full h-12 text-lg font-bold"
+                  variant="outline"
+                >
+                  <Maximize className="mr-2 h-5 w-5" />
+                  Enable Fullscreen
+                </Button>
+              )}
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider text-center">
                 By starting, you agree to complete the assessment in one sitting.
               </p>
@@ -361,6 +402,39 @@ export const ProctoredAssessment = () => {
               )}
             </div>
           </footer>
+        )}
+
+        {/* Security Warning Overlay */}
+        {!isFullscreen && (
+          <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md flex items-center justify-center p-8 text-center animate-in fade-in duration-300">
+            <div className="max-w-md space-y-8">
+              <div className="relative mx-auto w-24 h-24">
+                <div className="absolute inset-0 bg-destructive/20 rounded-full animate-ping" />
+                <div className="relative h-24 w-24 bg-destructive/10 rounded-full flex items-center justify-center border-2 border-destructive/30">
+                  <Lock className="h-10 w-10 text-destructive" />
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <h2 className="text-4xl font-bold text-destructive tracking-tight">Session Locked</h2>
+                <div className="space-y-2">
+                  <p className="text-xl font-semibold">Fullscreen Exit Detected</p>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    The assessment environment has been compromised. You must return to fullscreen mode immediately to continue your session.
+                  </p>
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleFullscreen} 
+                variant="destructive"
+                className="w-full h-12 text-base font-bold shadow-lg"
+              >
+                <Maximize className="mr-2 h-5 w-5" />
+                Restore Fullscreen
+              </Button>
+            </div>
+          </div>
         )}
       </div>
     );
