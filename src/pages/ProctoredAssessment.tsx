@@ -10,8 +10,7 @@ import {
   ArrowLeft,
   RefreshCw,
   AlertCircle,
-  Maximize,
-  AlertTriangle
+  Maximize
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -96,6 +95,15 @@ export const ProctoredAssessment = () => {
     
     setLoading(true);
     
+    // Attempt to exit fullscreen gracefully
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+    } catch (e) {
+      console.warn("Fullscreen exit failed", e);
+    }
+
     try {
       const res = await apiClient.post<any>("/assessment/submit", {
         sessionId,
