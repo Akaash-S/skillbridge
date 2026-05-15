@@ -144,7 +144,10 @@ export class AnalyticsService {
       sessionsByDate.get(dateKey)!.push(session);
     });
     
-    const uniqueDates = Array.from(sessionsByDate.keys()).sort();
+    // CRITICAL FIX: Sort chronologically, not alphabetically
+    const uniqueDates = Array.from(sessionsByDate.keys()).sort((a, b) => 
+      new Date(a).getTime() - new Date(b).getTime()
+    );
     
     // Calculate current streak
     let currentStreak = 0;
@@ -156,6 +159,7 @@ export class AnalyticsService {
     // Check if learned today or yesterday
     if (sessionsByDate.has(today) || sessionsByDate.has(yesterdayStr)) {
       let checkDate = new Date();
+      // If no session today, start checking from yesterday
       if (!sessionsByDate.has(today)) {
         checkDate.setDate(checkDate.getDate() - 1);
       }
@@ -174,8 +178,16 @@ export class AnalyticsService {
     uniqueDates.forEach(dateStr => {
       const currentDate = new Date(dateStr);
       
-      if (lastDate && (currentDate.getTime() - lastDate.getTime()) === 24 * 60 * 60 * 1000) {
-        tempStreak++;
+      // CRITICAL FIX: Use DST-aware consecutive day check
+      if (lastDate) {
+        const nextDay = new Date(lastDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+        
+        if (currentDate.toDateString() === nextDay.toDateString()) {
+          tempStreak++;
+        } else {
+          tempStreak = 1;
+        }
       } else {
         tempStreak = 1;
       }

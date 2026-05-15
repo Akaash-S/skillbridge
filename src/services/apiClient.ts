@@ -1,4 +1,5 @@
 import { env } from '@/config/env';
+import { authService } from './auth';
 
 // API Configuration
 const API_BASE_URL = env.apiBaseUrl;
@@ -51,6 +52,14 @@ class ApiClient {
       'Content-Type': 'application/json',
       ...headers
     };
+
+    // Check authentication if required
+    if (requireAuth) {
+      const authState = authService.getCurrentState();
+      if (!authState.isAuthenticated) {
+        throw new Error('Authentication required - please log in to continue');
+      }
+    }
 
     // Note: Auth token is now in httpOnly cookie (sb_session)
     // No need to add Authorization header - cookie is sent automatically
