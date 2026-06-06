@@ -38,6 +38,7 @@ import { Courses } from "@/pages/Courses";
 import Help from "@/pages/Help";
 import { ProctoredAssessment } from "@/pages/ProctoredAssessment";
 import NotFound from "./pages/NotFound";
+import { AIAssistant } from "@/components/AIAssistant/AIAssistant";
 import AddSkillsGuide from "@/pages/guide/AddSkills";
 import CareerGoalGuide from "@/pages/guide/CareerGoal";
 import SkillGapGuide from "@/pages/guide/SkillGap";
@@ -66,6 +67,7 @@ const App = () => (
               <TooltipProvider>
                 <Toaster />
                 <Sonner />
+                <AIAssistant />
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<AuthRedirect />} />
