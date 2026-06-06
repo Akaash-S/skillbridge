@@ -32,7 +32,7 @@ export const StepIndicator = ({ currentStep }: StepIndicatorProps) => {
                     className={cn(
                       "h-10 w-10 rounded-full flex items-center justify-center transition-all",
                       isActive && "bg-primary text-primary-foreground shadow-lg scale-110",
-                      isCompleted && "bg-accent text-accent-foreground",
+                      isCompleted && "bg-green-500 text-white",
                       !isActive && !isCompleted && "bg-muted text-muted-foreground"
                     )}
                   >
