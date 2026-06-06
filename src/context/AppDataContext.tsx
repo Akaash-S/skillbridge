@@ -52,6 +52,7 @@ interface AppDataState {
   roadmapProgress: any | null;
   loading: boolean;
   error: string | null;
+  initialLoadDone: boolean;
 }
 
 interface AppDataContextType extends AppDataState {
@@ -106,6 +107,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     roadmapProgress: null,
     loading: false,
     error: null,
+    initialLoadDone: false,
   });
 
   // Use ref to track timeouts for cleanup to prevent memory leaks
@@ -202,7 +204,8 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
             roadmapItems: processedRoadmapItems
           } : null,
           roadmap: processedRoadmapItems,
-          loading: false
+          loading: false,
+          initialLoadDone: true
         }));
         
         // CRITICAL FIX: Auto-generate fresh roadmap if role exists but no valid roadmap
@@ -239,14 +242,15 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
           loadMasterSkills(),
           loadJobRoles()
         ]);
-        setState(prev => ({ ...prev, loading: false }));
+        setState(prev => ({ ...prev, loading: false, initialLoadDone: true }));
       }
     } catch (error: any) {
       console.error('❌ Failed to load initial data:', error);
       setState(prev => ({
         ...prev,
         error: error.message || 'Failed to load application data',
-        loading: false
+        loading: false,
+        initialLoadDone: true
       }));
     }
   }, [isAuthenticated]);
