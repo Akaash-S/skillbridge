@@ -109,6 +109,16 @@ export const AIAssistant: React.FC = () => {
     }
   }, [shouldShow, isOpen]);
 
+  // Manage body class for split-view layout
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('assistant-open');
+    } else {
+      document.body.classList.remove('assistant-open');
+    }
+    return () => document.body.classList.remove('assistant-open');
+  }, [isOpen]);
+
   // Generate suggested prompts based on context
   useEffect(() => {
     const prompts: SuggestedPrompt[] = [];
