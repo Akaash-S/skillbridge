@@ -645,6 +645,275 @@ export const fixedRoadmaps: Record<string, RoadmapItem[]> = {
       estimatedTime: "35 hours",
       completed: false
     }
+  ],
+
+  "tech-lead": [
+    {
+      id: "roadmap-system-design",
+      skillId: "system-design",
+      skillName: "System Design",
+      resources: [
+        {
+          id: "sysdes-1",
+          title: "System Design Primer",
+          url: "https://github.com/donnemartin/system-design-primer",
+          type: "documentation",
+          duration: "30 hours",
+          provider: "Donne Martin",
+          difficulty: "advanced",
+          rating: 4.9,
+          completionRate: 72,
+          effectiveness: 96
+        },
+        {
+          id: "sysdes-2",
+          title: "Grokking System Design Interview",
+          url: "https://www.designgurus.io/course/grokking-the-system-design-interview",
+          type: "course",
+          duration: "40 hours",
+          provider: "Design Gurus",
+          difficulty: "advanced",
+          rating: 4.8,
+          completionRate: 68,
+          effectiveness: 94
+        }
+      ],
+      difficulty: "advanced" as ProficiencyLevel,
+      estimatedTime: "45 hours",
+      completed: false,
+      prerequisites: [],
+      learningOutcomes: ["Design scalable distributed systems", "Evaluate architectural trade-offs", "Create technical design documents"],
+      practicalProjects: ["Design a URL shortener", "Design a chat system", "Design a rate limiter"],
+      assessmentCriteria: ["Scalability analysis", "Trade-off reasoning", "Clear documentation"]
+    },
+    {
+      id: "roadmap-design-patterns",
+      skillId: "design-patterns",
+      skillName: "Design Patterns",
+      resources: [
+        {
+          id: "dp-1",
+          title: "Refactoring Guru – Design Patterns",
+          url: "https://refactoring.guru/design-patterns",
+          type: "documentation",
+          duration: "20 hours",
+          provider: "Refactoring Guru",
+          difficulty: "advanced",
+          rating: 4.9,
+          completionRate: 76,
+          effectiveness: 95
+        },
+        {
+          id: "dp-2",
+          title: "Source Making – Design Patterns",
+          url: "https://sourcemaking.com/design_patterns",
+          type: "tutorial",
+          duration: "15 hours",
+          provider: "Source Making",
+          difficulty: "advanced",
+          rating: 4.7,
+          completionRate: 70,
+          effectiveness: 90
+        }
+      ],
+      difficulty: "advanced" as ProficiencyLevel,
+      estimatedTime: "35 hours",
+      completed: false,
+      prerequisites: ["system-design"],
+      learningOutcomes: ["Apply Gang of Four patterns", "Refactor legacy code using patterns", "Choose correct pattern for a problem"],
+      practicalProjects: ["Refactor a monolith", "Pattern catalog with examples", "Code review checklist"],
+      assessmentCriteria: ["Pattern identification", "Correct application", "Code quality improvement"]
+    },
+    {
+      id: "roadmap-team-leadership",
+      skillId: "team-leadership",
+      skillName: "Team Leadership",
+      resources: [
+        {
+          id: "lead-1",
+          title: "Engineering Management Resources",
+          url: "https://github.com/charlax/engineering-management",
+          type: "documentation",
+          duration: "15 hours",
+          provider: "Community",
+          difficulty: "intermediate",
+          rating: 4.6,
+          completionRate: 80,
+          effectiveness: 88
+        },
+        {
+          id: "lead-2",
+          title: "Staff Engineer Guide",
+          url: "https://staffeng.com/",
+          type: "documentation",
+          duration: "12 hours",
+          provider: "Will Larson",
+          difficulty: "advanced",
+          rating: 4.8,
+          completionRate: 74,
+          effectiveness: 92
+        }
+      ],
+      difficulty: "intermediate" as ProficiencyLevel,
+      estimatedTime: "30 hours",
+      completed: false,
+      prerequisites: [],
+      learningOutcomes: ["Run effective 1:1s", "Manage team performance", "Build high-performing teams"],
+      practicalProjects: ["Create a team charter", "Design a mentoring programme", "Run a retrospective"],
+      assessmentCriteria: ["Communication clarity", "Conflict resolution", "Team morale improvement"]
+    },
+    {
+      id: "roadmap-communication",
+      skillId: "communication",
+      skillName: "Technical Communication",
+      resources: [
+        {
+          id: "comm-1",
+          title: "Technical Writing – Google",
+          url: "https://developers.google.com/tech-writing",
+          type: "course",
+          duration: "10 hours",
+          provider: "Google",
+          difficulty: "intermediate",
+          rating: 4.7,
+          completionRate: 85,
+          effectiveness: 91
+        },
+        {
+          id: "comm-2",
+          title: "Architecture Decision Records",
+          url: "https://adr.github.io/",
+          type: "documentation",
+          duration: "5 hours",
+          provider: "ADR Community",
+          difficulty: "intermediate",
+          rating: 4.5,
+          completionRate: 82,
+          effectiveness: 87
+        }
+      ],
+      difficulty: "intermediate" as ProficiencyLevel,
+      estimatedTime: "25 hours",
+      completed: false,
+      prerequisites: [],
+      learningOutcomes: ["Write clear technical documents", "Present technical decisions", "Document architecture decisions"],
+      practicalProjects: ["Write an ADR", "Create a tech proposal", "Present a design review"],
+      assessmentCriteria: ["Clarity of writing", "Stakeholder communication", "Decision documentation"]
+    },
+    {
+      id: "roadmap-agile",
+      skillId: "agile",
+      skillName: "Agile Methodologies",
+      resources: [
+        {
+          id: "agile-1",
+          title: "Agile Manifesto & Principles",
+          url: "https://agilemanifesto.org/",
+          type: "documentation",
+          duration: "3 hours",
+          provider: "Agile Alliance",
+          difficulty: "beginner",
+          rating: 4.5,
+          completionRate: 90,
+          effectiveness: 85
+        },
+        {
+          id: "agile-2",
+          title: "Scrum Guide",
+          url: "https://scrumguides.org/",
+          type: "documentation",
+          duration: "5 hours",
+          provider: "Scrum.org",
+          difficulty: "intermediate",
+          rating: 4.6,
+          completionRate: 88,
+          effectiveness: 89
+        }
+      ],
+      difficulty: "intermediate" as ProficiencyLevel,
+      estimatedTime: "25 hours",
+      completed: false,
+      prerequisites: [],
+      learningOutcomes: ["Run Scrum ceremonies", "Estimate stories", "Manage sprint velocity"],
+      practicalProjects: ["Sprint planning exercise", "Backlog grooming", "Sprint retrospective"],
+      assessmentCriteria: ["Process understanding", "Estimation accuracy", "Ceremony facilitation"]
+    },
+    {
+      id: "roadmap-architecture",
+      skillId: "architecture",
+      skillName: "Software Architecture",
+      resources: [
+        {
+          id: "arch-1",
+          title: "Martin Fowler – Software Architecture",
+          url: "https://martinfowler.com/architecture/",
+          type: "documentation",
+          duration: "25 hours",
+          provider: "Martin Fowler",
+          difficulty: "advanced",
+          rating: 4.9,
+          completionRate: 65,
+          effectiveness: 97
+        },
+        {
+          id: "arch-2",
+          title: "The Twelve-Factor App",
+          url: "https://12factor.net/",
+          type: "documentation",
+          duration: "5 hours",
+          provider: "12 Factor",
+          difficulty: "intermediate",
+          rating: 4.7,
+          completionRate: 80,
+          effectiveness: 90
+        }
+      ],
+      difficulty: "advanced" as ProficiencyLevel,
+      estimatedTime: "40 hours",
+      completed: false,
+      prerequisites: ["system-design", "design-patterns"],
+      learningOutcomes: ["Design microservice architectures", "Evaluate monolith vs microservices", "Apply 12-factor methodology"],
+      practicalProjects: ["Architecture diagram for a SaaS app", "Migration plan from monolith", "Tech radar creation"],
+      assessmentCriteria: ["Architecture clarity", "Scalability planning", "Security considerations"]
+    },
+    {
+      id: "roadmap-code-review",
+      skillId: "code-review",
+      skillName: "Code Review & Mentoring",
+      resources: [
+        {
+          id: "cr-1",
+          title: "Google Code Review Guidelines",
+          url: "https://google.github.io/eng-practices/review/",
+          type: "documentation",
+          duration: "8 hours",
+          provider: "Google",
+          difficulty: "intermediate",
+          rating: 4.8,
+          completionRate: 85,
+          effectiveness: 93
+        },
+        {
+          id: "cr-2",
+          title: "Effective Code Reviews",
+          url: "https://github.com/google/eng-practices",
+          type: "documentation",
+          duration: "6 hours",
+          provider: "Google",
+          difficulty: "advanced",
+          rating: 4.7,
+          completionRate: 78,
+          effectiveness: 91
+        }
+      ],
+      difficulty: "advanced" as ProficiencyLevel,
+      estimatedTime: "25 hours",
+      completed: false,
+      prerequisites: ["design-patterns"],
+      learningOutcomes: ["Give constructive code reviews", "Mentor junior developers", "Establish coding standards"],
+      practicalProjects: ["Create a review checklist", "Mentor a junior engineer", "Establish team coding standards"],
+      assessmentCriteria: ["Review quality", "Mentoring effectiveness", "Standards adoption"]
+    }
   ]
 };
 
