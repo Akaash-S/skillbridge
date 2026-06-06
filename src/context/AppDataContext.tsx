@@ -50,6 +50,8 @@ interface AppDataState {
   analysisProgress: AnalysisProgress | null;
   roadmap: RoadmapItem[];
   roadmapProgress: any | null;
+  roadmapModules: any[];
+  learningMode: string | null;
   loading: boolean;
   error: string | null;
   initialLoadDone: boolean;
@@ -83,6 +85,13 @@ interface AppDataContextType extends AppDataState {
   loadRoadmapProgress: () => Promise<void>;
   refreshRoleData: () => Promise<void>;
   
+  // Guided learning journey methods
+  setLearningMode: (mode: 'video' | 'documentation' | 'mixed') => Promise<void>;
+  loadRoadmapModules: () => Promise<void>;
+  completeModule: (moduleIndex: number) => Promise<void>;
+  fetchModuleQuiz: (moduleIndex: number) => Promise<any[]>;
+  submitModuleQuiz: (moduleIndex: number, answers: Record<string, number>) => Promise<any>;
+  
   // Utility methods
   clearError: () => void;
 }
@@ -105,6 +114,8 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     analysisProgress: null,
     roadmap: [],
     roadmapProgress: null,
+    roadmapModules: [],
+    learningMode: null,
     loading: false,
     error: null,
     initialLoadDone: false,
@@ -204,9 +215,21 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
             roadmapItems: processedRoadmapItems
           } : null,
           roadmap: processedRoadmapItems,
+          learningMode: isValidRole ? (initialData.userState as any)?.learningMode || null : null,
+          roadmapModules: isValidRole ? (initialData.userState?.roadmapProgress as any)?.roadmapModules || [] : [],
           loading: false,
           initialLoadDone: true
         }));
+
+        // If there's an active role, auto load roadmap modules
+        if (isValidRole) {
+          apiClient.get<{ modules: any[] }>('/module').then(res => {
+            setState(prev => ({
+              ...prev,
+              roadmapModules: res.modules
+            }));
+          }).catch(err => console.error('Failed to load modules on initial load:', err));
+        }
         
         // CRITICAL FIX: Auto-generate fresh roadmap if role exists but no valid roadmap
         if (isValidRole && processedRoadmapItems.length === 0) {
@@ -364,6 +387,8 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
           analysisProgress: null,   // Clear old progress
           roadmap: [],             // Clear old roadmap
           roadmapProgress: null,   // Clear old roadmap progress
+          roadmapModules: [],
+          learningMode: null,
           loading: false,
           error: null
         }));
@@ -790,6 +815,132 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     setState(prev => ({ ...prev, error: null }));
   }, []);
 
+  // Set learning mode preference
+  const setLearningMode = useCallback(async (mode: 'video' | 'documentation' | 'mixed') => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      const response = await apiClient.post<{ message: string; learningMode: string }>('/learning-mode', {
+        learningMode: mode
+      });
+      setState(prev => ({
+        ...prev,
+        learningMode: response.learningMode,
+        loading: false
+      }));
+    } catch (error: any) {
+      console.error('❌ Failed to set learning mode:', error);
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: 'Failed to set learning mode. Please try again.'
+      }));
+      throw error;
+    }
+  }, []);
+
+  // Load active roadmap modules
+  const loadRoadmapModules = useCallback(async () => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      const response = await apiClient.get<{ modules: any[] }>('/module');
+      setState(prev => ({
+        ...prev,
+        roadmapModules: response.modules,
+        loading: false
+      }));
+    } catch (error: any) {
+      console.error('❌ Failed to load modules:', error);
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: 'Failed to load modules.'
+      }));
+    }
+  }, []);
+
+  // Complete a module's learning phase
+  const completeModule = useCallback(async (moduleIndex: number) => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      await apiClient.post('/module/complete', { moduleIndex });
+      
+      // Update local state modules completed to true
+      setState(prev => {
+        const updatedModules = [...prev.roadmapModules];
+        if (updatedModules[moduleIndex]) {
+          updatedModules[moduleIndex] = {
+            ...updatedModules[moduleIndex],
+            completed: true
+          };
+        }
+        return {
+          ...prev,
+          roadmapModules: updatedModules,
+          loading: false
+        };
+      });
+      
+      // Optionally reload modules to get updated locks/unlocks
+      await loadRoadmapModules();
+    } catch (error: any) {
+      console.error('❌ Failed to complete module:', error);
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: 'Failed to complete module. Please try again.'
+      }));
+      throw error;
+    }
+  }, [loadRoadmapModules]);
+
+  // Fetch module quiz (MCQs)
+  const fetchModuleQuiz = useCallback(async (moduleIndex: number) => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      const response = await apiClient.get<{ questions: any[] }>(`/module-quiz?moduleIndex=${moduleIndex}`);
+      setState(prev => ({ ...prev, loading: false }));
+      return response.questions;
+    } catch (error: any) {
+      console.error('❌ Failed to fetch quiz:', error);
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: 'Failed to load quiz questions.'
+      }));
+      throw error;
+    }
+  }, []);
+
+  // Submit module quiz
+  const submitModuleQuiz = useCallback(async (moduleIndex: number, answers: Record<string, number>) => {
+    try {
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      const response = await apiClient.post<{ score: number; passed: boolean; quizAttempts: number }>('/module-quiz/submit', {
+        moduleIndex,
+        answers
+      });
+      
+      setState(prev => ({ ...prev, loading: false }));
+      
+      // Reload modules since passing a quiz unlocks the next one and updates stats
+      if (response.passed) {
+        await loadRoadmapModules();
+        // Also reload initial load data or roadmap progress if needed to reflect new progress percentages!
+        await loadRoadmapProgress();
+      }
+      
+      return response;
+    } catch (error: any) {
+      console.error('❌ Failed to submit quiz:', error);
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: 'Failed to submit quiz. Please try again.'
+      }));
+      throw error;
+    }
+  }, [loadRoadmapModules, loadRoadmapProgress]);
+
   const contextValue: AppDataContextType = {
     // State
     ...state,
@@ -809,6 +960,11 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     resetProgress,
     loadRoadmapProgress,
     refreshRoleData,
+    setLearningMode,
+    loadRoadmapModules,
+    completeModule,
+    fetchModuleQuiz,
+    submitModuleQuiz,
     clearError
   };
 
