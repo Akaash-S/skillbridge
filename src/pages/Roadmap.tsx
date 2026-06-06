@@ -576,7 +576,7 @@ export const Roadmap = () => {
                 </p>
                 <Button
                   onClick={() => setCurrentView('learning-pref')}
-                  className="mt-4 gap-2 bg-gradient-to-r from-primary to-emerald-500 text-white hover:from-primary/80 hover:to-emerald-500/80 animate-pulse shadow-lg"
+                  className="mt-4 gap-2 bg-gradient-to-r from-primary to-emerald-500 text-white hover:from-primary/80 hover:to-emerald-500/80 animate-pulse shadow-lg ring-4 ring-primary/50 hover:ring-primary/70"
                 >
                   Change Preference
                 </Button>
