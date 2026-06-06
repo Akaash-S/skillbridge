@@ -829,12 +829,12 @@ export const Roadmap = () => {
           </p>
           {learningMode && (
             <div className="pt-1">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setCurrentView('learning-pref')}
-                className="text-xs gap-1.5"
-              >
+              <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentView('learning-pref')}
+                  className="text-xs gap-1.5 ring-4 ring-primary/50 hover:ring-primary/70 animate-pulse"
+                >
                 Preference: <span className="capitalize font-semibold">{learningMode}</span> (Change)
               </Button>
             </div>
