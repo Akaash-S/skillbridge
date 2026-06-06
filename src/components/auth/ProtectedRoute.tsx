@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, user, isLoading, mfaRequired } = useAuth();
-  const { userSkills, initialLoadDone } = useAppData();
+  const { userSkills, selectedRole, initialLoadDone } = useAppData();
   const location = useLocation();
 
   // Show loading spinner while checking authentication
@@ -45,11 +45,26 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Paths that do not require skill checks / redirection
+  // Paths that do not require routing checks / redirection
   const isExcludedPath = ['/skills', '/onboarding'].includes(location.pathname);
+  const isRolesPath = location.pathname === '/roles';
+  const isAnalysisPath = location.pathname === '/analysis';
+  const isRoadmapPath = location.pathname === '/roadmap';
 
-  // If onboarding is complete, but skills/profile data is still loading, show spinner for non-excluded paths
-  if (!initialLoadDone && !isExcludedPath) {
+  const analysisKey = user ? `sb_analysis_visited_${user.uid}` : 'sb_analysis_visited';
+  const roadmapKey = user ? `sb_roadmap_visited_${user.uid}` : 'sb_roadmap_visited';
+
+  // Automatically mark steps as completed when user visits them
+  if (isAnalysisPath) {
+    localStorage.setItem(analysisKey, 'true');
+  }
+  if (isRoadmapPath) {
+    localStorage.setItem(roadmapKey, 'true');
+  }
+
+  // If onboarding is complete, but skills/profile data is still loading, show spinner for non-funnel paths
+  const isFunnelPath = isExcludedPath || isRolesPath || isAnalysisPath || isRoadmapPath;
+  if (!initialLoadDone && !isFunnelPath) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
@@ -65,9 +80,39 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // If user has 0 skills and is not on an excluded page, redirect to skills page
+  // Step 1: Skills Check
   if (initialLoadDone && userSkills && userSkills.length === 0 && !isExcludedPath) {
     return <Navigate to="/skills" replace />;
+  }
+
+  // Step 2: Role Check
+  if (initialLoadDone && userSkills && userSkills.length > 0 && !selectedRole && !isExcludedPath && !isRolesPath) {
+    return <Navigate to="/roles" replace />;
+  }
+
+  // Step 3: Analysis Check
+  const hasVisitedAnalysis = localStorage.getItem(analysisKey) === 'true';
+  if (
+    initialLoadDone &&
+    userSkills && userSkills.length > 0 &&
+    selectedRole &&
+    !hasVisitedAnalysis &&
+    !isExcludedPath && !isRolesPath && !isAnalysisPath
+  ) {
+    return <Navigate to="/analysis" replace />;
+  }
+
+  // Step 4: Roadmap Check
+  const hasVisitedRoadmap = localStorage.getItem(roadmapKey) === 'true';
+  if (
+    initialLoadDone &&
+    userSkills && userSkills.length > 0 &&
+    selectedRole &&
+    hasVisitedAnalysis &&
+    !hasVisitedRoadmap &&
+    !isExcludedPath && !isRolesPath && !isAnalysisPath && !isRoadmapPath
+  ) {
+    return <Navigate to="/roadmap" replace />;
   }
 
   // User is authenticated and ready - render the protected content
