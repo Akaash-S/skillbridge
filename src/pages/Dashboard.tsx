@@ -692,7 +692,7 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
                 </CardDescription>
               </div>
               <div className="hidden sm:block">
-                <StepIndicator currentStep={getCurrentStep()} />
+                <StepIndicator currentStep={getCurrentStep()} highlightActive={isRoadmapComplete} />
               </div>
             </div>
           </CardHeader>

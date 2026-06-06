@@ -10,17 +10,20 @@ const steps = [
 ];
 
 interface StepIndicatorProps {
+  /** Highlight active step with green overlay (e.g., on Roadmap after completion) */
+  highlightActive?: boolean;
   currentStep: 1 | 2 | 3 | 4;
 }
 
-export const StepIndicator = ({ currentStep }: StepIndicatorProps) => {
+export const StepIndicator = ({ currentStep, highlightActive = false }: StepIndicatorProps) => {
   return (
     <div className="w-full max-w-2xl mx-auto mb-8">
       <div className="flex items-center justify-between">
         {steps.map((step, index) => {
           const Icon = step.icon;
           const isActive = step.id === currentStep;
-          const isCompleted = step.id < currentStep;
+          // Consider active step as completed when highlightActive is true (e.g., Roadmap after full completion)
+          const isCompleted = step.id < currentStep || (highlightActive && isActive);
           const isClickable = step.id <= currentStep;
 
           return (
@@ -31,7 +34,7 @@ export const StepIndicator = ({ currentStep }: StepIndicatorProps) => {
                     to={step.path}
                     className={cn(
                       "h-10 w-10 rounded-full flex items-center justify-center transition-all",
-                      isActive && "bg-primary text-primary-foreground shadow-lg scale-110",
+                      isActive && "bg-green-200/30 border-2 border-green-500 text-primary-foreground shadow-lg scale-110",
                       isCompleted && "bg-green-500 text-white",
                       !isActive && !isCompleted && "bg-muted text-muted-foreground"
                     )}

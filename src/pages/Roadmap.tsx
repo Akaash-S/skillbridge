@@ -94,6 +94,15 @@ export const Roadmap = () => {
   const completedCount = roadmap.filter((item) => item.completed).length;
   const progressPercent = roadmap.length > 0 ? Math.round((completedCount / roadmap.length) * 100) : 0;
 
+  const getCurrentStep = (): 1 | 2 | 3 | 4 => {
+    if (roadmap.length > 0) return 4;
+    if (analysis) return 3;
+    if (selectedRole) return 2;
+    return 1;
+  };
+
+  const isRoadmapComplete = isRoadmapCompleted(roadmap);
+
   // Simplified initialization logic - Allow roadmap to render even with 0% progress
   useEffect(() => {
     const initializeRoadmap = async () => {
@@ -819,7 +828,7 @@ export const Roadmap = () => {
     <Layout>
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Step Indicator */}
-        <StepIndicator currentStep={4} />
+        <StepIndicator currentStep={getCurrentStep()} highlightActive={isRoadmapComplete} />
 
         {/* Header */}
         <div className="text-center space-y-2 px-4 relative">
