@@ -572,8 +572,14 @@ export const Roadmap = () => {
                 <HelpCircle className="h-10 w-10 mx-auto text-muted-foreground opacity-50 mb-3" />
                 <h4 className="font-semibold text-base">No Resources Found</h4>
                 <p className="text-xs text-muted-foreground max-w-xs mx-auto mt-1">
-                  No learning resources match your current selection mode ({learningMode}). Change preference or search online for this module's skills.
+                  No learning resources match your current selection mode ({learningMode}).
                 </p>
+                <Button
+                  onClick={() => setCurrentView('learning-pref')}
+                  className="mt-4 gap-2 bg-gradient-to-r from-primary to-emerald-500 text-white hover:from-primary/80 hover:to-emerald-500/80 animate-pulse shadow-lg"
+                >
+                  Change Preference
+                </Button>
               </div>
             )}
           </div>
