@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  BookOpen, 
-  ExternalLink, 
-  Clock, 
-  CheckCircle2, 
+import {
+  BookOpen,
+  ExternalLink,
+  Clock,
+  CheckCircle2,
   Circle,
   Video,
   FileText,
@@ -38,11 +38,11 @@ import { hasRoadmapTemplate } from "@/data/fixedRoadmaps";
 import { CompletionMessage } from "@/components/CompletionMessage";
 import { Certificate } from "@/components/Certificate";
 import { certificateService, Certificate as CertificateData } from "@/services/certificateService";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog";
@@ -56,13 +56,13 @@ const resourceTypeIcons = {
 };
 
 export const Roadmap = () => {
-  const { 
-    selectedRole, 
-    roadmap, 
-    analysis, 
+  const {
+    selectedRole,
+    roadmap,
+    analysis,
     loading,
     error,
-    markRoadmapItemComplete, 
+    markRoadmapItemComplete,
     loadFixedRoadmap,
     clearError,
     learningMode,
@@ -74,7 +74,7 @@ export const Roadmap = () => {
     submitModuleQuiz,
     roadmapProgress
   } = useAppData();
-  
+
   const navigate = useNavigate();
   const [localLoading, setLocalLoading] = useState(false);
   const [updatingItems, setUpdatingItems] = useState<Set<string>>(new Set());
@@ -97,13 +97,13 @@ export const Roadmap = () => {
   // Simplified initialization logic - Allow roadmap to render even with 0% progress
   useEffect(() => {
     const initializeRoadmap = async () => {
-      
+
       // Check prerequisites - but allow users with analysis to proceed even with 0% progress
       if (!selectedRole) {
         navigate("/roles");
         return;
       }
-      
+
       // Allow users to access roadmap if they have a selected role, even without analysis
       // This enables the roadmap template to render for users with 0% progress
       if (!analysis && !hasRoadmapTemplate(selectedRole.id)) {
@@ -173,9 +173,9 @@ export const Roadmap = () => {
       if (progressPercent === 100 && selectedRole && !assessmentStatus.checked) {
         try {
           const res = await apiClient.get<any>(`/assessment/eligibility/${selectedRole.id}`);
-          setAssessmentStatus({ 
-            passed: res.reason === 'Assessment already passed', 
-            checked: true 
+          setAssessmentStatus({
+            passed: res.reason === 'Assessment already passed',
+            checked: true
           });
         } catch (error) {
           console.error("Failed to check assessment status:", error);
@@ -190,10 +190,10 @@ export const Roadmap = () => {
     if (updatingItems.has(itemId)) return; // Prevent double-clicks
 
     setUpdatingItems(prev => new Set(prev).add(itemId));
-    
+
     try {
       await markRoadmapItemComplete(itemId);
-      
+
       // Show success message with analysis update info
       const roadmapItem = roadmap.find(item => item.id === itemId);
       if (roadmapItem?.completed) {
@@ -215,7 +215,7 @@ export const Roadmap = () => {
 
   const handleClaimCertificate = async () => {
     if (!selectedRole) return;
-    
+
     setIsIssuing(true);
     try {
       const certificate = await certificateService.verifyAndIssue(selectedRole.id);
@@ -335,7 +335,7 @@ export const Roadmap = () => {
               </>
             ) : (
               <>
-                <Button 
+                <Button
                   onClick={() => loadFixedRoadmap()}
                   className="gap-2"
                 >
@@ -353,8 +353,8 @@ export const Roadmap = () => {
     );
   }
 
-  const allQuizzesPassed = roadmapModules.length > 0 
-    ? roadmapModules.every((m: any) => m.quizPassed) 
+  const allQuizzesPassed = roadmapModules.length > 0
+    ? roadmapModules.every((m: any) => m.quizPassed)
     : progressPercent === 100;
 
   if (currentView === 'learning-pref') {
@@ -368,7 +368,7 @@ export const Roadmap = () => {
               Tailor your learning journey! Choose your preferred content format to customize the resources displayed for each module.
             </p>
           </div>
-          
+
           <div className="grid gap-4 pt-2">
             <button
               onClick={() => handleSavePref('video')}
@@ -424,19 +424,19 @@ export const Roadmap = () => {
   if (currentView === 'learning-screen' && selectedModuleIndex !== null) {
     const module = roadmapModules[selectedModuleIndex];
     if (!module) return null;
-    
+
     const videos: any[] = [];
     const docs: any[] = [];
-    
+
     module.skills?.forEach((skill: any) => {
       skill.resources?.forEach((res: any) => {
         const resourceType = res.type?.toLowerCase() || 'course';
         const isVideo = resourceType === 'video' || resourceType === 'youtube';
         const resourceWithContext = { ...res, skillName: skill.skillName };
-        
+
         if (learningMode === 'video' && !isVideo) return;
         if (learningMode === 'documentation' && isVideo) return;
-        
+
         if (isVideo) {
           videos.push(resourceWithContext);
         } else {
@@ -449,8 +449,8 @@ export const Roadmap = () => {
       <Layout>
         <div className="max-w-3xl mx-auto space-y-6 py-6 px-4">
           <div className="flex items-center justify-between border-b pb-4">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => setCurrentView('roadmap-list')}
               className="gap-2"
             >
@@ -654,8 +654,8 @@ export const Roadmap = () => {
       <Layout>
         <div className="max-w-2xl mx-auto space-y-6 py-6 px-4">
           <div className="flex items-center justify-between border-b pb-4">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => {
                 if (quizResult) {
                   setCurrentView('roadmap-list');
@@ -701,13 +701,13 @@ export const Roadmap = () => {
                     {quizResult.passed ? "🎉 Module Quiz Passed!" : "❌ Try Again!"}
                   </CardTitle>
                   <CardDescription className="text-sm">
-                    {quizResult.passed 
+                    {quizResult.passed
                       ? "Excellent work! You have successfully verified your skills for this module."
                       : "You didn't meet the passing score of 4/5. Review the resources and try again."}
                   </CardDescription>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="p-6 pt-0 space-y-6">
                 <div className="flex justify-around border-y py-4 text-center">
                   <div>
@@ -729,7 +729,7 @@ export const Roadmap = () => {
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                   {quizResult.passed ? (
-                    <Button 
+                    <Button
                       onClick={() => {
                         setCurrentView('roadmap-list');
                         setSelectedModuleIndex(null);
@@ -740,14 +740,14 @@ export const Roadmap = () => {
                     </Button>
                   ) : (
                     <>
-                      <Button 
+                      <Button
                         onClick={handleRetryQuiz}
                         className="bg-primary hover:bg-primary/90 text-white w-full sm:w-auto font-semibold"
                         disabled={localLoading}
                       >
                         {localLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Retry Quiz"}
                       </Button>
-                      <Button 
+                      <Button
                         variant="outline"
                         onClick={() => setCurrentView('learning-screen')}
                         className="w-full sm:w-auto font-semibold"
@@ -784,7 +784,7 @@ export const Roadmap = () => {
                             }}
                             className={cn(
                               "w-full text-left p-3.5 rounded-lg border text-sm transition-all flex items-center justify-between font-medium",
-                              isSelected 
+                              isSelected
                                 ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary"
                                 : "border-border hover:border-muted-foreground/30 hover:bg-muted/50"
                             )}
@@ -830,11 +830,11 @@ export const Roadmap = () => {
           {learningMode && (
             <div className="pt-1">
               <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentView('learning-pref')}
-                  className="text-xs gap-1.5 ring-4 ring-primary/50 hover:ring-primary/70 animate-pulse"
-                >
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentView('learning-pref')}
+                className="gap-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
+              >
                 Preference: <span className="capitalize font-semibold">{learningMode}</span> (Change)
               </Button>
             </div>
@@ -897,8 +897,8 @@ export const Roadmap = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start pt-2">
                   {assessmentStatus.passed ? (
-                    <Button 
-                      onClick={handleClaimCertificate} 
+                    <Button
+                      onClick={handleClaimCertificate}
                       className="gap-2 bg-green-600 hover:bg-green-700 text-white w-full sm:w-auto"
                       disabled={isIssuing}
                     >
@@ -906,8 +906,8 @@ export const Roadmap = () => {
                       Claim Your Certificate
                     </Button>
                   ) : (
-                    <Button 
-                      onClick={() => navigate(`/assessment/${selectedRole.id}`)} 
+                    <Button
+                      onClick={() => navigate(`/assessment/${selectedRole.id}`)}
                       className="gap-2 bg-primary hover:bg-primary/90 text-white w-full sm:w-auto"
                     >
                       <Shield className="h-4 w-4" />
@@ -944,10 +944,10 @@ export const Roadmap = () => {
               const isUnlocked = module.unlocked;
               const isCompleted = module.completed;
               const isQuizPassed = module.quizPassed;
-              
+
               return (
-                <Card 
-                  key={idx} 
+                <Card
+                  key={idx}
                   className={cn(
                     "transition-all duration-300 border",
                     isUnlocked ? "hover:border-primary shadow-sm cursor-pointer" : "opacity-60 bg-muted/30 pointer-events-none select-none",
@@ -991,16 +991,16 @@ export const Roadmap = () => {
                       <CardDescription className="text-sm">
                         {module.description}
                       </CardDescription>
-                      
+
                       {/* Skills covered */}
                       {module.skills && module.skills.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 pt-2.5">
                           {module.skills.map((skill: any, sIdx: number) => (
-                            <span 
+                            <span
                               key={sIdx}
                               className={cn(
                                 "text-xs px-2.5 py-0.5 rounded-md border font-semibold",
-                                skill.completed 
+                                skill.completed
                                   ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20"
                                   : "bg-muted text-muted-foreground border-border"
                               )}
@@ -1011,7 +1011,7 @@ export const Roadmap = () => {
                         </div>
                       )}
                     </div>
-                    
+
                     <div className="flex-shrink-0 pt-1">
                       {isQuizPassed ? (
                         <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 flex items-center justify-center border border-green-200">
@@ -1054,28 +1054,30 @@ export const Roadmap = () => {
       {/* Certificate Success Modal */}
       <Dialog open={isCertModalOpen} onOpenChange={setIsCertModalOpen}>
         <DialogContent className="max-w-3xl sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl text-center flex items-center justify-center gap-2">
-              <Sparkles className="h-6 w-6 text-yellow-500" />
-              Professional Certificate Earned!
-            </DialogTitle>
-            <DialogDescription className="text-center text-lg">
-              You've officially completed the {selectedRole.title} Learning Path.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {issuedCertificate && (
-            <div className="py-6">
-              <Certificate 
-                userName={issuedCertificate.userName}
-                roleName={issuedCertificate.roleName}
-                completionDate={issuedCertificate.completionDate}
-                certificateId={issuedCertificate.certificateId}
-              />
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-1">
+              <DialogHeader>
+                <DialogTitle className="text-2xl text-center flex items-center justify-center gap-2">
+                  <Sparkles className="h-6 w-6 text-yellow-500" />
+                  Professional Certificate Earned!
+                </DialogTitle>
+                <DialogDescription className="text-center text-lg">
+                  You've officially completed the {selectedRole.title} Learning Path.
+                </DialogDescription>
+              </DialogHeader>
             </div>
-          )}
-          
-          <div className="flex justify-center pb-4">
+            <div className="flex-1 flex items-center justify-center">
+              {issuedCertificate && (
+                <Certificate
+                  userName={issuedCertificate.userName}
+                  roleName={issuedCertificate.roleName}
+                  completionDate={issuedCertificate.completionDate}
+                  certificateId={issuedCertificate.certificateId}
+                />
+              )}
+            </div>
+          </div>
+          <div className="flex justify-center pb-4 mt-4">
             <Button variant="ghost" onClick={() => setIsCertModalOpen(false)}>
               Close Preview
             </Button>
