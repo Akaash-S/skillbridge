@@ -19,8 +19,13 @@ const LEVEL_COLORS: Record<number, string> = {
 };
 
 export const XPCard = ({ data, compact = false, className }: XPCardProps) => {
-  const { totalXP, levelInfo, weeklyXP, monthlyXP } = data;
-  const gradientClass = LEVEL_COLORS[levelInfo.level] || LEVEL_COLORS[1];
+  const { 
+    totalXP = 0, 
+    levelInfo = { level: 1, title: 'Beginner', progressToNext: 0, nextLevel: null, nextTitle: null, nextLevelXP: null, currentLevelXP: 0 }, 
+    weeklyXP = 0, 
+    monthlyXP = 0 
+  } = data || {};
+  const gradientClass = LEVEL_COLORS[levelInfo?.level] || LEVEL_COLORS[1];
 
   if (compact) {
     return (

@@ -32,7 +32,7 @@ function getIntensityLevel(activities: number): number {
   return 4;
 }
 
-export const LearningCalendar = ({ data, className }: LearningCalendarProps) => {
+export const LearningCalendar = ({ data = {}, className }: LearningCalendarProps) => {
   // Generate the last ~26 weeks of dates (6 months)
   const { weeks, monthLabels, totalActivities, activeDays } = useMemo(() => {
     const today = new Date();
@@ -53,7 +53,7 @@ export const LearningCalendar = ({ data, className }: LearningCalendarProps) => 
       const dateStr = currentDate.toISOString().split('T')[0];
       currentWeek.push(dateStr);
 
-      const dayData = data[dateStr];
+      const dayData = data?.[dateStr];
       if (dayData && dayData.activities > 0) {
         totalAct += dayData.activities;
         activeCount++;
@@ -125,7 +125,7 @@ export const LearningCalendar = ({ data, className }: LearningCalendarProps) => 
               {weeks.map((week, weekIdx) => (
                 <div key={weekIdx} className="flex flex-col gap-[2px]">
                   {week.map((dateStr) => {
-                    const dayData = data[dateStr];
+                    const dayData = data?.[dateStr];
                     const activities = dayData?.activities || 0;
                     const level = getIntensityLevel(activities);
                     const types = dayData?.types || [];

@@ -13,9 +13,9 @@ interface AchievementCardProps {
   className?: string;
 }
 
-export const AchievementCard = ({ achievements, className }: AchievementCardProps) => {
-  const unlocked = achievements.filter(a => a.unlocked);
-  const locked = achievements.filter(a => !a.unlocked);
+export const AchievementCard = ({ achievements = [], className }: AchievementCardProps) => {
+  const unlocked = achievements?.filter(a => a?.unlocked) || [];
+  const locked = achievements?.filter(a => !a?.unlocked) || [];
 
   return (
     <Card className={cn("border-border/50 bg-card/50 backdrop-blur-sm", className)}>

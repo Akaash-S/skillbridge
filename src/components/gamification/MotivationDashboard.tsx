@@ -14,7 +14,15 @@ interface MotivationDashboardProps {
 }
 
 export const MotivationDashboard = ({ data, roadmapModules = [], className }: MotivationDashboardProps) => {
-  const { streak, xp, achievements, achievementsSummary } = data;
+  const streak = data?.streak || { currentStreak: 0, bestStreak: 0, lastActivityDate: null };
+  const xp = data?.xp || { 
+    totalXP: 0, weeklyXP: 0, monthlyXP: 0, 
+    levelInfo: { level: 1, title: 'Beginner', currentLevelXP: 0, progressToNext: 0, nextLevel: null, nextTitle: null, nextLevelXP: null },
+    modulesCompleted: 0, quizzesCompleted: 0, roadmapsCompleted: 0 
+  };
+  const achievements = data?.achievements || [];
+  const achievementsSummary = data?.achievementsSummary || { unlocked: 0, total: 0 };
+  const calendarData = data?.calendar || {};
 
   return (
     <div className={cn("space-y-6 max-w-7xl mx-auto p-4 md:p-6", className)}>
@@ -77,7 +85,7 @@ export const MotivationDashboard = ({ data, roadmapModules = [], className }: Mo
           </div>
 
           {/* Calendar Heatmap */}
-          <LearningCalendar data={data.calendar} />
+          <LearningCalendar data={calendarData} />
 
           {/* Achievements Grid */}
           <AchievementCard achievements={achievements} />
