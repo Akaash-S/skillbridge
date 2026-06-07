@@ -303,6 +303,9 @@ export class AuthService {
       // Mark MFA as verified
       this.markMFAVerified();
       
+      // Mark session as restored so refreshes don't re-trigger MFA
+      localStorage.setItem(SESSION_TYPE_KEY, SessionType.SESSION_RESTORE);
+      
       // Update state with authenticated user
       const authUser: AuthUser = {
         uid: result.user.uid,
