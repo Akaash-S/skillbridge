@@ -464,25 +464,27 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
 
   // Determine which roadmap items to display (the active ones)
   const roadmapDisplayItems = useMemo(() => {
-    if (roadmapModules.length > 0 && roadmap.length > 0) {
+    if (roadmapModules.length > 0) {
       // Find the first module that is NOT quizPassed
       const currentModuleIndex = roadmapModules.findIndex(m => !m.quizPassed);
       
       // If all modules in roadmapModules are passed, the next module is at roadmapModules.length
       const effectiveIndex = currentModuleIndex >= 0 
         ? currentModuleIndex 
-        : Math.min(roadmapModules.length, roadmap.length - 1);
+        : Math.min(roadmapModules.length, roadmapModules.length - 1);
         
-      const startIndex = Math.max(0, Math.min(effectiveIndex, roadmap.length - 3));
+      const startIndex = Math.max(0, Math.min(effectiveIndex, roadmapModules.length - 3));
       
-      return roadmap.slice(startIndex, startIndex + 3).map((item, idx) => {
+      return roadmapModules.slice(startIndex, startIndex + 3).map((module, idx) => {
         const mIdx = startIndex + idx;
-        const module = roadmapModules[mIdx];
         return {
-          ...item,
-          isCompleted: module?.quizPassed || false,
-          isUnlocked: module?.unlocked || (mIdx === roadmapModules.length), // unlock the next one if it hasn't been added to DB yet but is next
-          displayIndex: mIdx + 1
+          id: `module-${mIdx}`,
+          skillName: module.title,
+          isCompleted: module.quizPassed || false,
+          isUnlocked: module.unlocked || false,
+          displayIndex: mIdx + 1,
+          skillsCount: module.skills?.length || 0,
+          isModule: true
         };
       });
     }
@@ -495,7 +497,8 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
       ...item,
       isCompleted: item.completed,
       isUnlocked: true,
-      displayIndex: start + idx + 1
+      displayIndex: start + idx + 1,
+      isModule: false
     }));
   }, [roadmap, roadmapModules]);
 
@@ -598,9 +601,9 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
     ? roadmapModules.filter((m: any) => m.quizPassed).length 
     : roadmap.filter((item) => item.completed === true).length;
     
-  const roadmapProgressPercent = roadmap.length > 0 
-    ? Math.round((completedItems / roadmap.length) * 100) 
-    : 0;
+  const roadmapProgressPercent = roadmapModules.length > 0
+    ? Math.round((completedItems / roadmapModules.length) * 100)
+    : roadmap.length > 0 ? Math.round((completedItems / roadmap.length) * 100) : 0;
 
   
   // Debug logging for roadmap progress calculation
@@ -611,7 +614,9 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
   }, [roadmap, completedItems, roadmapProgressPercent]);
   
   // Check roadmap completion status
-  const isRoadmapComplete = isRoadmapCompleted(roadmap);
+  const isRoadmapComplete = roadmapModules.length > 0
+    ? roadmapModules.every((m: any) => m.quizPassed)
+    : isRoadmapCompleted(roadmap);
 
   const skillsByProficiency = userSkills.reduce((acc, skill) => {
     acc[skill.proficiency] = (acc[skill.proficiency] || 0) + 1;
@@ -1379,7 +1384,12 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span>{completedItems} of {roadmap.length} skills completed</span>
+                  <span>
+                    {roadmapModules.length > 0
+                      ? `${completedItems} of ${roadmapModules.length} modules`
+                      : `${completedItems} of ${roadmap.length} skills`
+                    } completed
+                  </span>
                   <span className={cn(
                     "font-medium",
                     isRoadmapComplete ? "text-green-600" : "text-primary"
@@ -1400,18 +1410,19 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
                   {roadmapDisplayItems.map((item: any, index) => (
                     <div
                       key={item.id}
+                      onClick={() => item.isUnlocked && navigate("/roadmap")}
                       className={cn(
                         "p-4 rounded-xl border transition-all",
                         item.isCompleted 
                           ? "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800" 
                           : !item.isUnlocked 
-                            ? "bg-muted/50 border-border opacity-60"
-                            : "bg-card hover:border-primary/50 border-primary/20"
+                            ? "bg-muted/50 border-border opacity-60 cursor-not-allowed"
+                            : "bg-card hover:border-primary/50 border-primary/20 cursor-pointer hover:shadow-sm"
                       )}
                     >
                       <div className="flex items-start gap-3">
                         <div className={cn(
-                          "h-8 w-8 rounded-lg flex items-center justify-center",
+                          "h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0",
                           item.isCompleted 
                             ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" 
                             : !item.isUnlocked
@@ -1432,10 +1443,17 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
                           )}>
                             {item.skillName}
                           </p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                            <Clock className="h-3 w-3" />
-                            {item.estimatedTime}
-                          </p>
+                          {item.isModule ? (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                              <BookOpen className="h-3 w-3" />
+                              {item.skillsCount} {item.skillsCount === 1 ? 'skill' : 'skills'}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                              <Clock className="h-3 w-3" />
+                              {item.estimatedTime}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
