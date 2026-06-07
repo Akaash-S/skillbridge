@@ -75,8 +75,8 @@ export const Layout = ({ children, showNav = true }: LayoutProps) => {
                 <SheetContent side="left" className="w-[280px] p-0">
                   <SheetHeader className="p-6 border-b">
                     <SheetTitle className="flex items-center gap-2">
-                      <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 dark:hidden" />
-                      <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 hidden dark:block" />
+                      <img src="/icon.png" alt="SkillBridge Logo" className="h-8 w-8 rounded-full" />
+                      <span className="font-extrabold text-xl tracking-tight text-[#4169e1] dark:text-white">SkillBridge</span>
                     </SheetTitle>
                   </SheetHeader>
                   <div className="flex flex-col py-4">
@@ -105,8 +105,8 @@ export const Layout = ({ children, showNav = true }: LayoutProps) => {
             )}
 
             <Link to="/dashboard" className="flex items-center gap-2">
-              <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 dark:hidden" />
-              <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 hidden dark:block" />
+              <img src="/icon.png" alt="SkillBridge Logo" className="h-8 w-8 rounded-full" />
+              <span className="font-extrabold text-xl tracking-tight text-[#4169e1] dark:text-white">SkillBridge</span>
             </Link>
           </div>
 
