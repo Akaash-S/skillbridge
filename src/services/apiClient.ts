@@ -90,6 +90,12 @@ class ApiClient {
         
         // Handle 401 - token expired or invalid
         if (response.status === 401) {
+          // Trigger local sign out to clear auth state and redirect to login
+          authService.signOut().catch(err => {
+            if (env.debugMode) {
+              console.error('Failed to sign out after 401 error:', err);
+            }
+          });
           throw new Error('Authentication expired - please log in again');
         }
         
