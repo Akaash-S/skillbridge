@@ -145,10 +145,8 @@ export class AuthService {
         error: null
       });
 
-      // Store session type for future reference
-      if (sessionType === SessionType.SESSION_RESTORE) {
-        localStorage.setItem(SESSION_TYPE_KEY, SessionType.SESSION_RESTORE);
-      }
+      // Store session type for future reference so refreshes are treated as restores
+      localStorage.setItem(SESSION_TYPE_KEY, SessionType.SESSION_RESTORE);
 
     } catch (error: any) {
       if (env.debugMode) {
@@ -189,7 +187,7 @@ export class AuthService {
       body: JSON.stringify({ 
         idToken,
         sessionType,
-        skipMFA: sessionType === SessionType.SESSION_RESTORE
+        skipMFA: sessionType === SessionType.SESSION_RESTORE && this.isMFAVerified()
       })
     });
 
@@ -388,7 +386,7 @@ export class AuthService {
 
   // Mark MFA as verified
   private markMFAVerified(): void {
-    const expiryTime = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+    const expiryTime = Date.now() + (30 * 24 * 60 * 60 * 1000); // 30 days
     localStorage.setItem(MFA_VERIFIED_KEY, expiryTime.toString());
   }
 
