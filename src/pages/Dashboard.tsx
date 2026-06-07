@@ -41,7 +41,10 @@ import {
   Settings,
   Users,
   Bookmark,
-  PlayCircle
+  PlayCircle,
+  Linkedin,
+  Twitter,
+  Instagram
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 import { cn, isRoadmapCompleted } from "@/lib/utils";
@@ -111,7 +114,8 @@ export const Dashboard = () => {
         setShowMentorDialog(true);
         break;
       case 'Update resume and LinkedIn':
-        handleUpdateResume();
+      case 'Share achievements on socials':
+        setShowShareDialog(true);
         break;
       case 'Explore advanced topics':
         navigate('/roadmap');
@@ -172,232 +176,7 @@ export const Dashboard = () => {
     setShowCertificateDialog(true);
   };
 
-  // Handle resume update with comprehensive functionality
-  const handleUpdateResume = () => {
-    if (!selectedRole || !userSkills.length) {
-      toast.error("Complete your profile and add skills first!");
-      return;
-    }
-
-    // Generate comprehensive resume content
-    const resumeContent = generateResumeContent();
-    
-    // Create and download resume template
-    downloadResumeTemplate(resumeContent);
-    
-    // Open LinkedIn with pre-filled content
-    openLinkedInProfile();
-    
-    toast.success("Resume template downloaded and LinkedIn opened!");
-  };
-
-  // Generate comprehensive resume content
-  const generateResumeContent = () => {
-    const skillsByCategory = userSkills.reduce((acc, skill) => {
-      const category = skill.category || 'Technical Skills';
-      if (!acc[category]) acc[category] = [];
-      acc[category].push(`${skill.name} (${skill.proficiency})`);
-      return acc;
-    }, {} as Record<string, string[]>);
-
-    const resumeData = {
-      personalInfo: {
-        name: user?.name || 'Your Name',
-        email: user?.email || 'your.email@example.com',
-        targetRole: selectedRole?.title || 'Software Developer',
-        readinessScore: analysis?.readinessScore || 0
-      },
-      summary: `Motivated ${selectedRole?.title || 'professional'} with ${analysis?.readinessScore || 0}% job readiness. Successfully completed comprehensive skill development program with ${completedItems} technical competencies mastered. Passionate about continuous learning and applying cutting-edge technologies to solve complex problems.`,
-      skills: skillsByCategory,
-      achievements: [
-        `Achieved ${analysis?.readinessScore || 0}% job readiness for ${selectedRole?.title || 'target role'}`,
-        `Completed ${completedItems} technical skills in learning roadmap`,
-        `Maintained ${analytics?.currentStreak || 0} day learning streak`,
-        `Invested ${Math.round(analytics?.totalTimeSpent || 0)} hours in professional development`
-      ],
-      projects: [
-        {
-          name: `${selectedRole?.title || 'Professional'} Skill Development Portfolio`,
-          description: `Comprehensive learning journey demonstrating mastery of ${userSkills.length} technical skills`,
-          technologies: userSkills.slice(0, 8).map(s => s.name).join(', '),
-          achievements: [
-            `${roadmapProgressPercent}% completion rate`,
-            `${analysis?.matchedSkills?.length || 0} skills at professional level`,
-            'Real-world application of learned concepts'
-          ]
-        }
-      ],
-      certifications: isRoadmapComplete ? [
-        {
-          name: `${selectedRole?.title || 'Professional Development'} Certification`,
-          issuer: 'SkillBridge Learning Platform',
-          date: new Date().toLocaleDateString(),
-          skills: userSkills.length
-        }
-      ] : []
-    };
-
-    return resumeData;
-  };
-
-  // Download resume template as formatted document
-  const downloadResumeTemplate = (resumeData: any) => {
-    const resumeHTML = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${resumeData.personalInfo.name} - Resume</title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
-        .header { text-align: center; border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
-        .name { font-size: 2.5em; font-weight: bold; color: #1e40af; margin-bottom: 10px; }
-        .contact { font-size: 1.1em; color: #6b7280; }
-        .target-role { font-size: 1.3em; color: #059669; font-weight: 600; margin-top: 10px; }
-        .readiness-badge { display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin-top: 10px; }
-        .section { margin-bottom: 30px; }
-        .section-title { font-size: 1.4em; font-weight: bold; color: #1e40af; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px; margin-bottom: 15px; }
-        .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .skill-category { background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #2563eb; }
-        .skill-category h4 { margin: 0 0 10px 0; color: #1e40af; font-weight: 600; }
-        .skill-list { list-style: none; padding: 0; margin: 0; }
-        .skill-list li { padding: 3px 0; color: #4b5563; }
-        .achievement { background: #ecfdf5; padding: 10px; margin: 8px 0; border-radius: 6px; border-left: 4px solid #10b981; }
-        .project { background: #fefce8; padding: 15px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #eab308; }
-        .project h4 { color: #a16207; margin: 0 0 10px 0; }
-        .certification { background: #eff6ff; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #3b82f6; }
-        .certification h4 { color: #1d4ed8; margin: 0 0 5px 0; }
-        .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 0.9em; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="name">${resumeData.personalInfo.name}</div>
-        <div class="contact">${resumeData.personalInfo.email}</div>
-        <div class="target-role">${resumeData.personalInfo.targetRole}</div>
-        <div class="readiness-badge">${resumeData.personalInfo.readinessScore}% Job Ready</div>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Professional Summary</div>
-        <p>${resumeData.summary}</p>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Technical Skills</div>
-        <div class="skills-grid">
-            ${Object.entries(resumeData.skills).map(([category, skills]) => `
-                <div class="skill-category">
-                    <h4>${category}</h4>
-                    <ul class="skill-list">
-                        ${(skills as string[]).map(skill => `<li>${skill}</li>`).join('')}
-                    </ul>
-                </div>
-            `).join('')}
-        </div>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Key Achievements</div>
-        ${resumeData.achievements.map((achievement: string) => `
-            <div class="achievement">✓ ${achievement}</div>
-        `).join('')}
-    </div>
-
-    <div class="section">
-        <div class="section-title">Projects & Portfolio</div>
-        ${resumeData.projects.map((project: any) => `
-            <div class="project">
-                <h4>${project.name}</h4>
-                <p>${project.description}</p>
-                <p><strong>Technologies:</strong> ${project.technologies}</p>
-                <ul>
-                    ${project.achievements.map((ach: string) => `<li>${ach}</li>`).join('')}
-                </ul>
-            </div>
-        `).join('')}
-    </div>
-
-    ${resumeData.certifications.length > 0 ? `
-    <div class="section">
-        <div class="section-title">Certifications</div>
-        ${resumeData.certifications.map((cert: any) => `
-            <div class="certification">
-                <h4>${cert.name}</h4>
-                <p><strong>Issuer:</strong> ${cert.issuer} | <strong>Date:</strong> ${cert.date}</p>
-                <p><strong>Skills Validated:</strong> ${cert.skills} technical competencies</p>
-            </div>
-        `).join('')}
-    </div>
-    ` : ''}
-
-    <div class="footer">
-        <p>Generated by SkillBridge Learning Platform | ${new Date().toLocaleDateString()}</p>
-        <p>This resume reflects verified skills and achievements from your learning journey</p>
-    </div>
-</body>
-</html>`;
-
-    const blob = new Blob([resumeHTML], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${resumeData.personalInfo.name.replace(/\s+/g, '_')}_Resume_${new Date().toISOString().split('T')[0]}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // Open LinkedIn with pre-filled profile content
-  const openLinkedInProfile = () => {
-    const linkedInContent = {
-      headline: `${selectedRole?.title || 'Software Developer'} | ${analysis?.readinessScore || 0}% Job Ready | ${userSkills.length} Technical Skills`,
-      summary: `🚀 Passionate ${selectedRole?.title || 'developer'} with ${analysis?.readinessScore || 0}% job readiness
-
-🎯 Recently completed comprehensive skill development program:
-• ${completedItems} technical skills mastered
-• ${Math.round(analytics?.totalTimeSpent || 0)} hours invested in learning
-• ${analytics?.currentStreak || 0} day learning streak maintained
-
-💡 Core Competencies:
-${userSkills.slice(0, 10).map(skill => `• ${skill.name} (${skill.proficiency})`).join('\n')}
-
-🏆 Achievements:
-• ${roadmapProgressPercent}% roadmap completion
-• ${analysis?.matchedSkills?.length || 0} skills at professional level
-• Continuous learner with growth mindset
-
-Ready to contribute to innovative projects and drive technical excellence!
-
-#${selectedRole?.title?.replace(/\s+/g, '') || 'SoftwareDeveloper'} #TechSkills #ContinuousLearning #JobReady`,
-      skills: userSkills.slice(0, 50).map(skill => skill.name).join(', ')
-    };
-
-    // Copy LinkedIn content to clipboard
-    const clipboardContent = `LinkedIn Profile Update Content:
-
-HEADLINE:
-${linkedInContent.headline}
-
-SUMMARY:
-${linkedInContent.summary}
-
-SKILLS TO ADD:
-${linkedInContent.skills}
-
----
-Copy and paste these sections into your LinkedIn profile for maximum impact!`;
-
-    navigator.clipboard.writeText(clipboardContent);
-    
-    // Open LinkedIn profile edit page
-    window.open('https://www.linkedin.com/in/me/edit/', '_blank');
-    
-    // Show helpful dialog
-    toast.success("LinkedIn content copied to clipboard! Profile edit page opened.", {
-      duration: 5000
-    });
-  };
+  // Resume logic replaced with social share logic.
 
   // Handle achievements view
   const handleShowAchievements = () => {
@@ -1491,30 +1270,108 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
 
       {/* Dialogs */}
       <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Share Your Progress</DialogTitle>
+            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+              <Share2 className="h-5 w-5 text-primary" /> Share Your Learning Achievements
+            </DialogTitle>
             <DialogDescription>
-              Share your learning journey with others to inspire and motivate!
+              Inspire your network by sharing your progress on social and professional platforms!
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="p-4 bg-muted rounded-lg">
-              <p className="text-sm">
-                🚀 I'm {roadmapProgressPercent}% through my {selectedRole?.title || 'career'} learning journey!
-                <br />✅ {completedItems} skills mastered
-                <br />📈 {analysis?.readinessScore || 0}% job-ready
-                <br />🔥 <span className="font-semibold text-orange-600">{analytics?.currentStreak || 0} day</span> learning streak
-                {(analytics?.currentStreak || 0) > 7 && <span className="text-green-600"> (Amazing consistency!)</span>}
-              </p>
+          
+          <div className="space-y-4 pt-2">
+            {/* Live Card Preview */}
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-primary/10 via-accent/5 to-card border border-primary/20 shadow-inner relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -mr-4 -mt-4 pointer-events-none" />
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 bg-primary/10 text-primary rounded-full">
+                  Verified Progress
+                </span>
+                <span className="text-xs text-muted-foreground">SkillBridge Suite</span>
+              </div>
+              <p className="font-semibold text-lg text-foreground mb-1">{selectedRole?.title || 'Target Role'}</p>
+              <p className="text-sm text-muted-foreground mb-4">Mastering professional competencies</p>
+              
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="p-2.5 bg-background/60 backdrop-blur-sm rounded-xl border border-border/50">
+                  <p className="text-2xl font-black text-primary">{roadmapProgressPercent}%</p>
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Completed</p>
+                </div>
+                <div className="p-2.5 bg-background/60 backdrop-blur-sm rounded-xl border border-border/50">
+                  <p className="text-2xl font-black text-accent">{analysis?.readinessScore || 0}%</p>
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Job Ready</p>
+                </div>
+                <div className="p-2.5 bg-background/60 backdrop-blur-sm rounded-xl border border-border/50">
+                  <p className="text-2xl font-black text-orange-500">{gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0}d</p>
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mt-0.5">Streak</p>
+                </div>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={handleShareProgress} className="flex-1">
-                <Share2 className="h-4 w-4 mr-2" />
-                Share Now
+
+            {/* Social Share Buttons */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* LinkedIn */}
+              <Button 
+                onClick={() => {
+                  const headline = `${selectedRole?.title || 'Software Developer'} | ${analysis?.readinessScore || 0}% Job Ready | ${userSkills.length} Technical Skills`;
+                  const summary = `🚀 I'm ${roadmapProgressPercent}% through my ${selectedRole?.title || 'career'} learning journey on SkillBridge!\n\n` +
+                    `✅ ${completedItems} skills mastered\n` +
+                    `📈 ${analysis?.readinessScore || 0}% job-ready\n` +
+                    `🔥 ${gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0} day learning streak maintained!\n\n` +
+                    `#SkillBridge #LearningJourney #CareerGrowth #${selectedRole?.title?.replace(/\s+/g, '') || 'Developer'}`;
+                  
+                  navigator.clipboard.writeText(summary);
+                  toast.success("Post content copied to clipboard!");
+                  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin)}`, '_blank');
+                }}
+                className="bg-[#0077b5] hover:bg-[#0077b5]/90 text-white gap-2"
+              >
+                <Linkedin className="h-4 w-4" /> LinkedIn
               </Button>
-              <Button variant="outline" onClick={() => setShowShareDialog(false)}>
-                Cancel
+
+              {/* X (Twitter) */}
+              <Button 
+                onClick={() => {
+                  const shareText = `🚀 I'm ${roadmapProgressPercent}% through my ${selectedRole?.title || 'career'} learning journey on @SkillBridge!\n\n` +
+                    `✅ ${completedItems} skills mastered\n` +
+                    `📈 ${analysis?.readinessScore || 0}% job-ready\n` +
+                    `🔥 ${gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0} day streak!\n\n` +
+                    `#Learning #${selectedRole?.title?.replace(/\s+/g, '') || 'Tech'}`;
+                  
+                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(window.location.origin)}`, '_blank');
+                }}
+                className="bg-black hover:bg-black/90 text-white gap-2"
+              >
+                <Twitter className="h-4 w-4" /> X (Twitter)
+              </Button>
+
+              {/* Instagram */}
+              <Button 
+                onClick={() => {
+                  const shareText = `🚀 Working towards my goal: ${selectedRole?.title || 'Target Role'}!\n\n` +
+                    `• ${roadmapProgressPercent}% completed\n` +
+                    `• ${completedItems} technical skills mastered\n` +
+                    `• ${analysis?.readinessScore || 0}% job-ready\n` +
+                    `• ${gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0} day learning streak!\n\n` +
+                    `#SkillBridge #GrowthMindset #ContinuousLearning`;
+                  
+                  navigator.clipboard.writeText(shareText);
+                  toast.success("Instagram caption copied! Screenshot this card to post on your Stories/Feed.");
+                }}
+                variant="outline" 
+                className="border-pink-500/30 hover:bg-pink-500/5 text-pink-600 dark:text-pink-400 gap-2"
+              >
+                <Instagram className="h-4 w-4" /> Instagram
+              </Button>
+
+              {/* Copy Link / Generic Share */}
+              <Button 
+                onClick={handleShareProgress}
+                variant="outline"
+                className="gap-2"
+              >
+                <Share2 className="h-4 w-4" /> Copy Link
               </Button>
             </div>
           </div>

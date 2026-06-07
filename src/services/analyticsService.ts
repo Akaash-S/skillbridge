@@ -246,8 +246,8 @@ export class AnalyticsService {
       insights.push({
         type: 'success',
         title: 'Almost There!',
-        message: 'You\'re in the final stretch. Start preparing for job applications and portfolio updates.',
-        action: 'Update resume and LinkedIn',
+        message: 'You\'re in the final stretch. Share your achievements and learning milestones with your network!',
+        action: 'Share achievements on socials',
         priority: 'high'
       });
     }
