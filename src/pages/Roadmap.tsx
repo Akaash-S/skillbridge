@@ -1075,34 +1075,43 @@ export const Roadmap = () => {
 
       {/* Certificate Success Modal */}
       <Dialog open={isCertModalOpen} onOpenChange={setIsCertModalOpen}>
-        <DialogContent className="max-w-3xl sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1">
-              <DialogHeader>
-                <DialogTitle className="text-2xl text-center flex items-center justify-center gap-2">
-                  <Sparkles className="h-6 w-6 text-yellow-500" />
-                  Professional Certificate Earned!
+        <DialogContent className="max-w-[95vw] sm:max-w-[1200px] max-h-[90vh] overflow-hidden flex flex-col p-0 border-primary/20">
+          <div className="flex flex-col md:flex-row h-full overflow-y-auto">
+            {/* Left side text and graphics */}
+            <div className="md:w-1/3 bg-muted/20 p-8 md:p-12 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-border/50">
+              <DialogHeader className="w-full flex flex-col items-center">
+                <div className="flex justify-center mb-6">
+                  <div className="h-20 w-20 rounded-full bg-yellow-500/10 border-2 border-yellow-500/20 flex items-center justify-center animate-pulse">
+                    <Trophy className="h-10 w-10 text-yellow-500" />
+                  </div>
+                </div>
+                <DialogTitle className="text-3xl font-bold text-center mb-4 leading-tight">
+                  Professional<br/>Certificate<br/>Earned!
                 </DialogTitle>
-                <DialogDescription className="text-center text-lg">
-                  You've officially completed the {selectedRole.title} Learning Path.
+                <DialogDescription className="text-center text-lg max-w-[250px] mx-auto mt-2">
+                  You've officially completed the <span className="font-semibold text-primary">{selectedRole?.title}</span> Learning Path.
                 </DialogDescription>
               </DialogHeader>
             </div>
-            <div className="flex-1 flex items-center justify-center">
-              {issuedCertificate && (
-                <Certificate
-                  userName={issuedCertificate.userName}
-                  roleName={issuedCertificate.roleName}
-                  completionDate={issuedCertificate.completionDate}
-                  certificateId={issuedCertificate.certificateId}
-                />
-              )}
+            
+            {/* Right side Certificate and actions */}
+            <div className="md:w-2/3 p-6 md:p-8 flex flex-col items-center justify-center overflow-hidden">
+              <div className="w-full max-w-[650px] flex justify-center">
+                {issuedCertificate && (
+                  <Certificate
+                    userName={issuedCertificate.userName}
+                    roleName={issuedCertificate.roleName}
+                    completionDate={issuedCertificate.completionDate}
+                    certificateId={issuedCertificate.certificateId}
+                  />
+                )}
+              </div>
+              <div className="flex justify-center mt-6">
+                <Button variant="ghost" onClick={() => setIsCertModalOpen(false)}>
+                  Close Preview
+                </Button>
+              </div>
             </div>
-          </div>
-          <div className="flex justify-center pb-4 mt-4">
-            <Button variant="ghost" onClick={() => setIsCertModalOpen(false)}>
-              Close Preview
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
