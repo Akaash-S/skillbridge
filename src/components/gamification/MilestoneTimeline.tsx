@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export interface TimelineModule {
   title: string;
-  skills: string[];
+  skills: any[];
   completed: boolean;
   quizPassed: boolean;
   unlocked: boolean;
@@ -97,19 +97,24 @@ export const MilestoneTimeline = ({ modules, className }: MilestoneTimelineProps
                   {/* Skills tags */}
                   {module.skills && module.skills.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-2.5">
-                      {module.skills.map((skill, sIdx) => (
-                        <span
-                          key={sIdx}
-                          className={cn(
-                            "text-[10px] px-2 py-0.5 rounded-md font-medium",
-                            isCompleted && "bg-emerald-500/10 text-emerald-700/80 border border-emerald-500/10",
-                            isCurrent && "bg-primary/5 text-primary border border-primary/10",
-                            isUpcoming && "bg-muted/40 text-muted-foreground/80 border border-border/20"
-                          )}
-                        >
-                          {skill}
-                        </span>
-                      ))}
+                      {module.skills.map((skill, sIdx) => {
+                        const skillName = typeof skill === 'object' && skill !== null
+                          ? (skill as any).skillName || (skill as any).skillId
+                          : skill;
+                        return (
+                          <span
+                            key={sIdx}
+                            className={cn(
+                              "text-[10px] px-2 py-0.5 rounded-md font-medium",
+                              isCompleted && "bg-emerald-500/10 text-emerald-700/80 border border-emerald-500/10",
+                              isCurrent && "bg-primary/5 text-primary border border-primary/10",
+                              isUpcoming && "bg-muted/40 text-muted-foreground/80 border border-border/20"
+                            )}
+                          >
+                            {skillName}
+                          </span>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
