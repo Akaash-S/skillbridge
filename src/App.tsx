@@ -46,6 +46,7 @@ import SkillGapGuide from "@/pages/guide/SkillGap";
 import RoadmapGuide from "@/pages/guide/Roadmap";
 import GrowthTrackingGuide from "@/pages/guide/GrowthTracking";
 import { VerifyCertificate } from "@/pages/VerifyCertificate";
+import { PublicProfile } from "@/pages/PublicProfile";
 import ScrollToTop from "@/components/ScrollToTop";
 const queryClient = new QueryClient();
 
@@ -76,6 +77,7 @@ const App = () => (
                   <Route path="/" element={<AuthRedirect />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/verify-certificate/:id" element={<VerifyCertificate />} />
+                  <Route path="/profile/share/:userId" element={<PublicProfile />} />
                   
                   {/* Protected Routes */}
                   <Route path="/onboarding" element={

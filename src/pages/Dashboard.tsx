@@ -147,23 +147,22 @@ export const Dashboard = () => {
   // Handle sharing progress
   const handleShareProgress = () => {
     const streakCount = analytics?.currentStreak || 0;
-    const shareText = `🚀 I'm ${roadmapProgressPercent}% through my ${selectedRole?.title || 'career'} learning journey! 
-    
-✅ ${completedItems} skills mastered
-� $${analysis?.readinessScore || 0}% job-ready
-🔥 ${streakCount} day learning streak ${streakCount > 7 ? '(Amazing consistency!)' : ''}
-
-#SkillBridge #LearningJourney #CareerGrowth`;
+    const shareUrl = `${window.location.origin}/profile/share/${user?.uid || 'dev-user-123'}`;
+    const shareText = `🚀 I'm ${roadmapProgressPercent}% through my ${selectedRole?.title || 'career'} learning journey! \n\n` +
+      `✅ ${completedItems} skills mastered\n` +
+      `📈 ${analysis?.readinessScore || 0}% job-ready\n` +
+      `🔥 ${streakCount} day learning streak ${streakCount > 7 ? '(Amazing consistency!)' : ''}\n\n` +
+      `Check out my public learning profile here:`;
 
     if (navigator.share) {
       navigator.share({
         title: 'My Learning Progress',
         text: shareText,
-        url: window.location.origin
+        url: shareUrl
       });
     } else {
-      navigator.clipboard.writeText(shareText);
-      toast.success("Progress shared to clipboard!");
+      navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+      toast.success("Public profile link copied to clipboard!");
     }
   };
 
@@ -1314,16 +1313,18 @@ export const Dashboard = () => {
               {/* LinkedIn */}
               <Button 
                 onClick={() => {
+                  const shareUrl = `${window.location.origin}/profile/share/${user?.uid || 'dev-user-123'}`;
                   const headline = `${selectedRole?.title || 'Software Developer'} | ${analysis?.readinessScore || 0}% Job Ready | ${userSkills.length} Technical Skills`;
                   const summary = `🚀 I'm ${roadmapProgressPercent}% through my ${selectedRole?.title || 'career'} learning journey on SkillBridge!\n\n` +
                     `✅ ${completedItems} skills mastered\n` +
                     `📈 ${analysis?.readinessScore || 0}% job-ready\n` +
                     `🔥 ${gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0} day learning streak maintained!\n\n` +
+                    `Check out my learning profile: ${shareUrl}\n\n` +
                     `#SkillBridge #LearningJourney #CareerGrowth #${selectedRole?.title?.replace(/\s+/g, '') || 'Developer'}`;
                   
                   navigator.clipboard.writeText(summary);
-                  toast.success("Post content copied to clipboard!");
-                  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.origin)}`, '_blank');
+                  toast.success("Post content and public link copied to clipboard!");
+                  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank');
                 }}
                 className="bg-[#0077b5] hover:bg-[#0077b5]/90 text-white gap-2"
               >
@@ -1333,13 +1334,14 @@ export const Dashboard = () => {
               {/* X (Twitter) */}
               <Button 
                 onClick={() => {
+                  const shareUrl = `${window.location.origin}/profile/share/${user?.uid || 'dev-user-123'}`;
                   const shareText = `🚀 I'm ${roadmapProgressPercent}% through my ${selectedRole?.title || 'career'} learning journey on @SkillBridge!\n\n` +
                     `✅ ${completedItems} skills mastered\n` +
                     `📈 ${analysis?.readinessScore || 0}% job-ready\n` +
                     `🔥 ${gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0} day streak!\n\n` +
                     `#Learning #${selectedRole?.title?.replace(/\s+/g, '') || 'Tech'}`;
                   
-                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(window.location.origin)}`, '_blank');
+                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
                 }}
                 className="bg-black hover:bg-black/90 text-white gap-2"
               >
@@ -1349,15 +1351,17 @@ export const Dashboard = () => {
               {/* Instagram */}
               <Button 
                 onClick={() => {
+                  const shareUrl = `${window.location.origin}/profile/share/${user?.uid || 'dev-user-123'}`;
                   const shareText = `🚀 Working towards my goal: ${selectedRole?.title || 'Target Role'}!\n\n` +
                     `• ${roadmapProgressPercent}% completed\n` +
                     `• ${completedItems} technical skills mastered\n` +
                     `• ${analysis?.readinessScore || 0}% job-ready\n` +
                     `• ${gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0} day learning streak!\n\n` +
+                    `Check out my public profile: ${shareUrl}\n\n` +
                     `#SkillBridge #GrowthMindset #ContinuousLearning`;
                   
                   navigator.clipboard.writeText(shareText);
-                  toast.success("Instagram caption copied! Screenshot this card to post on your Stories/Feed.");
+                  toast.success("Instagram caption and public link copied! Screenshot this card to post on your Stories/Feed.");
                 }}
                 variant="outline" 
                 className="border-pink-500/30 hover:bg-pink-500/5 text-pink-600 dark:text-pink-400 gap-2"
