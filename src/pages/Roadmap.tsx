@@ -94,6 +94,13 @@ export const Roadmap = () => {
   const completedCount = roadmap.filter((item) => item.completed).length;
   const progressPercent = roadmap.length > 0 ? Math.round((completedCount / roadmap.length) * 100) : 0;
 
+  const completedModulesCount = roadmapModules.filter((m: any) => m.completed).length;
+  const passedQuizzesCount = roadmapModules.filter((m: any) => m.quizPassed).length;
+  const modulesTotalCount = roadmapModules.length;
+
+  const moduleProgressPercent = modulesTotalCount > 0 ? Math.round((completedModulesCount / modulesTotalCount) * 100) : 0;
+  const quizProgressPercent = modulesTotalCount > 0 ? Math.round((passedQuizzesCount / modulesTotalCount) * 100) : 0;
+
   const getCurrentStep = (): 1 | 2 | 3 | 4 => {
     if (roadmap.length > 0) return 4;
     if (analysis) return 3;
@@ -873,13 +880,13 @@ export const Roadmap = () => {
                 <div>
                   <span className="text-xs text-muted-foreground block font-medium uppercase tracking-wider">Modules Completed</span>
                   <span className="text-lg font-bold text-foreground">
-                    {roadmapModules.filter((m: any) => m.completed).length} of {roadmapModules.length} ({Math.round(roadmapProgress?.moduleProgress || 0)}%)
+                    {completedModulesCount} of {modulesTotalCount} ({moduleProgressPercent}%)
                   </span>
                 </div>
                 <div>
                   <span className="text-xs text-muted-foreground block font-medium uppercase tracking-wider">Quizzes Passed</span>
                   <span className="text-lg font-bold text-foreground">
-                    {roadmapModules.filter((m: any) => m.quizPassed).length} of {roadmapModules.length} ({Math.round(roadmapProgress?.quizProgress || 0)}%)
+                    {passedQuizzesCount} of {modulesTotalCount} ({quizProgressPercent}%)
                   </span>
                 </div>
               </div>

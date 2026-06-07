@@ -718,6 +718,8 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
             totalItems: roadmapItems.length,
             completedItems: roadmapItems.filter(item => item.completed).length,
             progress: backendRoadmap.progress?.skillProgress || 0,
+            moduleProgress: backendRoadmap.progress?.moduleProgress || 0,
+            quizProgress: backendRoadmap.progress?.quizProgress || 0,
             roadmapItems: roadmapItems
           },
           loading: false
