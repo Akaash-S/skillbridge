@@ -46,7 +46,7 @@ import SkillGapGuide from "@/pages/guide/SkillGap";
 import RoadmapGuide from "@/pages/guide/Roadmap";
 import GrowthTrackingGuide from "@/pages/guide/GrowthTracking";
 import { VerifyCertificate } from "@/pages/VerifyCertificate";
-
+import ScrollToTop from "@/components/ScrollToTop";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -67,6 +67,7 @@ const App = () => (
           <AppDataProvider>
             <ErrorBoundary>
               <TooltipProvider>
+                <ScrollToTop />
                 <Toaster />
                 <Sonner />
                 <AIAssistant />

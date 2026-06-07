@@ -465,9 +465,15 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
   // Determine which roadmap items to display (the active ones)
   const roadmapDisplayItems = useMemo(() => {
     if (roadmapModules.length > 0 && roadmap.length > 0) {
-      // Find the first module that is unlocked but NOT quizPassed
-      const currentModuleIndex = roadmapModules.findIndex(m => m.unlocked && !m.quizPassed);
-      const startIndex = currentModuleIndex >= 0 ? currentModuleIndex : 0;
+      // Find the first module that is NOT quizPassed
+      const currentModuleIndex = roadmapModules.findIndex(m => !m.quizPassed);
+      
+      // If all modules in roadmapModules are passed, the next module is at roadmapModules.length
+      const effectiveIndex = currentModuleIndex >= 0 
+        ? currentModuleIndex 
+        : Math.min(roadmapModules.length, roadmap.length - 1);
+        
+      const startIndex = Math.max(0, Math.min(effectiveIndex, roadmap.length - 3));
       
       return roadmap.slice(startIndex, startIndex + 3).map((item, idx) => {
         const mIdx = startIndex + idx;
@@ -475,14 +481,16 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
         return {
           ...item,
           isCompleted: module?.quizPassed || false,
-          isUnlocked: module?.unlocked || false,
+          isUnlocked: module?.unlocked || (mIdx === roadmapModules.length), // unlock the next one if it hasn't been added to DB yet but is next
           displayIndex: mIdx + 1
         };
       });
     }
     // Fallback
     const firstIncomplete = roadmap.findIndex(item => !item.completed);
-    const start = Math.max(0, firstIncomplete >= 0 ? firstIncomplete : 0);
+    const effectiveIndexFallback = firstIncomplete >= 0 ? firstIncomplete : roadmap.length - 1;
+    const start = Math.max(0, Math.min(effectiveIndexFallback, roadmap.length - 3));
+    
     return roadmap.slice(start, start + 3).map((item, idx) => ({
       ...item,
       isCompleted: item.completed,
@@ -590,9 +598,9 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
     ? roadmapModules.filter((m: any) => m.quizPassed).length 
     : roadmap.filter((item) => item.completed === true).length;
     
-  const roadmapProgressPercent = roadmapModules.length > 0 
-    ? Math.round((completedItems / roadmapModules.length) * 100) 
-    : roadmap.length > 0 ? Math.round((completedItems / roadmap.length) * 100) : 0;
+  const roadmapProgressPercent = roadmap.length > 0 
+    ? Math.round((completedItems / roadmap.length) * 100) 
+    : 0;
 
   
   // Debug logging for roadmap progress calculation
