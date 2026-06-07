@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import {
-  ArrowRight, Sparkles, TrendingUp, Users, 
-  Brain, Rocket, Target, CheckCircle2, Star, Play, 
+  ArrowRight, Sparkles, TrendingUp, Users,
+  Brain, Rocket, Target, CheckCircle2, Star, Play,
   Briefcase, BookOpen, BarChart3, Zap, Trophy,
   MapPin, Clock, Shield, Globe
 } from "lucide-react";
@@ -470,8 +470,8 @@ export const SimpleLanding = () => {
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 dark:hidden" />
-            <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 hidden dark:block" />
+            <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 dark:hidden" />
+            <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 hidden dark:block" />
           </div>
           <div className="flex items-center gap-6">
             <ThemeToggle />
@@ -547,7 +547,7 @@ export const SimpleLanding = () => {
                 color: "from-blue-500 to-cyan-500"
               },
               {
-                step: "2", 
+                step: "2",
                 title: "Analyze Your Skills",
                 description: "Our AI analyzes your current skills and identifies gaps for your target role.",
                 icon: Brain,
@@ -555,7 +555,7 @@ export const SimpleLanding = () => {
               },
               {
                 step: "3",
-                title: "Follow Your Roadmap", 
+                title: "Follow Your Roadmap",
                 description: "Get a personalized learning roadmap with curated resources and milestones.",
                 icon: MapPin,
                 color: "from-green-500 to-emerald-500"

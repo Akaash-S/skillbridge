@@ -21,16 +21,16 @@ export const Login = () => {
   const [hasRedirected, setHasRedirected] = useState(false);
   const [showAuthError, setShowAuthError] = useState(false);
   const [authError, setAuthError] = useState<string>('');
-  const { 
-    signInWithPopup, 
-    signInWithRedirect, 
-    user, 
-    isLoading: authLoading, 
-    error, 
-    clearError, 
-    isAuthenticated, 
-    mfaRequired, 
-    mfaToken 
+  const {
+    signInWithPopup,
+    signInWithRedirect,
+    user,
+    isLoading: authLoading,
+    error,
+    clearError,
+    isAuthenticated,
+    mfaRequired,
+    mfaToken
   } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -44,12 +44,12 @@ export const Login = () => {
     setIsLoggingIn(true);
     setShowAuthError(false);
     setAuthError('');
-    
+
     try {
       await signInWithPopup();
     } catch (error: any) {
       console.error('Login failed:', error);
-      
+
       // Don't show error for redirect in progress
       if (error.message !== 'REDIRECT_IN_PROGRESS') {
         setAuthError(error.message || 'Authentication failed');
@@ -63,7 +63,7 @@ export const Login = () => {
   const handleUseRedirect = async () => {
     setIsLoggingIn(true);
     setShowAuthError(false);
-    
+
     try {
       // Force redirect method
       await signInWithRedirect();
@@ -87,32 +87,32 @@ export const Login = () => {
   // Redirect authenticated users immediately
   useEffect(() => {
     console.log('Login state check:', {
-      isAuthenticated, 
-      user: !!user, 
+      isAuthenticated,
+      user: !!user,
       userName: user?.name,
       userEmail: user?.email,
-      authLoading, 
+      authLoading,
       mfaRequired,
       hasRedirected
     });
-    
+
     // If user is fully authenticated and not in MFA flow, redirect immediately
     if (isAuthenticated && user && !mfaRequired && !hasRedirected) {
       setHasRedirected(true);
-      
+
       // Immediate redirect without delay
       const redirectPath = (!user.name || user.name === '') ? "/onboarding" : from;
-      
+
       // Try multiple redirect methods to ensure it works
       navigate(redirectPath, { replace: true });
-      
+
       // Fallback redirect after short delay
       setTimeout(() => {
         if (window.location.pathname === '/login') {
           window.location.href = redirectPath;
         }
       }, 500);
-      
+
     } else {
       console.log('Login condition not met:', {
         isAuthenticated: isAuthenticated ? '✅' : '❌',
@@ -180,28 +180,28 @@ export const Login = () => {
       <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-accent" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.15),transparent)]" />
-        
+
         {/* Floating Elements */}
-        <motion.div 
+        <motion.div
           className="absolute top-20 left-20 w-32 h-32 bg-white/10 rounded-full blur-2xl"
-          animate={{ 
+          animate={{
             scale: [1, 1.3, 1],
             opacity: [0.3, 0.5, 0.3]
           }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
-        <motion.div 
+        <motion.div
           className="absolute bottom-32 right-20 w-48 h-48 bg-white/10 rounded-full blur-3xl"
-          animate={{ 
+          animate={{
             scale: [1.2, 1, 1.2],
             opacity: [0.2, 0.4, 0.2]
           }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
-        
+
         <div className="relative z-10 flex flex-col justify-between p-12 text-white w-full">
           {/* Logo */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -209,9 +209,9 @@ export const Login = () => {
           >
             <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-10" />
           </motion.div>
-          
+
           {/* Main Content */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
@@ -225,10 +225,10 @@ export const Login = () => {
                 Join thousands of professionals who've accelerated their career growth with personalized skill roadmaps.
               </p>
             </div>
-            
+
             <div className="space-y-3">
               {features.map((feature, index) => (
-                <motion.div 
+                <motion.div
                   key={feature}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -241,9 +241,9 @@ export const Login = () => {
               ))}
             </div>
           </motion.div>
-          
+
           {/* Bottom Quote */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8, duration: 0.5 }}
@@ -264,17 +264,17 @@ export const Login = () => {
           </motion.div>
         </div>
       </div>
-      
+
       {/* Right Panel - Login Form */}
       <div className="w-full lg:w-1/2 flex flex-col">
         {/* Mobile Header */}
         <header className="lg:hidden border-b border-border p-4">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 dark:hidden" />
-            <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 hidden dark:block" />
+            <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 dark:hidden" />
+            <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 hidden dark:block" />
           </Link>
         </header>
-        
+
         <main className="flex-1 flex items-center justify-center p-6 md:p-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -284,7 +284,7 @@ export const Login = () => {
           >
             <Card className="border-border/50 shadow-2xl shadow-primary/5">
               <CardHeader className="text-center space-y-4 pb-2">
-                <motion.div 
+                <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.4 }}
@@ -327,7 +327,7 @@ export const Login = () => {
                     </>
                   )}
                 </Button>
-                
+
                 {/* <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-border" />
@@ -344,7 +344,7 @@ export const Login = () => {
                 >
                   More sign-in options coming soon
                 </Button> */}
-                
+
                 <p className="text-center text-sm text-muted-foreground leading-relaxed">
                   By continuing, you agree to our{" "}
                   <Link to="#" className="text-primary hover:underline font-medium">Terms of Service</Link>
@@ -353,7 +353,7 @@ export const Login = () => {
                 </p>
               </CardContent>
             </Card>
-            
+
             <p className="text-center text-sm text-muted-foreground mt-6">
               Don't have an account?{" "}
               <Link to="/login" className="text-primary hover:underline font-medium">

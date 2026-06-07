@@ -103,10 +103,10 @@ export const Layout = ({ children, showNav = true }: LayoutProps) => {
                 </SheetContent>
               </Sheet>
             )}
-            
+
             <Link to="/dashboard" className="flex items-center gap-2">
-              <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 dark:hidden" />
-              <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 hidden dark:block" />
+              <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 dark:hidden" />
+              <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 hidden dark:block" />
             </Link>
           </div>
 
