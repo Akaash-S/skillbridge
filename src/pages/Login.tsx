@@ -207,7 +207,7 @@ export const Login = () => {
             transition={{ duration: 0.5 }}
             className="flex items-center gap-3"
           >
-            <img src="/icon.png" alt="SkillBridge Logo" className="h-10 w-10 rounded-full" />
+            <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-10 w-10 rounded-full" />
             <span className="font-extrabold text-2xl tracking-tight text-white">SkillBridge</span>
           </motion.div>
 
@@ -271,7 +271,8 @@ export const Login = () => {
         {/* Mobile Header */}
         <header className="lg:hidden border-b border-border p-4">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/icon.png" alt="SkillBridge Logo" className="h-8 w-8 rounded-full" />
+            <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 w-8 rounded-full dark:hidden" />
+            <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 w-8 rounded-full hidden dark:block" />
             <span className="font-extrabold text-xl tracking-tight text-[#4169e1] dark:text-white">SkillBridge</span>
           </Link>
         </header>

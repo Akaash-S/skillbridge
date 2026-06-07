@@ -470,7 +470,8 @@ export const SimpleLanding = () => {
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src="/icon.png" alt="SkillBridge Logo" className="h-8 w-8 rounded-full" />
+            <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 w-8 rounded-full dark:hidden" />
+            <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 w-8 rounded-full hidden dark:block" />
             <span className="font-extrabold text-xl tracking-tight text-[#4169e1] dark:text-white">SkillBridge</span>
           </div>
           <div className="flex items-center gap-6">
@@ -629,7 +630,8 @@ export const SimpleLanding = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <img src="/icon.png" alt="SkillBridge Logo" className="h-6 w-6 rounded-full" />
+              <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-6 w-6 rounded-full dark:hidden" />
+              <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-6 w-6 rounded-full hidden dark:block" />
               <span className="font-extrabold text-base tracking-tight text-[#4169e1] dark:text-white">SkillBridge</span>
               <span className="text-sm text-muted-foreground">• Bridge the gap to your dream tech role</span>
             </div>
