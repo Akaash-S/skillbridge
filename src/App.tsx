@@ -44,6 +44,7 @@ import CareerGoalGuide from "@/pages/guide/CareerGoal";
 import SkillGapGuide from "@/pages/guide/SkillGap";
 import RoadmapGuide from "@/pages/guide/Roadmap";
 import GrowthTrackingGuide from "@/pages/guide/GrowthTracking";
+import { VerifyCertificate } from "@/pages/VerifyCertificate";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const App = () => (
                   {/* Public Routes */}
                   <Route path="/" element={<AuthRedirect />} />
                   <Route path="/login" element={<Login />} />
+                  <Route path="/verify-certificate/:id" element={<VerifyCertificate />} />
                   
                   {/* Protected Routes */}
                   <Route path="/onboarding" element={
