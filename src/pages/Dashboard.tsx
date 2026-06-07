@@ -462,6 +462,35 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
     );
   }, [roadmap, roadmapProgress, selectedRole]);
 
+  // Determine which roadmap items to display (the active ones)
+  const roadmapDisplayItems = useMemo(() => {
+    if (roadmapModules.length > 0 && roadmap.length > 0) {
+      // Find the first module that is unlocked but NOT quizPassed
+      const currentModuleIndex = roadmapModules.findIndex(m => m.unlocked && !m.quizPassed);
+      const startIndex = currentModuleIndex >= 0 ? currentModuleIndex : 0;
+      
+      return roadmap.slice(startIndex, startIndex + 3).map((item, idx) => {
+        const mIdx = startIndex + idx;
+        const module = roadmapModules[mIdx];
+        return {
+          ...item,
+          isCompleted: module?.quizPassed || false,
+          isUnlocked: module?.unlocked || false,
+          displayIndex: mIdx + 1
+        };
+      });
+    }
+    // Fallback
+    const firstIncomplete = roadmap.findIndex(item => !item.completed);
+    const start = Math.max(0, firstIncomplete >= 0 ? firstIncomplete : 0);
+    return roadmap.slice(start, start + 3).map((item, idx) => ({
+      ...item,
+      isCompleted: item.completed,
+      isUnlocked: true,
+      displayIndex: start + idx + 1
+    }));
+  }, [roadmap, roadmapModules]);
+
   // Mock advanced analytics data - reset for new roles
   const advancedAnalyticsData = useMemo(() => {
     // If no analytics (new role or no roadmap), return default values
@@ -483,14 +512,14 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
     }
 
     return {
-      currentStreak: analytics?.currentStreak || 0,
-      longestStreak: analytics?.longestStreak || 0,
+      currentStreak: gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0,
+      longestStreak: gamificationData?.streak?.bestStreak || analytics?.longestStreak || 0,
       totalTimeSpent: analytics?.totalTimeSpent || 0,
       learningVelocity: analytics?.learningVelocity || 0,
       completionLikelihood: analytics?.completionLikelihood || 50,
       estimatedWeeksRemaining: analytics?.estimatedWeeksRemaining || 12,
       skillsPerWeek: analytics?.learningVelocity || 0,
-      consistencyScore: Math.round((analytics?.currentStreak || 0) * 10),
+      consistencyScore: Math.round((gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) * 10),
       focusAreas: [
         selectedRole?.title || 'Current Role',
         'Core Skills',
@@ -775,19 +804,19 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
         </Card>
 
         {/* Streak Milestone Celebration */}
-        {(analytics?.currentStreak || 0) >= 7 && (
+        {(gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) >= 7 && (
           <Alert className="border-orange-200 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20">
             <Flame className="h-4 w-4 text-orange-500" />
             <AlertDescription className="text-orange-800 dark:text-orange-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <strong>🔥 Streak Milestone!</strong> You've maintained a {analytics?.currentStreak} day learning streak! 
-                  {(analytics?.currentStreak || 0) >= 30 && " You're a learning champion! 🏆"}
-                  {(analytics?.currentStreak || 0) >= 14 && (analytics?.currentStreak || 0) < 30 && " You're building amazing habits! 💪"}
-                  {(analytics?.currentStreak || 0) >= 7 && (analytics?.currentStreak || 0) < 14 && " Keep the momentum going! 🚀"}
+                  <strong>🔥 Streak Milestone!</strong> You've maintained a {gamificationData?.streak?.currentStreak || analytics?.currentStreak} day learning streak! 
+                  {(gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) >= 30 && " You're a learning champion! 🏆"}
+                  {(gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) >= 14 && (gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) < 30 && " You're building amazing habits! 💪"}
+                  {(gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) >= 7 && (gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) < 14 && " Keep the momentum going! 🚀"}
                 </div>
                 <div className="flex items-center gap-2 text-2xl">
-                  <span className="font-bold text-orange-600">{analytics?.currentStreak}</span>
+                  <span className="font-bold text-orange-600">{gamificationData?.streak?.currentStreak || analytics?.currentStreak}</span>
                   <Flame className="h-6 w-6 text-orange-500 animate-pulse" />
                 </div>
               </div>
@@ -945,29 +974,29 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Learning Streak</p>
                   <div className="flex items-baseline gap-1">
-                    <p className="text-3xl font-bold text-orange-600">{analytics?.currentStreak || 0}</p>
+                    <p className="text-3xl font-bold text-orange-600">{gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0}</p>
                     <span className="text-sm text-muted-foreground">days</span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Best: {analytics?.longestStreak || 0} days
+                    Best: {gamificationData?.streak?.bestStreak || analytics?.longestStreak || 0} days
                   </p>
                 </div>
                 <div className="h-12 w-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
                   <Flame className="h-6 w-6 text-orange-500" />
                 </div>
               </div>
-              {(analytics?.currentStreak || 0) > 0 && (
+              {(gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) > 0 && (
                 <div className="mt-3 flex items-center gap-2">
                   <div className="flex-1 h-2 bg-orange-100 dark:bg-orange-900/30 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-gradient-to-r from-orange-400 to-red-500 rounded-full transition-all duration-500"
                       style={{ 
-                        width: `${Math.min(100, ((analytics?.currentStreak || 0) / Math.max(analytics?.longestStreak || 7, 7)) * 100)}%` 
+                        width: `${Math.min(100, ((gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) / Math.max(gamificationData?.streak?.bestStreak || analytics?.longestStreak || 7, 7)) * 100)}%` 
                       }}
                     />
                   </div>
                   <span className="text-xs text-orange-600 font-medium">
-                    {analytics?.currentStreak === analytics?.longestStreak ? '🔥 Record!' : 'Keep going!'}
+                    {gamificationData?.streak?.currentStreak === gamificationData?.streak?.bestStreak ? '🔥 Record!' : 'Keep going!'}
                   </span>
                 </div>
               )}
@@ -1360,33 +1389,38 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
                   />
                 </div>
                 <div className="grid sm:grid-cols-3 gap-4 pt-4">
-                  {roadmap.slice(0, 3).map((item, index) => (
+                  {roadmapDisplayItems.map((item: any, index) => (
                     <div
                       key={item.id}
                       className={cn(
                         "p-4 rounded-xl border transition-all",
-                        item.completed 
+                        item.isCompleted 
                           ? "bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-800" 
-                          : "bg-card hover:border-primary/50"
+                          : !item.isUnlocked 
+                            ? "bg-muted/50 border-border opacity-60"
+                            : "bg-card hover:border-primary/50 border-primary/20"
                       )}
                     >
                       <div className="flex items-start gap-3">
                         <div className={cn(
                           "h-8 w-8 rounded-lg flex items-center justify-center",
-                          item.completed 
+                          item.isCompleted 
                             ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300" 
-                            : "bg-primary/10 text-primary"
+                            : !item.isUnlocked
+                              ? "bg-muted text-muted-foreground"
+                              : "bg-primary/10 text-primary"
                         )}>
-                          {item.completed ? (
+                          {item.isCompleted ? (
                             <CheckCircle2 className="h-4 w-4" />
                           ) : (
-                            <span className="text-sm font-bold">{index + 1}</span>
+                            <span className="text-sm font-bold">{item.displayIndex}</span>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={cn(
                             "font-medium text-sm truncate",
-                            item.completed && "line-through opacity-75"
+                            item.isCompleted && "line-through opacity-75",
+                            !item.isUnlocked && "text-muted-foreground"
                           )}>
                             {item.skillName}
                           </p>
