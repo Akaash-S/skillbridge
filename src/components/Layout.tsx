@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, LayoutDashboard, Target, BookOpen, BarChart3, Briefcase, User, Settings, Compass, Brain, Bell, HelpCircle, GraduationCap } from "lucide-react";
+import { LogOut, LayoutDashboard, Target, BookOpen, BarChart3, Briefcase, User, Settings, Compass, Brain, Bell, HelpCircle, GraduationCap, Flame } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -34,6 +34,7 @@ const navItems = [
   { path: "/skills", label: "Skills", icon: Target },
   { path: "/skills/intelligence", label: "Skill Intel", icon: Brain },
   { path: "/roadmap", label: "Roadmaps", icon: BookOpen },
+  { path: "/motivation", label: "Motivation", icon: Flame },
   { path: "/courses", label: "Courses", icon: GraduationCap },
   { path: "/opportunities", label: "Opportunities", icon: Briefcase },
   { path: "/insights", label: "Insights", icon: BarChart3 },

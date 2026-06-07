@@ -47,6 +47,7 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { MilestoneTimeline } from "@/components/gamification/MilestoneTimeline";
 
 const resourceTypeIcons = {
   course: GraduationCap,
@@ -611,7 +612,18 @@ export const Roadmap = () => {
               onClick={async () => {
                 try {
                   setLocalLoading(true);
-                  await completeModule(selectedModuleIndex);
+                  const res = await completeModule(selectedModuleIndex);
+                  if (res && res.gamification) {
+                    const { xp, newAchievements } = res.gamification;
+                    if (xp && xp.xpAwarded) {
+                      toast.success(`⚡ Earned +${xp.xpAwarded} XP!`);
+                    }
+                    if (newAchievements && newAchievements.length > 0) {
+                      newAchievements.forEach((ach: any) => {
+                        toast.success(`🏆 Achievement Unlocked: ${ach.title}! ${ach.description}`);
+                      });
+                    }
+                  }
                   const questions = await fetchModuleQuiz(selectedModuleIndex);
                   setQuizQuestions(questions);
                   setQuizAnswers({});
@@ -646,6 +658,17 @@ export const Roadmap = () => {
         setLocalLoading(true);
         const result = await submitModuleQuiz(selectedModuleIndex, quizAnswers);
         setQuizResult(result);
+        if (result && result.passed && result.gamification) {
+          const { xp, newAchievements } = result.gamification;
+          if (xp && xp.xpAwarded) {
+            toast.success(`⚡ Earned +${xp.xpAwarded} XP!`);
+          }
+          if (newAchievements && newAchievements.length > 0) {
+            newAchievements.forEach((ach: any) => {
+              toast.success(`🏆 Achievement Unlocked: ${ach.title}! ${ach.description}`);
+            });
+          }
+        }
         if (result.passed) {
           toast.success("Congratulations! You passed the quiz!");
         } else {
@@ -955,7 +978,9 @@ export const Roadmap = () => {
           </Alert>
         )}
 
-        {/* Modules Timeline */}
+        {/* Two-column layout: Left = Module Cards, Right = MilestoneTimeline */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
         <div className="space-y-4">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" />
@@ -1055,6 +1080,21 @@ export const Roadmap = () => {
             })}
           </div>
         </div>
+        </div>
+
+        <div className="space-y-4">
+          <MilestoneTimeline
+            modules={roadmapModules.map((m: any) => ({
+              title: m.title,
+              skills: m.skills?.map((s: any) => s.skillName) || [],
+              completed: m.completed,
+              quizPassed: m.quizPassed,
+              unlocked: m.unlocked,
+              description: m.description
+            }))}
+          />
+        </div>
+      </div>
 
         {/* Actions */}
         <div className="flex justify-center gap-4 pt-8">

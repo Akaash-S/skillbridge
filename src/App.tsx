@@ -16,6 +16,7 @@ import { Skills } from "@/pages/Skills";
 import { Roles } from "@/pages/Roles";
 import { Analysis } from "@/pages/Analysis";
 import { Roadmap } from "@/pages/Roadmap";
+import { Motivation } from "@/pages/Motivation";
 import { Dashboard } from "@/pages/Dashboard";
 import { Profile } from "@/pages/Profile";
 import { Resources } from "@/pages/Resources";
@@ -109,6 +110,12 @@ const App = () => (
                   <Route path="/roadmap" element={
                     <ProtectedRoute>
                       <Roadmap />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/motivation" element={
+                    <ProtectedRoute>
+                      <Motivation />
                     </ProtectedRoute>
                   } />
 

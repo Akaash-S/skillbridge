@@ -88,7 +88,7 @@ interface AppDataContextType extends AppDataState {
   // Guided learning journey methods
   setLearningMode: (mode: 'video' | 'documentation' | 'mixed') => Promise<void>;
   loadRoadmapModules: () => Promise<void>;
-  completeModule: (moduleIndex: number) => Promise<void>;
+  completeModule: (moduleIndex: number) => Promise<any>;
   fetchModuleQuiz: (moduleIndex: number) => Promise<any[]>;
   submitModuleQuiz: (moduleIndex: number, answers: Record<string, number>) => Promise<any>;
   
@@ -864,7 +864,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
   const completeModule = useCallback(async (moduleIndex: number) => {
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
-      await apiClient.post('/module/complete', { moduleIndex });
+      const response = await apiClient.post<any>('/module/complete', { moduleIndex });
       
       // Update local state modules completed to true
       setState(prev => {
@@ -884,6 +884,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
       
       // Optionally reload modules to get updated locks/unlocks
       await loadRoadmapModules();
+      return response;
     } catch (error: any) {
       console.error('❌ Failed to complete module:', error);
       setState(prev => ({

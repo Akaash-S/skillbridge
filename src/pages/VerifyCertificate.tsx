@@ -71,6 +71,7 @@ export const VerifyCertificate = () => {
                   roleName={certData.roleName}
                   completionDate={certData.issuedAt || certData.completionDate}
                   certificateId={certData.certificateId}
+                  hideVerifyLink={true}
                 />
               </div>
 

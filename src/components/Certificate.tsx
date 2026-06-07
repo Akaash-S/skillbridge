@@ -17,6 +17,7 @@ interface CertificateProps {
   completionDate: string | Date;
   certificateId?: string;
   className?: string;
+  hideVerifyLink?: boolean;
   onDownloadComplete?: () => void;
   // Compatibility props
   userEmail?: string;
@@ -33,6 +34,7 @@ export const Certificate: React.FC<CertificateProps> = ({
   completionDate,
   certificateId = "SB-" + Math.random().toString(36).substr(2, 9).toUpperCase(),
   className = "",
+  hideVerifyLink = false,
   onDownloadComplete
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -289,14 +291,16 @@ export const Certificate: React.FC<CertificateProps> = ({
           <Share2 className="h-4 w-4" />
           Share
         </Button>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={() => window.open(`${window.location.origin}/verify-certificate/${certificateId}`, '_blank')}
-          title="Verify Link"
-        >
-          <ExternalLink className="h-4 w-4" />
-        </Button>
+        {!hideVerifyLink && (
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={() => window.open(`${window.location.origin}/verify-certificate/${certificateId}`, '_blank')}
+            title="Verify Link"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     </div>
   );

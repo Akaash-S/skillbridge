@@ -16,6 +16,7 @@ import { LearningResources } from "@/components/LearningResources";
 import { AdvancedAnalytics } from "@/components/AdvancedAnalytics";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { toast } from "sonner";
+import { gamificationService } from "@/services/gamificationService";
 import { 
   Target, 
   BookOpen, 
@@ -74,12 +75,27 @@ export const Dashboard = () => {
   const [showMentorDialog, setShowMentorDialog] = useState(false);
   const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [gamificationData, setGamificationData] = useState<any>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate("/login");
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    const fetchGamification = async () => {
+      try {
+        const data = await gamificationService.getDashboard();
+        setGamificationData(data);
+      } catch (err) {
+        console.error("Failed to fetch gamification dashboard data:", err);
+      }
+    };
+    if (isAuthenticated) {
+      fetchGamification();
+    }
+  }, [isAuthenticated]);
 
   // Handle insight actions
   const handleInsightAction = (action: string) => {
@@ -1087,80 +1103,127 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
 
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Readiness Overview */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Role Readiness</CardTitle>
-              <CardDescription>
-                {selectedRole ? selectedRole.title : "Select a target role"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center">
-              {analysis ? (
-                <>
-                  <ProgressCircle value={analysis.readinessScore} size="lg" />
-                  <div className="mt-6 w-full space-y-3">
-                    <div className="flex items-center justify-between text-sm p-3 rounded-lg bg-progress-high/10">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-progress-high" />
-                        <span>Matched Skills</span>
+          {/* Column 1: Readiness Overview & Motivation Widget */}
+          <div className="space-y-6">
+            {/* Readiness Overview */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Role Readiness</CardTitle>
+                <CardDescription>
+                  {selectedRole ? selectedRole.title : "Select a target role"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center">
+                {analysis ? (
+                  <>
+                    <ProgressCircle value={analysis.readinessScore} size="lg" />
+                    <div className="mt-6 w-full space-y-3">
+                      <div className="flex items-center justify-between text-sm p-3 rounded-lg bg-progress-high/10">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-progress-high" />
+                          <span>Matched Skills</span>
+                        </div>
+                        <span className="font-semibold">{analysis.matchedSkills.length}</span>
                       </div>
-                      <span className="font-semibold">{analysis.matchedSkills.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm p-3 rounded-lg bg-progress-medium/10">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-progress-medium" />
-                        <span>Need Improvement</span>
+                      <div className="flex items-center justify-between text-sm p-3 rounded-lg bg-progress-medium/10">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-progress-medium" />
+                          <span>Need Improvement</span>
+                        </div>
+                        <span className="font-semibold">{analysis.partialSkills.length}</span>
                       </div>
-                      <span className="font-semibold">{analysis.partialSkills.length}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm p-3 rounded-lg bg-progress-low/10">
-                      <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-progress-low" />
-                        <span>Missing Skills</span>
+                      <div className="flex items-center justify-between text-sm p-3 rounded-lg bg-progress-low/10">
+                        <div className="flex items-center gap-2">
+                          <Target className="h-4 w-4 text-progress-low" />
+                          <span>Missing Skills</span>
+                        </div>
+                        <span className="font-semibold">{analysis.missingSkills.length}</span>
                       </div>
-                      <span className="font-semibold">{analysis.missingSkills.length}</span>
                     </div>
+                    
+                    {/* Real-time Update Indicator */}
+                    {completedItems > 0 && (
+                      <div className="mt-4 w-full p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                        <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
+                          <TrendingUp className="h-4 w-4" />
+                          <span className="text-sm font-medium">Live Updates Active</span>
+                        </div>
+                        <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                          Score updates as you complete roadmap items
+                        </p>
+                      </div>
+                    )}
+                    
+                    <Link to="/analysis" className="mt-6 w-full">
+                      <Button variant="outline" className="w-full">
+                        View Full Analysis
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                      <TrendingUp className="h-10 w-10 text-muted-foreground" />
+                    </div>
+                    <p className="text-muted-foreground mb-4">
+                      Complete your skill analysis to see your readiness score
+                    </p>
+                    <Link to="/roles">
+                      <Button>
+                        Select Target Role
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
                   </div>
-                  
-                  {/* Real-time Update Indicator */}
-                  {completedItems > 0 && (
-                    <div className="mt-4 w-full p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                        <TrendingUp className="h-4 w-4" />
-                        <span className="text-sm font-medium">Live Updates Active</span>
-                      </div>
-                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                        Score updates as you complete roadmap items
-                      </p>
-                    </div>
-                  )}
-                  
-                  <Link to="/analysis" className="mt-6 w-full">
-                    <Button variant="outline" className="w-full">
-                      View Full Analysis
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="h-20 w-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                    <TrendingUp className="h-10 w-10 text-muted-foreground" />
-                  </div>
-                  <p className="text-muted-foreground mb-4">
-                    Complete your skill analysis to see your readiness score
-                  </p>
-                  <Link to="/roles">
-                    <Button>
-                      Select Target Role
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Motivation Widget */}
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+              <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+                <div>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    🔥 Motivation Engine
+                  </CardTitle>
+                  <CardDescription>Keep up the consistency</CardDescription>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <Link to="/motivation" className="text-xs text-primary hover:underline font-semibold">
+                  View All
+                </Link>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between p-3 rounded-xl bg-orange-500/5 border border-orange-500/10">
+                  <div className="flex items-center gap-2">
+                    <Flame className="h-4.5 w-4.5 text-orange-500 animate-pulse" />
+                    <span className="text-xs font-semibold">Daily Streak</span>
+                  </div>
+                  <span className="text-sm font-bold text-orange-600">
+                    {gamificationData?.streak?.currentStreak || 0} days
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-yellow-500/5 border border-yellow-500/10">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-4.5 w-4.5 text-yellow-500" />
+                    <span className="text-xs font-semibold">Level {gamificationData?.xp?.level || 1}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground font-semibold">
+                    {gamificationData?.xp?.totalXP || 0} XP
+                  </span>
+                </div>
+                <div className="flex items-center justify-between p-3 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-4.5 w-4.5 text-blue-500" />
+                    <span className="text-xs font-semibold">Achievements</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground font-semibold">
+                    {gamificationData?.achievementsSummary?.unlocked || 0} / {gamificationData?.achievementsSummary?.total || 11}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Skills Distribution */}
           <Card className="lg:col-span-2">
