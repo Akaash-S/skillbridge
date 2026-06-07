@@ -91,8 +91,14 @@ export const Roadmap = () => {
   const [quizResult, setQuizResult] = useState<{ score: number; passed: boolean; quizAttempts: number } | null>(null);
 
   // Calculate progress - MUST be declared before any useEffect that references it
-  const completedCount = roadmap.filter((item) => item.completed).length;
-  const progressPercent = roadmap.length > 0 ? Math.round((completedCount / roadmap.length) * 100) : 0;
+  const completedCount = roadmapModules.length > 0 
+    ? roadmapModules.filter((m: any) => m.quizPassed).length 
+    : roadmap.filter((item) => item.completed).length;
+    
+  const progressPercent = roadmapModules.length > 0 
+    ? Math.round((completedCount / roadmapModules.length) * 100) 
+    : roadmap.length > 0 ? Math.round((completedCount / roadmap.length) * 100) : 0;
+
 
   const completedModulesCount = roadmapModules.filter((m: any) => m.completed).length;
   const passedQuizzesCount = roadmapModules.filter((m: any) => m.quizPassed).length;

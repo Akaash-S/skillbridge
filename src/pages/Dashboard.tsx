@@ -61,6 +61,8 @@ export const Dashboard = () => {
     analysis, 
     roadmap,
     roadmapProgress,
+    roadmapModules,
+    loadRoadmapModules,
     loadFixedRoadmap
   } = useAppData();
   const { user, isAuthenticated } = useAuth();
@@ -519,6 +521,13 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
     }
   }, [selectedRole, roadmap.length, loadFixedRoadmap]);
 
+  // Load roadmap modules to accurately track progress
+  useEffect(() => {
+    if (selectedRole && roadmapModules.length === 0) {
+      loadRoadmapModules();
+    }
+  }, [selectedRole?.id, roadmapModules.length, loadRoadmapModules]);
+
   // Track role changes
   useEffect(() => {
     // Role tracking
@@ -531,8 +540,14 @@ Copy and paste these sections into your LinkedIn profile for maximum impact!`;
     }
   }, [analytics, selectedRole]);
 
-  const completedItems = roadmap.filter((item) => item.completed === true).length;
-  const roadmapProgressPercent = roadmap.length > 0 ? Math.round((completedItems / roadmap.length) * 100) : 0;
+  const completedItems = roadmapModules.length > 0 
+    ? roadmapModules.filter((m: any) => m.quizPassed).length 
+    : roadmap.filter((item) => item.completed === true).length;
+    
+  const roadmapProgressPercent = roadmapModules.length > 0 
+    ? Math.round((completedItems / roadmapModules.length) * 100) 
+    : roadmap.length > 0 ? Math.round((completedItems / roadmap.length) * 100) : 0;
+
   
   // Debug logging for roadmap progress calculation
   useEffect(() => {
