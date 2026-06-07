@@ -470,10 +470,8 @@ export const SimpleLanding = () => {
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-background/60 backdrop-blur-xl">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary to-purple-600 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-xl tracking-tight">SkillBridge</span>
+            <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 dark:hidden" />
+            <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 hidden dark:block" />
           </div>
           <div className="flex items-center gap-6">
             <ThemeToggle />
@@ -631,8 +629,8 @@ export const SimpleLanding = () => {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <span className="font-bold text-foreground">SkillBridge</span>
+              <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-6 dark:hidden" />
+              <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-6 hidden dark:block" />
               <span className="text-sm text-muted-foreground">• Bridge the gap to your dream tech role</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">

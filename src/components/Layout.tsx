@@ -75,10 +75,8 @@ export const Layout = ({ children, showNav = true }: LayoutProps) => {
                 <SheetContent side="left" className="w-[280px] p-0">
                   <SheetHeader className="p-6 border-b">
                     <SheetTitle className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                        <span className="text-primary-foreground font-bold text-lg">S</span>
-                      </div>
-                      SkillBridge
+                      <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 dark:hidden" />
+                      <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 hidden dark:block" />
                     </SheetTitle>
                   </SheetHeader>
                   <div className="flex flex-col py-4">
@@ -107,10 +105,8 @@ export const Layout = ({ children, showNav = true }: LayoutProps) => {
             )}
             
             <Link to="/dashboard" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">S</span>
-              </div>
-              <span className="font-semibold text-lg hidden xs:block">SkillBridge</span>
+              <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 dark:hidden" />
+              <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 hidden dark:block" />
             </Link>
           </div>
 

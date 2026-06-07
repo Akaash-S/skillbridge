@@ -207,10 +207,7 @@ export const Login = () => {
             transition={{ duration: 0.5 }}
             className="flex items-center gap-3"
           >
-            <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <Sparkles className="h-6 w-6 text-white" />
-            </div>
-            <span className="font-bold text-2xl">SkillBridge</span>
+            <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-10" />
           </motion.div>
           
           {/* Main Content */}
@@ -273,10 +270,8 @@ export const Login = () => {
         {/* Mobile Header */}
         <header className="lg:hidden border-b border-border p-4">
           <Link to="/" className="flex items-center gap-2">
-            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <Sparkles className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="font-semibold text-lg">SkillBridge</span>
+            <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 dark:hidden" />
+            <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 hidden dark:block" />
           </Link>
         </header>
         
