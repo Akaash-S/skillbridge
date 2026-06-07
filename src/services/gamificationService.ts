@@ -107,6 +107,11 @@ class GamificationService {
   public async getDashboard(): Promise<MotivationDashboard> {
     return apiClient.get<MotivationDashboard>('/gamification/dashboard', false);
   }
+
+  /** Sync legacy progress to gamification */
+  public async syncLegacyProgress(): Promise<{ message: string; synced: boolean; xpAdded?: number }> {
+    return apiClient.post<{ message: string; synced: boolean; xpAdded?: number }>('/gamification/sync-legacy', {});
+  }
 }
 
 export const gamificationService = GamificationService.getInstance();

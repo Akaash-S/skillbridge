@@ -86,6 +86,7 @@ export const Dashboard = () => {
   useEffect(() => {
     const fetchGamification = async () => {
       try {
+        await gamificationService.syncLegacyProgress();
         const data = await gamificationService.getDashboard();
         setGamificationData(data);
       } catch (err) {

@@ -17,6 +17,7 @@ export const Motivation = () => {
     try {
       setLoading(true);
       setError(null);
+      await gamificationService.syncLegacyProgress();
       const data = await gamificationService.getDashboard();
       setDashboardData(data);
     } catch (err: any) {
