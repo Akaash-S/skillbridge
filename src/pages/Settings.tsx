@@ -1122,25 +1122,52 @@ export const Settings = () => {
 
           {/* Account Tab */}
           <TabsContent value="account" className="space-y-6">
-            <Card>
+            <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Data Management
+                  <User className="h-5 w-5 text-primary" />
+                  Account & Data Management
                 </CardTitle>
                 <CardDescription>
-                  Export, import, and manage your account data
+                  Import/export backups, reset preferences, or manage your active session
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <Label className="text-sm font-medium">Data Actions</Label>
-                  <div className="flex flex-wrap gap-3">
-                    <Button variant="outline" onClick={handleExportSettings}>
-                      <Download className="h-4 w-4 mr-2" />
-                      Export Settings
+                
+                {/* Grid of Data Management Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Export Card */}
+                  <div className="flex flex-col justify-between p-4 border border-border rounded-xl bg-card/55 hover:border-muted-foreground/35 hover:bg-card/75 transition-all duration-300">
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                          <Download className="h-4 w-4" />
+                        </div>
+                        <Label className="text-sm font-bold text-foreground">Export Backup</Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Download your customized preferences, theme modes, notifications setup, and pace choices in a secure JSON file.
+                      </p>
+                    </div>
+                    <Button variant="outline" onClick={handleExportSettings} className="w-full gap-2 mt-auto">
+                      <Download className="h-4 w-4 text-primary" />
+                      Export Profile Settings
                     </Button>
+                  </div>
 
+                  {/* Import Card */}
+                  <div className="flex flex-col justify-between p-4 border border-border rounded-xl bg-card/55 hover:border-muted-foreground/35 hover:bg-card/75 transition-all duration-300">
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                          <Upload className="h-4 w-4" />
+                        </div>
+                        <Label className="text-sm font-bold text-foreground">Import Profile</Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Upload a previously exported `.json` configuration file to instantly restore your custom UI settings and preferences.
+                      </p>
+                    </div>
                     <div>
                       <input
                         type="file"
@@ -1150,30 +1177,47 @@ export const Settings = () => {
                         id="import-settings"
                         name="import-settings"
                       />
-                      <Button variant="outline" asChild>
-                        <label htmlFor="import-settings" className="cursor-pointer">
-                          <Upload className="h-4 w-4 mr-2" />
-                          Import Settings
+                      <Button variant="outline" asChild className="w-full gap-2 mt-auto cursor-pointer">
+                        <label htmlFor="import-settings" className="flex items-center justify-center w-full">
+                          <Upload className="h-4 w-4 text-primary mr-2" />
+                          Import JSON Settings
                         </label>
                       </Button>
                     </div>
+                  </div>
 
+                  {/* Reset Settings Card */}
+                  <div className="flex flex-col justify-between p-4 border border-border rounded-xl bg-card/55 hover:border-muted-foreground/35 hover:bg-card/75 transition-all duration-300">
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-destructive/10 text-destructive">
+                          <RotateCcw className="h-4 w-4" />
+                        </div>
+                        <Label className="text-sm font-bold text-foreground">Reset Configuration</Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Revert all visual selections, job country metrics, and difficulty ranges to default factory values. Progress remains safe.
+                      </p>
+                    </div>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="outline" disabled={resetting}>
+                        <Button variant="outline" disabled={resetting} className="w-full gap-2 mt-auto border-destructive/25 text-destructive/85 hover:bg-destructive/10 hover:text-destructive">
                           {resetting ? (
                             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                           ) : (
                             <RotateCcw className="h-4 w-4 mr-2" />
                           )}
-                          Reset Settings
+                          Reset Preferences
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Reset all settings?</AlertDialogTitle>
+                          <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                            <AlertTriangle className="h-5 w-5" />
+                            Reset settings to default?
+                          </AlertDialogTitle>
                           <AlertDialogDescription>
-                            This will reset all your preferences to default values. Your learning progress and skills will not be affected. This action cannot be undone.
+                            This will reset all your theme profiles, notification states, and custom study rates. Your custom skills lists, study logs, and roadmap nodes are NOT affected.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -1185,17 +1229,23 @@ export const Settings = () => {
                       </AlertDialogContent>
                     </AlertDialog>
                   </div>
-                </div>
 
-                <Separator />
-
-                {/* Account Actions */}
-                <div className="space-y-4">
-                  <Label className="text-sm font-medium">Account Actions</Label>
-                  <div className="flex gap-3">
-                    <Button variant="outline" onClick={() => signOut()}>
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
+                  {/* Logout Session Card */}
+                  <div className="flex flex-col justify-between p-4 border border-border rounded-xl bg-card/55 hover:border-muted-foreground/35 hover:bg-card/75 transition-all duration-300">
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                          <LogOut className="h-4 w-4" />
+                        </div>
+                        <Label className="text-sm font-bold text-foreground">Active Session</Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Disconnect from your account and log out of the current device. You will be redirected to the sign-in portal.
+                      </p>
+                    </div>
+                    <Button variant="outline" onClick={() => signOut()} className="w-full gap-2 mt-auto">
+                      <LogOut className="h-4 w-4 text-primary" />
+                      Sign Out Session
                     </Button>
                   </div>
                 </div>
