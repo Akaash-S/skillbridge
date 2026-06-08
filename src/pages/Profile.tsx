@@ -501,6 +501,7 @@ export const Profile = () => {
 
     // Job Readiness Score
     if (analysis) {
+      checkPageBreak(40);
       yPosition += 5;
       pdf.setFont('helvetica', 'bold');
       pdf.text(`Job Readiness Score: ${analysis.readinessScore}%`, margin, yPosition);
@@ -519,16 +520,17 @@ export const Profile = () => {
       yPosition += 15;
 
       // Skills breakdown
+      checkPageBreak(35);
       pdf.setFont('helvetica', 'bold');
       pdf.text('Skills Breakdown:', margin, yPosition);
       yPosition += 6;
 
       pdf.setFont('helvetica', 'normal');
-      pdf.text(`✓ Matched Skills: ${analysis.matchedSkills.length}`, margin + 5, yPosition);
+      pdf.text(`Matched Skills: ${analysis.matchedSkills.length}`, margin + 5, yPosition);
       yPosition += 5;
-      pdf.text(`⚠ Partial Skills: ${analysis.partialSkills.length}`, margin + 5, yPosition);
+      pdf.text(`Partial Skills: ${analysis.partialSkills.length}`, margin + 5, yPosition);
       yPosition += 5;
-      pdf.text(`✗ Missing Skills: ${analysis.missingSkills.length}`, margin + 5, yPosition);
+      pdf.text(`Missing Skills: ${analysis.missingSkills.length}`, margin + 5, yPosition);
       yPosition += 10;
     }
 
@@ -633,14 +635,14 @@ export const Profile = () => {
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'normal');
         
-        const status = item.completed ? '✓' : '○';
+        const status = item.completed ? '[x]' : '[ ]';
         const statusColor = item.completed ? [40, 167, 69] : [128, 128, 128];
         
         pdf.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
         pdf.text(status, margin, yPosition);
         
         pdf.setTextColor(0, 0, 0);
-        pdf.text(`${item.skillName}`, margin + 8, yPosition);
+        pdf.text(`${item.skillName}`, margin + 10, yPosition);
         pdf.text(`(${item.difficulty})`, margin + 100, yPosition);
         pdf.text(item.estimatedTime, margin + 130, yPosition);
         
@@ -657,7 +659,7 @@ export const Profile = () => {
 
     // Progress Analytics Section
     if (analysisProgress) {
-      checkPageBreak(30);
+      checkPageBreak(55);
       pdf.setFontSize(18);
       pdf.setFont('helvetica', 'bold');
       pdf.text('Progress Analytics', margin, yPosition);
