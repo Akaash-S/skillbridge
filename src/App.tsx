@@ -37,6 +37,7 @@ import { Activity } from "@/pages/Activity";
 import { Settings } from "@/pages/Settings";
 import { Courses } from "@/pages/Courses";
 import Help from "@/pages/Help";
+import { Certifications } from "@/pages/Certifications";
 import { ProctoredAssessment } from "@/pages/ProctoredAssessment";
 import NotFound from "./pages/NotFound";
 import { AIAssistant } from "@/components/AIAssistant/AIAssistant";
@@ -239,6 +240,12 @@ const App = () => (
                   <Route path="/courses" element={
                     <ProtectedRoute>
                       <Courses />
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/certifications" element={
+                    <ProtectedRoute>
+                      <Certifications />
                     </ProtectedRoute>
                   } />
                   
