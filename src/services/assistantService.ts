@@ -261,10 +261,10 @@ export async function getSuggestedPrompts(
  */
 function getDefaultPrompts(): SuggestedPrompt[] {
   return [
-    { label: '💡 Explain Simply', text: 'Explain the current topic simply' },
-    { label: '📝 Give Example', text: 'Give me a practical example' },
-    { label: '📋 Summarize', text: 'Summarize the current topic' },
-    { label: '🧠 Quiz Me', text: 'Ask me a practice question' },
-    { label: '🔄 Revise Topic', text: 'Help me revise the key concepts' },
+    { label: 'Explain Simply', text: 'Explain the current topic simply' },
+    { label: 'Give Example', text: 'Give me a practical example' },
+    { label: 'Summarize', text: 'Summarize the current topic' },
+    { label: 'Quiz Me', text: 'Ask me a practice question' },
+    { label: 'Revise Topic', text: 'Help me revise the key concepts' },
   ];
 }

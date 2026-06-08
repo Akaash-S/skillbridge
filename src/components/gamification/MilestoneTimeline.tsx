@@ -1,4 +1,4 @@
-import { CheckCircle2, Lock, PlayCircle, Star } from "lucide-react";
+import { CheckCircle2, Lock, PlayCircle, Star, Map } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +25,7 @@ export const MilestoneTimeline = ({ modules, className }: MilestoneTimelineProps
     <Card className={cn("border-border/50 bg-card/50 backdrop-blur-sm", className)}>
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
-          🗺️ Milestone Timeline
+          <Map className="h-5 w-5 text-primary" /> Milestone Timeline
         </CardTitle>
       </CardHeader>
       <CardContent className="relative pl-6 sm:pl-8">

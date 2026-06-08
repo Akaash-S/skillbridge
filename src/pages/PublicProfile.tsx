@@ -141,8 +141,10 @@ export const PublicProfile = () => {
 
         {/* Top Navbar Brand */}
         <div className="flex items-center justify-between border-b border-border/40 pb-5">
-          <Link to="/" className="flex items-center gap-2 font-black text-xl tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            ⚡ SkillBridge
+          <Link to="/" className="flex items-center gap-2">
+            <img src="/skillbridge-logo-light.png" alt="SkillBridge Logo" className="h-8 w-8 rounded-full dark:hidden" />
+            <img src="/skillbridge-logo-dark.png" alt="SkillBridge Logo" className="h-8 w-8 rounded-full hidden dark:block" />
+            <span className="font-extrabold text-xl tracking-tight text-[#4169e1] dark:text-white">SkillBridge</span>
           </Link>
           <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-semibold py-1">
             Shared Achievement Profile
@@ -304,8 +306,8 @@ export const PublicProfile = () => {
             <CardContent className="p-0">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div className="flex items-center gap-3 p-3 bg-muted/20 border border-border/30 rounded-xl">
-                  <div className="h-10 w-10 bg-yellow-500/10 text-yellow-600 rounded-xl flex items-center justify-center font-bold text-lg border border-yellow-500/20">
-                    📘
+                  <div className="h-10 w-10 bg-yellow-500/10 text-yellow-600 rounded-xl flex items-center justify-center border border-yellow-500/20">
+                    <BookOpen className="h-5 w-5" />
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-foreground">First Steps</h4>
@@ -314,8 +316,8 @@ export const PublicProfile = () => {
                 </div>
 
                 <div className="flex items-center gap-3 p-3 bg-muted/20 border border-border/30 rounded-xl">
-                  <div className="h-10 w-10 bg-yellow-500/10 text-yellow-600 rounded-xl flex items-center justify-center font-bold text-lg border border-yellow-500/20">
-                    ✅
+                  <div className="h-10 w-10 bg-yellow-500/10 text-yellow-600 rounded-xl flex items-center justify-center border border-yellow-500/20">
+                    <CheckCircle2 className="h-5 w-5" />
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-foreground">Quiz Whiz</h4>
@@ -324,8 +326,8 @@ export const PublicProfile = () => {
                 </div>
 
                 <div className="flex items-center gap-3 p-3 bg-muted/20 border border-border/30 rounded-xl">
-                  <div className="h-10 w-10 bg-yellow-500/10 text-yellow-600 rounded-xl flex items-center justify-center font-bold text-lg border border-yellow-500/20">
-                    💯
+                  <div className="h-10 w-10 bg-yellow-500/10 text-yellow-600 rounded-xl flex items-center justify-center border border-yellow-500/20">
+                    <Award className="h-5 w-5" />
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-foreground">Perfect Score</h4>
@@ -334,8 +336,8 @@ export const PublicProfile = () => {
                 </div>
 
                 <div className="flex items-center gap-3 p-3 bg-muted/20 border border-border/30 rounded-xl">
-                  <div className="h-10 w-10 bg-yellow-500/10 text-yellow-600 rounded-xl flex items-center justify-center font-bold text-lg border border-yellow-500/20">
-                    ⚡
+                  <div className="h-10 w-10 bg-yellow-500/10 text-yellow-600 rounded-xl flex items-center justify-center border border-yellow-500/20">
+                    <Zap className="h-5 w-5" />
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-foreground">XP Hunter</h4>

@@ -17,6 +17,7 @@ export const MotivationDashboard = ({ data, roadmapModules = [], className }: Mo
   const streak = data?.streak || { currentStreak: 0, bestStreak: 0, lastActivityDate: null };
   const xp = data?.xp || { 
     totalXP: 0, weeklyXP: 0, monthlyXP: 0, 
+    level: 1, levelTitle: 'Beginner',
     levelInfo: { level: 1, title: 'Beginner', currentLevelXP: 0, progressToNext: 0, nextLevel: null, nextTitle: null, nextLevelXP: null },
     modulesCompleted: 0, quizzesCompleted: 0, roadmapsCompleted: 0 
   };
@@ -75,12 +76,19 @@ export const MotivationDashboard = ({ data, roadmapModules = [], className }: Mo
                   <p className="text-xs text-muted-foreground mt-0.5">Day Streak</p>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground text-center italic">
-                {streak.currentStreak > 0 
-                  ? "🔥 Keep your streak alive! Learn something today."
-                  : "🚀 Complete a module or pass a quiz today to start a streak!"
-                }
-              </p>
+              <div className="text-xs text-muted-foreground flex items-center justify-center gap-1.5 italic">
+                {streak.currentStreak > 0 ? (
+                  <>
+                    <Flame className="h-3.5 w-3.5 text-orange-500 animate-pulse" />
+                    <span>Keep your streak alive! Learn something today.</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="h-3.5 w-3.5 text-yellow-500" />
+                    <span>Complete a module or pass a quiz today to start a streak!</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 

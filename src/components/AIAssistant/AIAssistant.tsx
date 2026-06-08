@@ -125,25 +125,25 @@ export const AIAssistant: React.FC = () => {
 
     if (currentModule) {
       prompts.push(
-        { label: '💡 Explain Simply', text: `Explain ${currentModule} in simple terms` },
-        { label: '📝 Give Example', text: `Give me a practical example of ${currentModule}` },
-        { label: '📋 Summarize', text: `Summarize what I need to know about ${currentModule}` },
-        { label: '🧠 Quiz Me', text: `Ask me a practice question about ${currentModule}` },
-        { label: '🔄 Revise Topic', text: `Help me revise the key concepts of ${currentModule}` },
+        { label: 'Explain Simply', text: `Explain ${currentModule} in simple terms` },
+        { label: 'Give Example', text: `Give me a practical example of ${currentModule}` },
+        { label: 'Summarize', text: `Summarize what I need to know about ${currentModule}` },
+        { label: 'Quiz Me', text: `Ask me a practice question about ${currentModule}` },
+        { label: 'Revise Topic', text: `Help me revise the key concepts of ${currentModule}` },
       );
     } else {
       prompts.push(
-        { label: '💡 Explain Simply', text: 'Explain the current topic simply' },
-        { label: '📝 Give Example', text: 'Give me a practical example' },
-        { label: '📋 Summarize', text: 'Summarize the current topic' },
-        { label: '🧠 Quiz Me', text: 'Ask me a practice question' },
-        { label: '🔄 Revise Topic', text: 'Help me revise the key concepts' },
+        { label: 'Explain Simply', text: 'Explain the current topic simply' },
+        { label: 'Give Example', text: 'Give me a practical example' },
+        { label: 'Summarize', text: 'Summarize the current topic' },
+        { label: 'Quiz Me', text: 'Ask me a practice question' },
+        { label: 'Revise Topic', text: 'Help me revise the key concepts' },
       );
     }
 
     if (currentRole) {
       prompts.push({
-        label: '🗺️ Roadmap Help',
+        label: 'Roadmap Help',
         text: `What should I focus on next in my ${currentRole} roadmap?`,
       });
     }

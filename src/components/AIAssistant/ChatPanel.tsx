@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Bot, X, Trash2, Send, Briefcase, BookOpen, MonitorPlay } from 'lucide-react';
+import { Bot, X, Trash2, Send, Briefcase, BookOpen, MonitorPlay, Lightbulb, FileText, ClipboardList, HelpCircle, RefreshCw, Map } from 'lucide-react';
 import { ChatMessage } from './ChatMessage';
 import type { SuggestedPrompt } from '@/services/assistantService';
 
@@ -210,17 +210,38 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
         {/* ── Suggested Prompts ── */}
         {showSuggestions && suggestedPrompts.length > 0 && (
-          <div className="ai-suggested-prompts">
-            {suggestedPrompts.map((prompt, i) => (
-              <button
-                key={i}
-                className="ai-suggested-prompt-btn"
-                onClick={() => onPromptClick(prompt.text)}
-                disabled={isStreaming || isAtLimit}
-              >
-                {prompt.label}
-              </button>
-            ))}
+          <div className="ai-suggested-prompts flex flex-wrap gap-2">
+            {suggestedPrompts.map((prompt, i) => {
+              // Sanitize the label of any emoji prefix
+              const cleanLabel = prompt.label.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}]️?\s*/gu, '').trim();
+              
+              let IconNode = null;
+              if (cleanLabel.toLowerCase().includes('explain')) {
+                IconNode = <Lightbulb size={14} className="text-yellow-500 mr-1.5 shrink-0" />;
+              } else if (cleanLabel.toLowerCase().includes('example')) {
+                IconNode = <FileText size={14} className="text-blue-500 mr-1.5 shrink-0" />;
+              } else if (cleanLabel.toLowerCase().includes('summarize')) {
+                IconNode = <ClipboardList size={14} className="text-emerald-500 mr-1.5 shrink-0" />;
+              } else if (cleanLabel.toLowerCase().includes('quiz')) {
+                IconNode = <HelpCircle size={14} className="text-purple-500 mr-1.5 shrink-0" />;
+              } else if (cleanLabel.toLowerCase().includes('revise')) {
+                IconNode = <RefreshCw size={14} className="text-indigo-500 mr-1.5 shrink-0" />;
+              } else if (cleanLabel.toLowerCase().includes('roadmap')) {
+                IconNode = <Map size={14} className="text-orange-500 mr-1.5 shrink-0" />;
+              }
+
+              return (
+                <button
+                  key={i}
+                  className="ai-suggested-prompt-btn flex items-center inline-flex px-3 py-1.5 text-xs rounded-lg border border-border bg-card hover:bg-muted transition-colors"
+                  onClick={() => onPromptClick(prompt.text)}
+                  disabled={isStreaming || isAtLimit}
+                >
+                  {IconNode}
+                  <span>{cleanLabel}</span>
+                </button>
+              );
+            })}
           </div>
         )}
 

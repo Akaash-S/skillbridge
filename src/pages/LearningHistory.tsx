@@ -2,7 +2,7 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAppData } from "@/context/AppDataContext";
-import { History, Calendar, Clock, Award, RefreshCw, Filter } from "lucide-react";
+import { History, Calendar, Clock, Award, RefreshCw, Filter, Target, Star, Trophy, Map, Gem } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
@@ -36,11 +36,11 @@ export const LearningHistory = () => {
 
   // Badges earned
   const badges = [
-    { id: "first-skill", name: "First Steps", description: "Added your first skill", earned: userSkills.length > 0, icon: "🎯" },
-    { id: "five-skills", name: "Skill Collector", description: "Added 5 skills", earned: userSkills.length >= 5, icon: "⭐" },
-    { id: "ten-skills", name: "Knowledge Seeker", description: "Added 10 skills", earned: userSkills.length >= 10, icon: "🏆" },
-    { id: "roadmap-start", name: "Path Finder", description: "Started a learning roadmap", earned: roadmap.length > 0, icon: "🗺️" },
-    { id: "advanced", name: "Expert", description: "Reached advanced in any skill", earned: userSkills.some(s => s.proficiency === "advanced"), icon: "💎" },
+    { id: "first-skill", name: "First Steps", description: "Added your first skill", earned: userSkills.length > 0, icon: Target },
+    { id: "five-skills", name: "Skill Collector", description: "Added 5 skills", earned: userSkills.length >= 5, icon: Star },
+    { id: "ten-skills", name: "Knowledge Seeker", description: "Added 10 skills", earned: userSkills.length >= 10, icon: Trophy },
+    { id: "roadmap-start", name: "Path Finder", description: "Started a learning roadmap", earned: roadmap.length > 0, icon: Map },
+    { id: "advanced", name: "Expert", description: "Reached advanced in any skill", earned: userSkills.some(s => s.proficiency === "advanced"), icon: Gem },
   ];
 
   const formatDate = (dateString: string) => {
@@ -91,25 +91,28 @@ export const LearningHistory = () => {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-3">
-              {badges.map(badge => (
-                <div
-                  key={badge.id}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full border ${
-                    badge.earned 
-                      ? "bg-primary/10 border-primary/30" 
-                      : "bg-muted/50 border-muted opacity-50"
-                  }`}
-                >
-                  <span className="text-xl">{badge.icon}</span>
-                  <div>
-                    <p className="text-sm font-medium">{badge.name}</p>
-                    <p className="text-xs text-muted-foreground">{badge.description}</p>
+              {badges.map(badge => {
+                const IconComponent = badge.icon;
+                return (
+                  <div
+                    key={badge.id}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full border ${
+                      badge.earned 
+                        ? "bg-primary/10 border-primary/30 text-primary" 
+                        : "bg-muted/50 border-muted opacity-50 text-muted-foreground"
+                    }`}
+                  >
+                    <IconComponent className="h-5 w-5" />
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{badge.name}</p>
+                      <p className="text-xs text-muted-foreground">{badge.description}</p>
+                    </div>
+                    {badge.earned && (
+                      <Badge className="bg-accent text-xs text-accent-foreground">Earned</Badge>
+                    )}
                   </div>
-                  {badge.earned && (
-                    <Badge className="bg-accent text-xs">Earned</Badge>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
