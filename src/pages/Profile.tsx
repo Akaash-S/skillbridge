@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { apiClient } from "@/services/apiClient";
 import jsPDF from 'jspdf';
+import { useTheme } from "next-themes";
 import { 
   User, 
   Mail, 
@@ -35,7 +36,12 @@ import {
   CheckCircle2,
   Clock,
   Star,
-  Award
+  Award,
+  Plus,
+  X,
+  Sun,
+  Moon,
+  Monitor
 } from "lucide-react";
 
 interface UserProfile {
@@ -71,12 +77,16 @@ export const Profile = () => {
   const { user } = useAuth();
   const { userSkills, selectedRole, analysis, roadmap, analysisProgress } = useAppData();
   const pdfRef = useRef<HTMLDivElement>(null);
+  const { theme, setTheme } = useTheme();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // State management
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [exportingPDF, setExportingPDF] = useState(false);
+  const [newInterest, setNewInterest] = useState("");
+  const [showThemeDialog, setShowThemeDialog] = useState(false);
   
   // Data state
   const [profileData, setProfileData] = useState<UserProfile>({
@@ -99,6 +109,101 @@ export const Profile = () => {
     completedMilestones: 0,
     recentActivityCount: 0
   });
+
+  const handleUpdateTheme = async (newTheme: 'light' | 'dark' | 'system') => {
+    try {
+      setTheme(newTheme);
+      await apiClient.put('/settings', { theme: newTheme });
+      toast.success(`Theme updated to ${newTheme}!`);
+      setShowThemeDialog(false);
+    } catch (error) {
+      console.error('Error updating theme settings:', error);
+      toast.error('Failed to update theme settings');
+    }
+  };
+
+  const addInterest = () => {
+    if (!newInterest.trim()) return;
+    const trimmed = newInterest.trim();
+    if (profileData.interests.includes(trimmed)) {
+      toast.warning('Interest already exists');
+      return;
+    }
+    setProfileData(prev => ({
+      ...prev,
+      interests: [...prev.interests, trimmed]
+    }));
+    setNewInterest('');
+  };
+
+  const removeInterest = (idxToRemove: number) => {
+    setProfileData(prev => ({
+      ...prev,
+      interests: prev.interests.filter((_, idx) => idx !== idxToRemove)
+    }));
+  };
+
+  const handleImportJSON = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setLoading(true);
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (!data.profile || !data.skills) {
+        throw new Error("Invalid export file. Required sections are missing.");
+      }
+
+      // Restore profile data
+      const profile = data.profile;
+      const updateProfileData = {
+        name: profile.name,
+        education: profile.education,
+        experience: profile.experience,
+        interests: profile.interests || [],
+        notifications: profile.notifications ?? true,
+        weeklyGoal: profile.weeklyGoal || 10,
+        bio: profile.bio || "",
+        location: profile.location || ""
+      };
+
+      await apiClient.put('/users/profile', updateProfileData);
+
+      // Restore user state (skills, targetRole, analysis, roadmapProgress)
+      const userStatePayload = {
+        skills: data.skills || [],
+        targetRole: data.targetRole || null,
+        analysis: data.analysis || null,
+        roadmapProgress: data.roadmapProgress || {
+          totalItems: 0,
+          completedItems: 0,
+          progress: 0,
+          roadmapItems: [],
+          lastUpdated: new Date().toISOString()
+        }
+      };
+
+      await apiClient.post('/user-state', userStatePayload);
+
+      toast.success("Profile and learning progress imported successfully!");
+      
+      // Clear cache and reload data
+      apiClient.clearCache('/users');
+      await loadProfileData();
+
+    } catch (error: any) {
+      console.error("Import error:", error);
+      toast.error(error.message || "Failed to import profile data. Please check the JSON format.");
+    } finally {
+      setLoading(false);
+      // Reset input value so it triggers change event on subsequent select
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   // Load data on component mount
   useEffect(() => {
@@ -796,6 +901,61 @@ export const Profile = () => {
                     placeholder="Tell us about yourself and your career goals..."
                   />
                 </div>
+                
+                <div className="space-y-2">
+                  <Label>Interests & Focus Areas</Label>
+                  {isEditing ? (
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[42px] bg-muted/20">
+                        {profileData.interests.length === 0 ? (
+                          <span className="text-sm text-muted-foreground self-center px-1">No interests added yet.</span>
+                        ) : (
+                          profileData.interests.map((interest, idx) => (
+                            <Badge key={idx} variant="secondary" className="gap-1 px-2.5 py-1 text-sm bg-secondary/80">
+                              {interest}
+                              <button 
+                                type="button"
+                                onClick={() => removeInterest(idx)}
+                                className="text-muted-foreground hover:text-foreground rounded-full hover:bg-muted p-0.5"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          value={newInterest}
+                          onChange={(e) => setNewInterest(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addInterest();
+                            }
+                          }}
+                          placeholder="Type an interest and press Enter..."
+                          className="flex-1"
+                        />
+                        <Button type="button" onClick={addInterest} variant="outline" size="sm" className="px-3 gap-1">
+                          <Plus className="h-4 w-4" /> Add
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2 py-1">
+                      {profileData.interests.length === 0 ? (
+                        <p className="text-sm text-muted-foreground italic">No interests specified yet.</p>
+                      ) : (
+                        profileData.interests.map((interest, idx) => (
+                          <Badge key={idx} variant="outline" className="px-2.5 py-1 text-sm">
+                            {interest}
+                          </Badge>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 <div className="grid sm:grid-cols-3 gap-4">
                   <div>
@@ -967,30 +1127,37 @@ export const Profile = () => {
                   )}
                   {exportingPDF ? 'Generating PDF...' : 'Export PDF Report'}
                 </Button>
-                {/* <Button 
+                <Button 
                   variant="outline" 
                   className="w-full justify-start" 
                   onClick={handleExportJSON}
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Export JSON Data
-                </Button> */}
-                {/* <Button 
+                </Button>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept=".json" 
+                  onChange={handleImportJSON} 
+                />
+                <Button 
                   variant="outline" 
                   className="w-full justify-start" 
-                  onClick={() => toast.info("Import feature coming soon!")}
+                  onClick={() => fileInputRef.current?.click()}
                 >
                   <Upload className="h-4 w-4 mr-2" />
-                  Import Data
-                </Button> */}
-                {/* <Button 
+                  Import Profile JSON
+                </Button>
+                <Button 
                   variant="outline" 
                   className="w-full justify-start" 
-                  onClick={() => toast.info("Theme customization coming soon!")}
+                  onClick={() => setShowThemeDialog(true)}
                 >
                   <Palette className="h-4 w-4 mr-2" />
                   Customize Theme
-                </Button> */}
+                </Button>
               </CardContent>
             </Card>
 
@@ -1014,6 +1181,50 @@ export const Profile = () => {
           </div>
         </div>
       </div>
+      
+      {/* Theme customization dialog */}
+      {showThemeDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-2xl max-w-sm w-full p-6 space-y-6 shadow-2xl relative">
+            <button 
+              onClick={() => setShowThemeDialog(false)}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground rounded-full p-1 hover:bg-muted"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold">Customize Theme</h3>
+              <p className="text-sm text-muted-foreground">Select your preferred visual mode.</p>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <button 
+                onClick={() => handleUpdateTheme('light')}
+                className={`flex flex-col items-center justify-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all
+                  ${theme === 'light' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+              >
+                <Sun className={`h-6 w-6 ${theme === 'light' ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="text-sm font-semibold">Light</span>
+              </button>
+              <button 
+                onClick={() => handleUpdateTheme('dark')}
+                className={`flex flex-col items-center justify-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all
+                  ${theme === 'dark' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+              >
+                <Moon className={`h-6 w-6 ${theme === 'dark' ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="text-sm font-semibold">Dark</span>
+              </button>
+              <button 
+                onClick={() => handleUpdateTheme('system')}
+                className={`flex flex-col items-center justify-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all
+                  ${theme === 'system' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+              >
+                <Monitor className={`h-6 w-6 ${theme === 'system' ? 'text-primary' : 'text-muted-foreground'}`} />
+                <span className="text-sm font-semibold">System</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 };
