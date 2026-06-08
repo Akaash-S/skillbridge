@@ -30,7 +30,7 @@ export const MilestoneTimeline = ({ modules, className }: MilestoneTimelineProps
       </CardHeader>
       <CardContent className="relative pl-6 sm:pl-8">
         {/* Vertical Line */}
-        <div className="absolute left-[29px] sm:left-[37px] top-6 bottom-6 w-0.5 bg-border/60" />
+        <div className="absolute left-[37px] sm:left-[49px] top-6 bottom-6 w-0.5 bg-border/60" />
 
         <div className="space-y-8">
           {modules.map((module, idx) => {
