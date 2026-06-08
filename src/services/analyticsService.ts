@@ -231,16 +231,7 @@ export class AnalyticsService {
         priority: 'medium'
       });
     }
-    
-    if (progressPercent > 50 && learningVelocity > 1) {
-      insights.push({
-        type: 'success',
-        title: 'Excellent Progress!',
-        message: 'You\'re ahead of schedule and learning at a great pace. Keep it up!',
-        action: 'Consider mentoring others',
-        priority: 'low'
-      });
-    }
+
     
     if (progressPercent > 80) {
       insights.push({
