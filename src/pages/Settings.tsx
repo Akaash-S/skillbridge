@@ -15,6 +15,7 @@ import { useAuth } from "@/context/AuthContext";
 import { apiClient } from "@/services/apiClient";
 import { useTheme } from "next-themes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Palette,
   Bell,
@@ -624,7 +625,7 @@ export const Settings = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Brain className="h-5 w-5" />
+                  <Brain className="h-5 w-5 text-primary" />
                   Learning Preferences
                 </CardTitle>
                 <CardDescription>
@@ -634,24 +635,47 @@ export const Settings = () => {
               <CardContent className="space-y-6">
                 {/* Learning Pace */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">Learning Pace</Label>
+                  <Label className="text-sm font-semibold">Learning Pace</Label>
                   <p className="text-xs text-muted-foreground">Affects roadmap timelines and recommendations</p>
                   <RadioGroup
                     value={settings?.learningPace || 'balanced'}
-                    onValueChange={(value) => updateSetting('learningPace', value)}
-                    className="flex gap-4"
+                    onValueChange={(value) => updateSetting('learningPace', value as any)}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-4"
                   >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="slow" id="slow" />
-                      <Label htmlFor="slow" className="cursor-pointer">Relaxed</Label>
+                      <RadioGroupItem value="slow" id="slow" className="sr-only" />
+                      <Label
+                        htmlFor="slow"
+                        className={`flex flex-col items-center justify-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all w-full text-center
+                          ${(settings?.learningPace || 'balanced') === 'slow' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+                      >
+                        <span className="font-semibold text-foreground">Relaxed</span>
+                        <span className="text-[10px] text-muted-foreground">Slower timeline, ideal for part-time learners</span>
+                      </Label>
                     </div>
+
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="balanced" id="balanced" />
-                      <Label htmlFor="balanced" className="cursor-pointer">Balanced</Label>
+                      <RadioGroupItem value="balanced" id="balanced" className="sr-only" />
+                      <Label
+                        htmlFor="balanced"
+                        className={`flex flex-col items-center justify-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all w-full text-center
+                          ${(settings?.learningPace || 'balanced') === 'balanced' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+                      >
+                        <span className="font-semibold text-foreground">Balanced</span>
+                        <span className="text-[10px] text-muted-foreground">Steady progression, recommended for most users</span>
+                      </Label>
                     </div>
+
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="fast" id="fast" />
-                      <Label htmlFor="fast" className="cursor-pointer">Fast-paced</Label>
+                      <RadioGroupItem value="fast" id="fast" className="sr-only" />
+                      <Label
+                        htmlFor="fast"
+                        className={`flex flex-col items-center justify-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all w-full text-center
+                          ${(settings?.learningPace || 'balanced') === 'fast' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+                      >
+                        <span className="font-semibold text-foreground">Fast-paced</span>
+                        <span className="text-[10px] text-muted-foreground">Aggressive timeline, ideal for full-time bootcamps</span>
+                      </Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -661,7 +685,7 @@ export const Settings = () => {
                 {/* Weekly Goal */}
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <Label className="text-sm font-medium">Weekly Learning Goal</Label>
+                    <Label className="text-sm font-semibold">Weekly Learning Goal</Label>
                     <span className="text-sm font-medium text-primary">{settings?.preferences?.weeklyGoal || 10} hours</span>
                   </div>
                   <p className="text-xs text-muted-foreground">Target hours per week for skill development</p>
@@ -683,24 +707,47 @@ export const Settings = () => {
 
                 {/* Difficulty Preference */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">Skill Difficulty Preference</Label>
+                  <Label className="text-sm font-semibold">Skill Difficulty Preference</Label>
                   <p className="text-xs text-muted-foreground">How challenging should new skills be?</p>
                   <RadioGroup
                     value={settings?.preferences?.difficultyPreference || 'adaptive'}
-                    onValueChange={(value) => updateSetting('preferences.difficultyPreference', value)}
-                    className="flex gap-4"
+                    onValueChange={(value) => updateSetting('preferences.difficultyPreference', value as any)}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-4"
                   >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="easy" id="easy" />
-                      <Label htmlFor="easy" className="cursor-pointer">Start Easy</Label>
+                      <RadioGroupItem value="easy" id="easy" className="sr-only" />
+                      <Label
+                        htmlFor="easy"
+                        className={`flex flex-col items-center justify-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all w-full text-center
+                          ${(settings?.preferences?.difficultyPreference || 'adaptive') === 'easy' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+                      >
+                        <span className="font-semibold text-foreground">Start Easy</span>
+                        <span className="text-[10px] text-muted-foreground">Begin with fundamental topics and build up confidence</span>
+                      </Label>
                     </div>
+
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="adaptive" id="adaptive" />
-                      <Label htmlFor="adaptive" className="cursor-pointer">Adaptive</Label>
+                      <RadioGroupItem value="adaptive" id="adaptive" className="sr-only" />
+                      <Label
+                        htmlFor="adaptive"
+                        className={`flex flex-col items-center justify-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all w-full text-center
+                          ${(settings?.preferences?.difficultyPreference || 'adaptive') === 'adaptive' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+                      >
+                        <span className="font-semibold text-foreground">Adaptive AI</span>
+                        <span className="text-[10px] text-muted-foreground">Difficulty adjusts dynamically based on your quiz answers</span>
+                      </Label>
                     </div>
+
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="challenging" id="challenging" />
-                      <Label htmlFor="challenging" className="cursor-pointer">Challenging</Label>
+                      <RadioGroupItem value="challenging" id="challenging" className="sr-only" />
+                      <Label
+                        htmlFor="challenging"
+                        className={`flex flex-col items-center justify-center gap-2 p-4 border-2 rounded-xl cursor-pointer transition-all w-full text-center
+                          ${(settings?.preferences?.difficultyPreference || 'adaptive') === 'challenging' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+                      >
+                        <span className="font-semibold text-foreground">Challenging</span>
+                        <span className="text-[10px] text-muted-foreground">Jump straight into intermediate and advanced scenarios</span>
+                      </Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -711,7 +758,7 @@ export const Settings = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
+                  <Target className="h-5 w-5 text-primary" />
                   Career Focus & Goals
                 </CardTitle>
                 <CardDescription>
@@ -721,19 +768,17 @@ export const Settings = () => {
               <CardContent className="space-y-6">
                 {/* Job Countries */}
                 <div className="space-y-3">
-                  <Label className="text-sm font-medium">Job Search Countries</Label>
+                  <Label className="text-sm font-semibold">Job Search Countries</Label>
                   <p className="text-xs text-muted-foreground">Countries to search for job opportunities</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {countries.map((country) => (
-                      <div key={country.code} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
+                      <div key={country.code} className="flex items-center space-x-3 p-3 border rounded-xl bg-card/40 hover:bg-card/85 transition-colors">
+                        <Checkbox
                           id={country.code}
                           checked={settings?.jobCountries?.includes(country.code) || false}
-                          onChange={() => toggleJobCountry(country.code)}
-                          className="rounded border-gray-300"
+                          onCheckedChange={() => toggleJobCountry(country.code)}
                         />
-                        <Label htmlFor={country.code} className="cursor-pointer text-sm">
+                        <Label htmlFor={country.code} className="cursor-pointer text-sm font-medium text-foreground w-full">
                           {country.name}
                         </Label>
                       </div>
