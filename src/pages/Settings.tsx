@@ -41,7 +41,9 @@ import {
   Trash2,
   Briefcase,
   Clock,
-  BarChart3
+  BarChart3,
+  Lock,
+  Eye
 } from "lucide-react";
 import {
   AlertDialog,
@@ -911,33 +913,75 @@ export const Settings = () => {
 
           {/* Privacy Tab */}
           <TabsContent value="privacy" className="space-y-6">
-            <Card>
+            <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
+                  <Shield className="h-5 w-5 text-primary" />
                   Privacy & Data Control
                 </CardTitle>
                 <CardDescription>
-                  Manage your data and privacy settings
+                  Manage your data, profile sharing, and visibility preferences
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Profile Visibility */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Profile Visibility</Label>
-                  <p className="text-xs text-muted-foreground">Control who can see your profile information</p>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <User className="h-4 w-4 text-primary" />
+                      Profile Visibility
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Control who can view your main profile card, display name, avatar, and active status.
+                    </p>
+                  </div>
                   <RadioGroup
                     value={settings?.privacy?.profileVisibility || 'private'}
-                    onValueChange={(value) => updateSetting('privacy.profileVisibility', value)}
-                    className="flex gap-4"
+                    onValueChange={(value) => updateSetting('privacy.profileVisibility', value as any)}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
                   >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="private" id="profile-private" />
-                      <Label htmlFor="profile-private" className="cursor-pointer">Private</Label>
+                      <RadioGroupItem value="private" id="profile-private" className="sr-only" />
+                      <Label
+                        htmlFor="profile-private"
+                        className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 w-full hover:bg-card/85
+                          ${(settings?.privacy?.profileVisibility || 'private') === 'private'
+                            ? 'border-primary bg-primary/5 shadow-md scale-[1.01]'
+                            : 'border-muted bg-card/40 hover:border-muted-foreground/30'}`}
+                      >
+                        <div className={`p-2 rounded-lg mt-0.5 transition-colors duration-300
+                          ${(settings?.privacy?.profileVisibility || 'private') === 'private' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                          <Lock className="h-4 w-4" />
+                        </div>
+                        <div className="text-left">
+                          <span className="font-semibold text-sm text-foreground block">Private Mode</span>
+                          <span className="text-[11px] text-muted-foreground block mt-1">
+                            Only you can view your profile details. External sharing is disabled.
+                          </span>
+                        </div>
+                      </Label>
                     </div>
+
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="public" id="profile-public" />
-                      <Label htmlFor="profile-public" className="cursor-pointer">Public</Label>
+                      <RadioGroupItem value="public" id="profile-public" className="sr-only" />
+                      <Label
+                        htmlFor="profile-public"
+                        className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 w-full hover:bg-card/85
+                          ${(settings?.privacy?.profileVisibility || 'private') === 'public'
+                            ? 'border-primary bg-primary/5 shadow-md scale-[1.01]'
+                            : 'border-muted bg-card/40 hover:border-muted-foreground/30'}`}
+                      >
+                        <div className={`p-2 rounded-lg mt-0.5 transition-colors duration-300
+                          ${(settings?.privacy?.profileVisibility || 'private') === 'public' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                          <Globe className="h-4 w-4" />
+                        </div>
+                        <div className="text-left">
+                          <span className="font-semibold text-sm text-foreground block">Public Profile</span>
+                          <span className="text-[11px] text-muted-foreground block mt-1">
+                            Anyone can view your profile card. Enables sharing with recruitment partners via unique link.
+                          </span>
+                        </div>
+                      </Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -945,21 +989,63 @@ export const Settings = () => {
                 <Separator />
 
                 {/* Skills Visibility */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Skills Visibility</Label>
-                  <p className="text-xs text-muted-foreground">Control who can see your skills and progress</p>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <Brain className="h-4 w-4 text-primary" />
+                      Skills Visibility
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Control who can view your custom skill trees, currently unlocked nodes, and levels.
+                    </p>
+                  </div>
                   <RadioGroup
                     value={settings?.privacy?.skillsVisibility || 'private'}
-                    onValueChange={(value) => updateSetting('privacy.skillsVisibility', value)}
-                    className="flex gap-4"
+                    onValueChange={(value) => updateSetting('privacy.skillsVisibility', value as any)}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
                   >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="private" id="skills-private" />
-                      <Label htmlFor="skills-private" className="cursor-pointer">Private</Label>
+                      <RadioGroupItem value="private" id="skills-private" className="sr-only" />
+                      <Label
+                        htmlFor="skills-private"
+                        className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 w-full hover:bg-card/85
+                          ${(settings?.privacy?.skillsVisibility || 'private') === 'private'
+                            ? 'border-primary bg-primary/5 shadow-md scale-[1.01]'
+                            : 'border-muted bg-card/40 hover:border-muted-foreground/30'}`}
+                      >
+                        <div className={`p-2 rounded-lg mt-0.5 transition-colors duration-300
+                          ${(settings?.privacy?.skillsVisibility || 'private') === 'private' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                          <Lock className="h-4 w-4" />
+                        </div>
+                        <div className="text-left">
+                          <span className="font-semibold text-sm text-foreground block">Private Mode</span>
+                          <span className="text-[11px] text-muted-foreground block mt-1">
+                            Only you can see your custom skill trees and achieved badges.
+                          </span>
+                        </div>
+                      </Label>
                     </div>
+
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="public" id="skills-public" />
-                      <Label htmlFor="skills-public" className="cursor-pointer">Public</Label>
+                      <RadioGroupItem value="public" id="skills-public" className="sr-only" />
+                      <Label
+                        htmlFor="skills-public"
+                        className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 w-full hover:bg-card/85
+                          ${(settings?.privacy?.skillsVisibility || 'private') === 'public'
+                            ? 'border-primary bg-primary/5 shadow-md scale-[1.01]'
+                            : 'border-muted bg-card/40 hover:border-muted-foreground/30'}`}
+                      >
+                        <div className={`p-2 rounded-lg mt-0.5 transition-colors duration-300
+                          ${(settings?.privacy?.skillsVisibility || 'private') === 'public' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                          <Eye className="h-4 w-4" />
+                        </div>
+                        <div className="text-left">
+                          <span className="font-semibold text-sm text-foreground block">Publicly Visible</span>
+                          <span className="text-[11px] text-muted-foreground block mt-1">
+                            Display your unlocked skills on your public profile page for recruiters and peers.
+                          </span>
+                        </div>
+                      </Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -967,21 +1053,63 @@ export const Settings = () => {
                 <Separator />
 
                 {/* Progress Visibility */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-medium">Progress Visibility</Label>
-                  <p className="text-xs text-muted-foreground">Control who can see your learning progress</p>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4 text-primary" />
+                      Progress & Activity Visibility
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Control who can view your motivation dashboard, XP logs, study time graphs, and learning streak statistics.
+                    </p>
+                  </div>
                   <RadioGroup
                     value={settings?.privacy?.progressVisibility || 'private'}
-                    onValueChange={(value) => updateSetting('privacy.progressVisibility', value)}
-                    className="flex gap-4"
+                    onValueChange={(value) => updateSetting('privacy.progressVisibility', value as any)}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
                   >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="private" id="progress-private" />
-                      <Label htmlFor="progress-private" className="cursor-pointer">Private</Label>
+                      <RadioGroupItem value="private" id="progress-private" className="sr-only" />
+                      <Label
+                        htmlFor="progress-private"
+                        className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 w-full hover:bg-card/85
+                          ${(settings?.privacy?.progressVisibility || 'private') === 'private'
+                            ? 'border-primary bg-primary/5 shadow-md scale-[1.01]'
+                            : 'border-muted bg-card/40 hover:border-muted-foreground/30'}`}
+                      >
+                        <div className={`p-2 rounded-lg mt-0.5 transition-colors duration-300
+                          ${(settings?.privacy?.progressVisibility || 'private') === 'private' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                          <Lock className="h-4 w-4" />
+                        </div>
+                        <div className="text-left">
+                          <span className="font-semibold text-sm text-foreground block">Private Mode</span>
+                          <span className="text-[11px] text-muted-foreground block mt-1">
+                            Keep your daily activity logs, weekly reports, XP gains, and study duration private.
+                          </span>
+                        </div>
+                      </Label>
                     </div>
+
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="public" id="progress-public" />
-                      <Label htmlFor="progress-public" className="cursor-pointer">Public</Label>
+                      <RadioGroupItem value="public" id="progress-public" className="sr-only" />
+                      <Label
+                        htmlFor="progress-public"
+                        className={`flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all duration-300 w-full hover:bg-card/85
+                          ${(settings?.privacy?.progressVisibility || 'private') === 'public'
+                            ? 'border-primary bg-primary/5 shadow-md scale-[1.01]'
+                            : 'border-muted bg-card/40 hover:border-muted-foreground/30'}`}
+                      >
+                        <div className={`p-2 rounded-lg mt-0.5 transition-colors duration-300
+                          ${(settings?.privacy?.progressVisibility || 'private') === 'public' ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                          <Eye className="h-4 w-4" />
+                        </div>
+                        <div className="text-left">
+                          <span className="font-semibold text-sm text-foreground block">Publicly Visible</span>
+                          <span className="text-[11px] text-muted-foreground block mt-1">
+                            Show your learning consistency, activity graphs, and streak records to inspire others.
+                          </span>
+                        </div>
+                      </Label>
                     </div>
                   </RadioGroup>
                 </div>
