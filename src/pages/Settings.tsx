@@ -14,6 +14,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { apiClient } from "@/services/apiClient";
 import { useTheme } from "next-themes";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Palette,
   Bell,
@@ -34,7 +35,9 @@ import {
   Target,
   AlertTriangle,
   CheckCircle,
-  Upload
+  Upload,
+  Database,
+  Trash2
 } from "lucide-react";
 import {
   AlertDialog,
@@ -108,7 +111,19 @@ const timezones = [
 export const Settings = () => {
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
-  const { isAuthenticated, signOut } = useAuth();
+  const { isAuthenticated, signOut, user } = useAuth();
+
+  const getInitials = (name: string) => {
+    return name?.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "U";
+  };
+
+  const handleClearCache = () => {
+    apiClient.clearCache();
+    toast({
+      title: "Cache cleared",
+      description: "Local data cache has been successfully cleared.",
+    });
+  };
 
   // Loading states
   const [loading, setLoading] = useState(false);
@@ -305,6 +320,13 @@ export const Settings = () => {
     }
   }, [isAuthenticated, loadSettings]);
 
+  // Sync next-themes when settings.theme changes
+  useEffect(() => {
+    if (mounted && settings?.theme) {
+      setTheme(settings.theme);
+    }
+  }, [mounted, settings?.theme, setTheme]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -423,6 +445,35 @@ export const Settings = () => {
 
           {/* General Settings Tab */}
           <TabsContent value="general" className="space-y-6">
+            {/* Profile Overview Card */}
+            <Card className="bg-card/50 backdrop-blur-sm border border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <User className="h-5 w-5 text-primary" />
+                  Profile Details
+                </CardTitle>
+                <CardDescription>
+                  Your public profile details synced from Google authentication
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                <Avatar className="h-16 w-16 border-2 border-primary/20">
+                  <AvatarImage src={user?.avatar} alt={user?.name} />
+                  <AvatarFallback className="text-xl bg-primary/10 text-primary">
+                    {getInitials(user?.name || "U")}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="space-y-1 text-center sm:text-left w-full sm:w-auto">
+                  <h3 className="font-semibold text-lg text-foreground">{user?.name || "User"}</h3>
+                  <p className="text-sm text-muted-foreground">{user?.email}</p>
+                  <div className="flex flex-wrap gap-2 mt-2 justify-center sm:justify-start">
+                    <Badge variant="secondary" className="text-xs">Google Authenticated</Badge>
+                    <Badge variant="outline" className="text-xs">Active Account</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -438,9 +489,9 @@ export const Settings = () => {
                 <div className="space-y-3">
                   <Label className="text-sm font-medium">Theme Mode</Label>
                   <RadioGroup
-                    value={mounted ? theme : 'system'}
+                    value={settings?.theme || 'system'}
                     onValueChange={(value) => {
-                      updateSetting('theme', value);
+                      updateSetting('theme', value as any);
                       setTheme(value);
                     }}
                     className="grid grid-cols-1 md:grid-cols-3 gap-4"
@@ -450,9 +501,9 @@ export const Settings = () => {
                       <Label
                         htmlFor="theme-light"
                         className={`flex items-center justify-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all w-full
-                          ${theme === 'light' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+                          ${(settings?.theme || 'system') === 'light' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
                       >
-                        <Sun className={`h-5 w-5 ${theme === 'light' ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <Sun className={`h-5 w-5 ${(settings?.theme || 'system') === 'light' ? 'text-primary' : 'text-muted-foreground'}`} />
                         <span className="font-semibold">Light Mode</span>
                       </Label>
                     </div>
@@ -462,9 +513,9 @@ export const Settings = () => {
                       <Label
                         htmlFor="theme-dark"
                         className={`flex items-center justify-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all w-full
-                          ${theme === 'dark' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+                          ${(settings?.theme || 'system') === 'dark' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
                       >
-                        <Moon className={`h-5 w-5 ${theme === 'dark' ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <Moon className={`h-5 w-5 ${(settings?.theme || 'system') === 'dark' ? 'text-primary' : 'text-muted-foreground'}`} />
                         <span className="font-semibold">Dark Mode</span>
                       </Label>
                     </div>
@@ -474,9 +525,9 @@ export const Settings = () => {
                       <Label
                         htmlFor="theme-system"
                         className={`flex items-center justify-center gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all w-full
-                          ${theme === 'system' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
+                          ${(settings?.theme || 'system') === 'system' ? 'border-primary bg-primary/5 shadow-md' : 'border-muted hover:border-muted-foreground'}`}
                       >
-                        <Monitor className={`h-5 w-5 ${theme === 'system' ? 'text-primary' : 'text-muted-foreground'}`} />
+                        <Monitor className={`h-5 w-5 ${(settings?.theme || 'system') === 'system' ? 'text-primary' : 'text-muted-foreground'}`} />
                         <div className="flex flex-col">
                           <span className="font-semibold text-center">System Default</span>
                           <span className="text-[10px] text-muted-foreground text-center">(Follows Dark)</span>
@@ -538,6 +589,31 @@ export const Settings = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* System & Storage Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Database className="h-5 w-5 text-primary" />
+                  System & Storage
+                </CardTitle>
+                <CardDescription>
+                  Manage local data, caching, and client performance options
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/20">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-semibold">Local Data Caching</Label>
+                    <p className="text-xs text-muted-foreground">Clear client-side cache to force reload fresh database contents</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleClearCache} className="gap-2">
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                    Clear Local Cache
+                  </Button>
                 </div>
               </CardContent>
             </Card>
