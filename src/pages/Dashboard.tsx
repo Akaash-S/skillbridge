@@ -225,7 +225,7 @@ export const Dashboard = () => {
       navigate('/roadmap');
       toast.success(`Let's work on: ${nextIncompleteItem.skillName}!`);
     } else {
-      toast.success("🎉 You've completed all roadmap items! Time to apply for jobs!");
+      toast.success("You've completed all roadmap items! Time to apply for jobs!");
     }
   };
 
@@ -601,10 +601,10 @@ export const Dashboard = () => {
             <AlertDescription className="text-orange-800 dark:text-orange-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <strong>🔥 Streak Milestone!</strong> You've maintained a {gamificationData?.streak?.currentStreak || analytics?.currentStreak} day learning streak! 
-                  {(gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) >= 30 && " You're a learning champion! 🏆"}
-                  {(gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) >= 14 && (gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) < 30 && " You're building amazing habits! 💪"}
-                  {(gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) >= 7 && (gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) < 14 && " Keep the momentum going! 🚀"}
+                  <strong>Streak Milestone!</strong> You've maintained a {gamificationData?.streak?.currentStreak || analytics?.currentStreak} day learning streak! 
+                  {(gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) >= 30 && " You're a learning champion!"}
+                  {(gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) >= 14 && (gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) < 30 && " You're building amazing habits!"}
+                  {(gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) >= 7 && (gamificationData?.streak?.currentStreak || analytics?.currentStreak || 0) < 14 && " Keep the momentum going!"}
                 </div>
                 <div className="flex items-center gap-2 text-2xl">
                   <span className="font-bold text-orange-600">{gamificationData?.streak?.currentStreak || analytics?.currentStreak}</span>
@@ -620,7 +620,7 @@ export const Dashboard = () => {
           <Alert className="border-green-200 bg-green-50 dark:bg-green-950">
             <Trophy className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-800 dark:text-green-200">
-              🎉 <strong>Congratulations!</strong> You've completed your entire learning roadmap for {selectedRole?.title || 'your target role'}! 
+              <strong>Congratulations!</strong> You've completed your entire learning roadmap for {selectedRole?.title || 'your target role'}! 
               You're now ready to apply for positions in this role. Your dedication and hard work have paid off!
               <div className="flex gap-2 mt-3">
                 <Button size="sm" onClick={handleDownloadCertificate} className="bg-green-600 hover:bg-green-700">
@@ -1385,7 +1385,9 @@ export const Dashboard = () => {
       <Dialog open={showCertificateDialog} onOpenChange={setShowCertificateDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>🏆 Congratulations!</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-yellow-500" /> Congratulations!
+            </DialogTitle>
             <DialogDescription>
               You've completed your {selectedRole?.title || 'learning'} roadmap!
             </DialogDescription>

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { CalendarData } from "@/services/gamificationService";
+import { Calendar } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -91,7 +92,7 @@ export const LearningCalendar = ({ data = {}, className }: LearningCalendarProps
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            📅 Learning Calendar
+            <Calendar className="h-5 w-5 text-primary" /> Learning Calendar
           </CardTitle>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span>{activeDays} active days</span>

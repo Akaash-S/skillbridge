@@ -616,11 +616,11 @@ export const Roadmap = () => {
                   if (res && res.gamification) {
                     const { xp, newAchievements } = res.gamification;
                     if (xp && xp.xpAwarded) {
-                      toast.success(`⚡ Earned +${xp.xpAwarded} XP!`);
+                      toast.success(`Earned +${xp.xpAwarded} XP!`);
                     }
                     if (newAchievements && newAchievements.length > 0) {
                       newAchievements.forEach((ach: any) => {
-                        toast.success(`🏆 Achievement Unlocked: ${ach.title}! ${ach.description}`);
+                        toast.success(`Achievement Unlocked: ${ach.title}! ${ach.description}`);
                       });
                     }
                   }
@@ -661,11 +661,11 @@ export const Roadmap = () => {
         if (result && result.passed && result.gamification) {
           const { xp, newAchievements } = result.gamification;
           if (xp && xp.xpAwarded) {
-            toast.success(`⚡ Earned +${xp.xpAwarded} XP!`);
+            toast.success(`Earned +${xp.xpAwarded} XP!`);
           }
           if (newAchievements && newAchievements.length > 0) {
             newAchievements.forEach((ach: any) => {
-              toast.success(`🏆 Achievement Unlocked: ${ach.title}! ${ach.description}`);
+              toast.success(`Achievement Unlocked: ${ach.title}! ${ach.description}`);
             });
           }
         }
@@ -743,7 +743,7 @@ export const Roadmap = () => {
                 </div>
                 <div className="space-y-1">
                   <CardTitle className="text-2xl font-bold">
-                    {quizResult.passed ? "🎉 Module Quiz Passed!" : "❌ Try Again!"}
+                    {quizResult.passed ? "Module Quiz Passed!" : "Try Again!"}
                   </CardTitle>
                   <CardDescription className="text-sm">
                     {quizResult.passed
@@ -935,7 +935,7 @@ export const Roadmap = () => {
               </div>
               <div className="flex-1 text-center md:text-left space-y-2">
                 <AlertDescription className="text-green-800 dark:text-green-200 text-base md:text-lg font-semibold">
-                  🎉 Congratulations! You've completed your roadmap for {selectedRole.title}.
+                  Congratulations! You've completed your roadmap for {selectedRole.title}.
                 </AlertDescription>
                 <p className="text-xs md:text-sm text-green-700 dark:text-green-300">
                   Your dedication has paid off. You have mastered all the required skills, passed all verification quizzes, and are now officially ready for this role!

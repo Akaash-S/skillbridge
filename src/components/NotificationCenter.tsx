@@ -68,18 +68,18 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
       {
         id: '1',
         type: 'streak',
-        title: '🔥 7-Day Streak!',
+        title: '7-Day Streak!',
         message: "Congratulations! You've maintained a 7-day learning streak. Keep it up!",
         timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
         read: false,
         actionable: true,
-        action: () => toast.success("Streak celebration! 🎉"),
+        action: () => toast.success("Streak celebration!"),
         actionLabel: "Celebrate"
       },
       {
         id: '2',
         type: 'reminder',
-        title: '📚 Daily Learning Reminder',
+        title: 'Daily Learning Reminder',
         message: "Time for your daily 30-minute learning session. You're doing great!",
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
         read: false,
@@ -90,7 +90,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
       {
         id: '3',
         type: 'achievement',
-        title: '🏆 Skill Mastered!',
+        title: 'Skill Mastered!',
         message: "You've completed 'React Fundamentals' and earned 100 XP!",
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
         read: true,
@@ -101,7 +101,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
       {
         id: '4',
         type: 'milestone',
-        title: '🎯 50% Progress Milestone',
+        title: '50% Progress Milestone',
         message: "You're halfway through your Full Stack Developer roadmap!",
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2), // 2 days ago
         read: true
@@ -109,7 +109,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
       {
         id: '5',
         type: 'goal',
-        title: '📈 Weekly Goal Achieved',
+        title: 'Weekly Goal Achieved',
         message: "You've completed your weekly learning goal of 10 hours. Excellent work!",
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3), // 3 days ago
         read: true
@@ -196,7 +196,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ classNam
       if (permission === 'granted') {
         toast.success("Browser notifications enabled!");
         scheduleNotification(
-          "🎉 Notifications Enabled!",
+          "Notifications Enabled!",
           "You'll now receive learning reminders and achievement alerts."
         );
       } else {

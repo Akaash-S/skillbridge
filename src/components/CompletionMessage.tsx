@@ -14,7 +14,7 @@ export const CompletionMessage = ({ isCompleted, className }: CompletionMessageP
     <Alert className={cn("border-green-200 bg-green-50 dark:bg-green-950", className)}>
       <CheckCircle2 className="h-4 w-4 text-green-600" />
       <AlertDescription className="text-green-800 dark:text-green-200">
-        🎉 Roadmap completed successfully! Congratulations! You have completed all roadmap items.
+        Roadmap completed successfully! Congratulations! You have completed all roadmap items.
       </AlertDescription>
     </Alert>
   );

@@ -142,7 +142,9 @@ export const TestFeatures = () => {
                 </DialogTrigger>
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>🏆 Achievement Certificate</DialogTitle>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Trophy className="h-5 w-5 text-yellow-500" /> Achievement Certificate
+                    </DialogTitle>
                     <DialogDescription>
                       Congratulations on completing your learning roadmap!
                     </DialogDescription>
@@ -289,7 +291,9 @@ export const TestFeatures = () => {
           <CardContent>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-3">
-                <h4 className="font-medium">✅ Completed Features</h4>
+                <h4 className="font-medium flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" /> Completed Features
+                </h4>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -319,7 +323,9 @@ export const TestFeatures = () => {
               </div>
               
               <div className="space-y-3">
-                <h4 className="font-medium">🚀 Enhanced Features</h4>
+                <h4 className="font-medium flex items-center gap-2">
+                  <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" /> Enhanced Features
+                </h4>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <Star className="h-4 w-4 text-yellow-600" />
