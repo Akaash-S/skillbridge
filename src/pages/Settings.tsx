@@ -38,7 +38,10 @@ import {
   CheckCircle,
   Upload,
   Database,
-  Trash2
+  Trash2,
+  Briefcase,
+  Clock,
+  BarChart3
 } from "lucide-react";
 import {
   AlertDialog,
@@ -794,7 +797,7 @@ export const Settings = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Bell className="h-5 w-5" />
+                  <Bell className="h-5 w-5 text-primary" />
                   Notification Preferences
                 </CardTitle>
                 <CardDescription>
@@ -803,12 +806,14 @@ export const Settings = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Master Toggle */}
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <Label className="text-sm font-medium">Enable Notifications</Label>
-                    <p className="text-xs text-muted-foreground">Master toggle for all notifications</p>
+                <div className={`flex items-center justify-between p-5 border border-border rounded-xl transition-all duration-300
+                  ${settings?.notifications ? 'border-primary bg-primary/5 shadow-md' : 'border-muted bg-card'}`}>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-bold text-foreground">Enable Notifications</Label>
+                    <p className="text-xs text-muted-foreground">Master toggle for receiving all email and platform alerts</p>
                   </div>
                   <Switch
+                    id="master-notifications"
                     checked={settings?.notifications || false}
                     onCheckedChange={(checked) => updateSetting('notifications', checked)}
                   />
@@ -818,47 +823,81 @@ export const Settings = () => {
 
                 {/* Email Notifications */}
                 <div className="space-y-4">
-                  <Label className="text-sm font-medium">Email Notifications</Label>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-sm">Roadmap Updates</Label>
-                        <p className="text-xs text-muted-foreground">When your roadmap progress changes</p>
+                  <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                    <Globe className="h-4 w-4 text-primary" />
+                    Email Alerts
+                  </Label>
+                  <div className="grid gap-4">
+                    <div className={`flex items-center justify-between p-4 border rounded-xl bg-card/50 transition-all duration-300
+                      ${settings?.notifications ? 'hover:border-muted-foreground/30' : 'opacity-60 cursor-not-allowed'}`}>
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary mt-0.5">
+                          <Target className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-semibold text-foreground">Roadmap Updates</Label>
+                          <p className="text-xs text-muted-foreground">Receive emails when your custom learning roadmap changes or progresses</p>
+                        </div>
                       </div>
                       <Switch
+                        id="notify-roadmap"
                         checked={settings?.emailNotifications?.roadmapUpdates || false}
                         onCheckedChange={(checked) => updateSetting('emailNotifications.roadmapUpdates', checked)}
                         disabled={!settings?.notifications}
                       />
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-sm">Job Recommendations</Label>
-                        <p className="text-xs text-muted-foreground">New job opportunities matching your skills</p>
+
+                    <div className={`flex items-center justify-between p-4 border rounded-xl bg-card/50 transition-all duration-300
+                      ${settings?.notifications ? 'hover:border-muted-foreground/30' : 'opacity-60 cursor-not-allowed'}`}>
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary mt-0.5">
+                          <Briefcase className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-semibold text-foreground">Job Recommendations</Label>
+                          <p className="text-xs text-muted-foreground">Get matched job postings based on your skills and target role</p>
+                        </div>
                       </div>
                       <Switch
+                        id="notify-jobs"
                         checked={settings?.emailNotifications?.jobRecommendations || false}
                         onCheckedChange={(checked) => updateSetting('emailNotifications.jobRecommendations', checked)}
                         disabled={!settings?.notifications}
                       />
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-sm">Learning Reminders</Label>
-                        <p className="text-xs text-muted-foreground">Daily and weekly learning reminders</p>
+
+                    <div className={`flex items-center justify-between p-4 border rounded-xl bg-card/50 transition-all duration-300
+                      ${settings?.notifications ? 'hover:border-muted-foreground/30' : 'opacity-60 cursor-not-allowed'}`}>
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary mt-0.5">
+                          <Clock className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-semibold text-foreground">Learning Reminders</Label>
+                          <p className="text-xs text-muted-foreground">Daily prompts and scheduling reminders to help keep your learning streaks active</p>
+                        </div>
                       </div>
                       <Switch
+                        id="notify-reminders"
                         checked={settings?.emailNotifications?.learningReminders || false}
                         onCheckedChange={(checked) => updateSetting('emailNotifications.learningReminders', checked)}
                         disabled={!settings?.notifications}
                       />
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label className="text-sm">Weekly Progress</Label>
-                        <p className="text-xs text-muted-foreground">Weekly progress summaries</p>
+
+                    <div className={`flex items-center justify-between p-4 border rounded-xl bg-card/50 transition-all duration-300
+                      ${settings?.notifications ? 'hover:border-muted-foreground/30' : 'opacity-60 cursor-not-allowed'}`}>
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary mt-0.5">
+                          <BarChart3 className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <Label className="text-sm font-semibold text-foreground">Weekly Progress Reports</Label>
+                          <p className="text-xs text-muted-foreground">A summary report of your weekly study hours, completed milestones, and skills gained</p>
+                        </div>
                       </div>
                       <Switch
+                        id="notify-weekly"
                         checked={settings?.emailNotifications?.weeklyProgress || false}
                         onCheckedChange={(checked) => updateSetting('emailNotifications.weeklyProgress', checked)}
                         disabled={!settings?.notifications}
