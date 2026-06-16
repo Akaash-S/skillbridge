@@ -70,6 +70,7 @@ export const Roadmap = () => {
     roadmapModules,
     setLearningMode,
     loadRoadmapModules,
+    startModule,
     completeModule,
     fetchModuleQuiz,
     submitModuleQuiz,
@@ -1004,6 +1005,7 @@ export const Roadmap = () => {
                     if (isUnlocked) {
                       setSelectedModuleIndex(idx);
                       setCurrentView('learning-screen');
+                      startModule(idx);
                     }
                   }}
                 >

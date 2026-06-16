@@ -52,6 +52,26 @@ export const ProctoredAssessment = () => {
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, []);
 
+  // Report fullscreen exit to proctoring backend
+  useEffect(() => {
+    if (step === "test" && !isFullscreen && sessionId) {
+      apiClient.post<any>("/assessment/violation", {
+        sessionId,
+        type: "Fullscreen Exit",
+        details: "User exited fullscreen mode during technical evaluation."
+      }).then((res) => {
+        if (res.terminated) {
+          toast.error("Assessment terminated due to excessive proctoring violations (limit: 3).");
+          handleSubmit();
+        } else {
+          toast.error(`Proctor warning: Fullscreen exit detected! (${res.violations}/3)`);
+        }
+      }).catch(err => {
+        console.error("Failed to report proctor violation:", err);
+      });
+    }
+  }, [isFullscreen, step, sessionId]);
+
   const handleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(() => {

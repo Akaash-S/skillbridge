@@ -230,15 +230,38 @@ export const Dashboard = () => {
   };
 
   // Calculate enhanced analytics
+  const learningSessions = useMemo(() => {
+    return roadmapModules
+      .filter(m => m.startedAt)
+      .map((m, idx) => {
+        const startTime = new Date(m.startedAt);
+        const endTime = m.completedAt ? new Date(m.completedAt) : undefined;
+        let duration = m.duration || 0;
+        if (!duration && endTime) {
+          duration = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
+        }
+        return {
+          id: `session-${m.index ?? idx}`,
+          userId: user?.uid || "dev-user-123",
+          skillId: m.skills?.[0]?.skillId || "",
+          startTime,
+          endTime,
+          duration: Math.max(1, duration),
+          completed: Boolean(m.completed || m.quizPassed)
+        };
+      });
+  }, [roadmapModules, user?.uid]);
+
+  // Calculate enhanced analytics
   const analytics = useMemo(() => {
     if (roadmap.length === 0 || !selectedRole) return null;
     
     return AnalyticsService.calculateLearningAnalytics(
       roadmap,
       roadmapProgress,
-      [] // Learning sessions would come from backend
+      learningSessions
     );
-  }, [roadmap, roadmapProgress, selectedRole]);
+  }, [roadmap, roadmapProgress, selectedRole, learningSessions]);
 
   // Determine which roadmap items to display (the active ones)
   const roadmapDisplayItems = useMemo(() => {

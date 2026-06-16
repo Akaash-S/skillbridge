@@ -88,6 +88,7 @@ interface AppDataContextType extends AppDataState {
   // Guided learning journey methods
   setLearningMode: (mode: 'video' | 'documentation' | 'mixed') => Promise<void>;
   loadRoadmapModules: () => Promise<void>;
+  startModule: (moduleIndex: number) => Promise<any>;
   completeModule: (moduleIndex: number) => Promise<any>;
   fetchModuleQuiz: (moduleIndex: number) => Promise<any[]>;
   submitModuleQuiz: (moduleIndex: number, answers: Record<string, number>) => Promise<any>;
@@ -860,6 +861,34 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     }
   }, []);
 
+  // Start a module's learning phase
+  const startModule = useCallback(async (moduleIndex: number) => {
+    try {
+      setState(prev => {
+        const updatedModules = [...prev.roadmapModules];
+        if (updatedModules[moduleIndex]) {
+          updatedModules[moduleIndex] = {
+            ...updatedModules[moduleIndex],
+            startedAt: new Date().toISOString()
+          };
+        }
+        return {
+          ...prev,
+          roadmapModules: updatedModules
+        };
+      });
+
+      const response = await apiClient.post<any>('/module/start', { moduleIndex });
+      
+      // Sync state from backend
+      await loadRoadmapModules();
+      return response;
+    } catch (error: any) {
+      console.error('❌ Failed to start module tracking:', error);
+      return null;
+    }
+  }, [loadRoadmapModules]);
+
   // Complete a module's learning phase
   const completeModule = useCallback(async (moduleIndex: number) => {
     try {
@@ -965,6 +994,7 @@ export const AppDataProvider: React.FC<AppDataProviderProps> = ({ children }) =>
     refreshRoleData,
     setLearningMode,
     loadRoadmapModules,
+    startModule,
     completeModule,
     fetchModuleQuiz,
     submitModuleQuiz,

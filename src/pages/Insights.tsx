@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useAppData } from "@/context/AppDataContext";
 import { BarChart3, TrendingUp, Target, Clock, Zap, Award, Calendar, Loader2 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, BarChart, Bar } from "recharts";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "@/hooks/use-toast";
 
@@ -35,7 +35,15 @@ interface ActivitySummary {
 }
 
 export const Insights = () => {
-  const { userSkills, selectedRole, roadmap, roadmapProgress, loadRoadmapProgress } = useAppData();
+  const { 
+    userSkills, 
+    selectedRole, 
+    roadmap, 
+    roadmapProgress, 
+    loadRoadmapProgress,
+    roadmapModules,
+    loadRoadmapModules
+  } = useAppData();
   const { isAuthenticated } = useAuth();
   
   // State for real user data
@@ -52,8 +60,8 @@ export const Insights = () => {
       
       // Load user stats and activity summary in parallel
       const [statsResponse, activityResponse] = await Promise.all([
-        apiClient.get('/users/stats'),
-        apiClient.get('/activity?days=30') // Last 30 days
+        apiClient.get<{ stats: UserStats }>('/users/stats'),
+        apiClient.get<{ activities: any[] }>('/activity?days=30') // Last 30 days
       ]);
       
       setUserStats(statsResponse.stats);
@@ -102,7 +110,10 @@ export const Insights = () => {
   useEffect(() => {
     loadUserInsights();
     loadRoadmapProgress();
-  }, [isAuthenticated, loadRoadmapProgress]);
+    if (selectedRole) {
+      loadRoadmapModules();
+    }
+  }, [isAuthenticated, loadRoadmapProgress, loadRoadmapModules, selectedRole?.id]);
 
   // Generate skill growth data based on activity
   const generateSkillGrowthData = () => {
@@ -253,7 +264,26 @@ export const Insights = () => {
   ];
 
   const completedRoadmapItems = userStats?.completedMilestones || roadmap.filter(r => r.completed).length;
-  const totalLearningHours = userStats ? userStats.skillsCount * 15 : skillGrowthData.reduce((acc, d) => acc + d.hours, 0);
+  
+  const totalLearningHours = useMemo(() => {
+    if (roadmapModules && roadmapModules.length > 0) {
+      const completedModules = roadmapModules.filter((m: any) => m.completed || m.quizPassed);
+      const sumMinutes = completedModules.reduce((sum: number, m: any) => {
+        if (m.duration) {
+          return sum + m.duration;
+        }
+        if (m.startedAt && m.completedAt) {
+          const diff = Math.round((new Date(m.completedAt).getTime() - new Date(m.startedAt).getTime()) / 60000);
+          return sum + Math.max(1, diff);
+        }
+        const skillCount = m.skills?.length || 1;
+        return sum + (skillCount * 45);
+      }, 0);
+      return Math.round((sumMinutes / 60) * 10) / 10;
+    }
+    return userStats ? userStats.skillsCount * 15 : skillGrowthData.reduce((acc, d) => acc + d.hours, 0);
+  }, [roadmapModules, userStats, userSkills.length, skillGrowthData]);
+
   const currentStreak = activitySummary ? Math.min(Object.keys(activitySummary.dailyCounts).length, 7) : 3;
 
   // Create difficulty distribution chart from real data
