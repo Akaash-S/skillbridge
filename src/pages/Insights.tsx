@@ -8,6 +8,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useEffect, useState, useMemo } from "react";
 import { apiClient } from "@/services/apiClient";
 import { toast } from "@/hooks/use-toast";
+import { gamificationService } from "@/services/gamificationService";
 
 interface UserStats {
   skillsCount: number;
@@ -49,6 +50,7 @@ export const Insights = () => {
   // State for real user data
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [activitySummary, setActivitySummary] = useState<ActivitySummary | null>(null);
+  const [currentStreak, setCurrentStreak] = useState<number>(0);
   const [loading, setLoading] = useState(false);
 
   // Load user statistics and activity data
@@ -58,13 +60,18 @@ export const Insights = () => {
     setLoading(true);
     try {
       
-      // Load user stats and activity summary in parallel
-      const [statsResponse, activityResponse] = await Promise.all([
+      // Load user stats, activity summary, and streak in parallel
+      const [statsResponse, activityResponse, streakResponse] = await Promise.all([
         apiClient.get<{ stats: UserStats }>('/users/stats'),
-        apiClient.get<{ activities: any[] }>('/activity?days=30') // Last 30 days
+        apiClient.get<{ activities: any[] }>('/activity?days=30'), // Last 30 days
+        gamificationService.getStreak().catch(err => {
+          console.error("Failed to load streak data:", err);
+          return { currentStreak: 0 };
+        })
       ]);
       
       setUserStats(statsResponse.stats);
+      setCurrentStreak(streakResponse?.currentStreak ?? 0);
       
       // Process activity data for summary
       const activities = activityResponse.activities || [];
@@ -284,7 +291,7 @@ export const Insights = () => {
     return userStats ? userStats.skillsCount * 15 : skillGrowthData.reduce((acc, d) => acc + d.hours, 0);
   }, [roadmapModules, userStats, userSkills.length, skillGrowthData]);
 
-  const currentStreak = activitySummary ? Math.min(Object.keys(activitySummary.dailyCounts).length, 7) : 3;
+  // Streak is fetched dynamically from the database and stored in state
 
   // Create difficulty distribution chart from real data
   const difficultyData = roadmapProgress?.hasRoadmap 

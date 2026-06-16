@@ -303,7 +303,7 @@ export const Dashboard = () => {
     }));
   }, [roadmap, roadmapModules]);
 
-  // Mock advanced analytics data - reset for new roles
+  // Calculate advanced analytics data dynamically from real user sessions
   const advancedAnalyticsData = useMemo(() => {
     // If no analytics (new role or no roadmap), return default values
     if (!analytics || !selectedRole) {
@@ -338,31 +338,86 @@ export const Dashboard = () => {
         'Practical Projects',
         'Industry Standards'
       ],
-      weeklyProgress: [
-        { week: 'Week 1', skillsCompleted: 0, timeSpent: 0, consistency: 0 },
-        { week: 'Week 2', skillsCompleted: 0, timeSpent: 0, consistency: 0 },
-        { week: 'Week 3', skillsCompleted: 0, timeSpent: 0, consistency: 0 },
-        { week: 'Week 4', skillsCompleted: 0, timeSpent: 0, consistency: 0 },
-        { week: 'Week 5', skillsCompleted: 0, timeSpent: 0, consistency: 0 },
-        { week: 'Week 6', skillsCompleted: 0, timeSpent: 0, consistency: 0 }
-      ],
+      weeklyProgress: (() => {
+        const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'];
+        const progress = weeks.map(week => ({ week, skillsCompleted: 0, timeSpent: 0, consistency: 0 }));
+        
+        if (!learningSessions || learningSessions.length === 0) return progress;
+        
+        const now = new Date();
+        learningSessions.forEach(session => {
+          const sessionDate = new Date(session.startTime);
+          const diffDays = Math.floor((now.getTime() - sessionDate.getTime()) / (24 * 60 * 60 * 1000));
+          const diffWeeks = Math.floor(diffDays / 7);
+          
+          const weekIndex = 5 - diffWeeks;
+          if (weekIndex >= 0 && weekIndex < 6) {
+            progress[weekIndex].timeSpent += (session.duration || 0) / 60;
+            if (session.completed) {
+              progress[weekIndex].skillsCompleted += 1;
+            }
+            progress[weekIndex].consistency += 15;
+          }
+        });
+        
+        return progress.map(p => ({
+          ...p,
+          timeSpent: Math.round(p.timeSpent * 10) / 10,
+          consistency: Math.min(100, p.consistency)
+        }));
+      })(),
       skillDistribution: [
-        { category: 'Frontend', completed: 0, remaining: roadmap.filter(item => item.skillName.toLowerCase().includes('frontend') || item.skillName.toLowerCase().includes('react') || item.skillName.toLowerCase().includes('html') || item.skillName.toLowerCase().includes('css') || item.skillName.toLowerCase().includes('javascript')).length },
-        { category: 'Backend', completed: 0, remaining: roadmap.filter(item => item.skillName.toLowerCase().includes('backend') || item.skillName.toLowerCase().includes('node') || item.skillName.toLowerCase().includes('api') || item.skillName.toLowerCase().includes('server')).length },
-        { category: 'Database', completed: 0, remaining: roadmap.filter(item => item.skillName.toLowerCase().includes('database') || item.skillName.toLowerCase().includes('sql') || item.skillName.toLowerCase().includes('mongo')).length },
-        { category: 'DevOps', completed: 0, remaining: roadmap.filter(item => item.skillName.toLowerCase().includes('devops') || item.skillName.toLowerCase().includes('docker') || item.skillName.toLowerCase().includes('aws') || item.skillName.toLowerCase().includes('deploy')).length }
+        {
+          category: 'Frontend',
+          completed: roadmap.filter(item => item.completed && (item.skillName.toLowerCase().includes('frontend') || item.skillName.toLowerCase().includes('react') || item.skillName.toLowerCase().includes('html') || item.skillName.toLowerCase().includes('css') || item.skillName.toLowerCase().includes('javascript'))).length,
+          remaining: roadmap.filter(item => !item.completed && (item.skillName.toLowerCase().includes('frontend') || item.skillName.toLowerCase().includes('react') || item.skillName.toLowerCase().includes('html') || item.skillName.toLowerCase().includes('css') || item.skillName.toLowerCase().includes('javascript'))).length
+        },
+        {
+          category: 'Backend',
+          completed: roadmap.filter(item => item.completed && (item.skillName.toLowerCase().includes('backend') || item.skillName.toLowerCase().includes('node') || item.skillName.toLowerCase().includes('api') || item.skillName.toLowerCase().includes('server'))).length,
+          remaining: roadmap.filter(item => !item.completed && (item.skillName.toLowerCase().includes('backend') || item.skillName.toLowerCase().includes('node') || item.skillName.toLowerCase().includes('api') || item.skillName.toLowerCase().includes('server'))).length
+        },
+        {
+          category: 'Database',
+          completed: roadmap.filter(item => item.completed && (item.skillName.toLowerCase().includes('database') || item.skillName.toLowerCase().includes('sql') || item.skillName.toLowerCase().includes('mongo'))).length,
+          remaining: roadmap.filter(item => !item.completed && (item.skillName.toLowerCase().includes('database') || item.skillName.toLowerCase().includes('sql') || item.skillName.toLowerCase().includes('mongo'))).length
+        },
+        {
+          category: 'DevOps',
+          completed: roadmap.filter(item => item.completed && (item.skillName.toLowerCase().includes('devops') || item.skillName.toLowerCase().includes('docker') || item.skillName.toLowerCase().includes('aws') || item.skillName.toLowerCase().includes('deploy'))).length,
+          remaining: roadmap.filter(item => !item.completed && (item.skillName.toLowerCase().includes('devops') || item.skillName.toLowerCase().includes('docker') || item.skillName.toLowerCase().includes('aws') || item.skillName.toLowerCase().includes('deploy'))).length
+        }
       ],
-      learningPattern: [
-        { day: 'Mon', morning: 0, afternoon: 0, evening: 0 },
-        { day: 'Tue', morning: 0, afternoon: 0, evening: 0 },
-        { day: 'Wed', morning: 0, afternoon: 0, evening: 0 },
-        { day: 'Thu', morning: 0, afternoon: 0, evening: 0 },
-        { day: 'Fri', morning: 0, afternoon: 0, evening: 0 },
-        { day: 'Sat', morning: 0, afternoon: 0, evening: 0 },
-        { day: 'Sun', morning: 0, afternoon: 0, evening: 0 }
-      ]
+      learningPattern: (() => {
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const pattern = days.map(day => ({ day, morning: 0, afternoon: 0, evening: 0 }));
+        
+        learningSessions.forEach(session => {
+          const date = new Date(session.startTime);
+          let dayIdx = date.getDay() - 1;
+          if (dayIdx < 0) dayIdx = 6;
+          
+          const hour = date.getHours();
+          const durationHrs = (session.duration || 0) / 60;
+          
+          if (hour >= 5 && hour < 12) {
+            pattern[dayIdx].morning += durationHrs;
+          } else if (hour >= 12 && hour < 17) {
+            pattern[dayIdx].afternoon += durationHrs;
+          } else {
+            pattern[dayIdx].evening += durationHrs;
+          }
+        });
+        
+        return pattern.map(p => ({
+          day: p.day,
+          morning: Math.round(p.morning * 10) / 10,
+          afternoon: Math.round(p.afternoon * 10) / 10,
+          evening: Math.round(p.evening * 10) / 10
+        }));
+      })()
     };
-  }, [analytics, selectedRole, roadmap]);
+  }, [analytics, selectedRole, roadmap, learningSessions, gamificationData]);
 
   // Get learning insights for the selected role
   useEffect(() => {
