@@ -214,7 +214,12 @@ export const Roles = () => {
       if (role) {
         await selectRole(role);
         toast({
-          title: "Role Updated Successfully! 🎯",
+          title: (
+            <span className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-primary" />
+              <span>Role Updated Successfully!</span>
+            </span>
+          ),
           description: `${role.title} has been set as your target role. Previous analysis and roadmap data has been cleared.`,
         });
         navigate("/analysis");

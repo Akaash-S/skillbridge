@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, ArrowRight, Send, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Send, CheckCircle2, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
@@ -297,7 +297,7 @@ export const WalkthroughLayout = ({
                     <Button type="submit" disabled={isSubmitting} className="gap-2">
                       {isSubmitting ? (
                         <>
-                          <span className="animate-spin">⏳</span>
+                          <Loader2 className="w-4 h-4 animate-spin" />
                           Sending...
                         </>
                       ) : (

@@ -126,7 +126,12 @@ export const Dashboard = () => {
         toast.info("Review your skill gap analysis to optimize your learning strategy.");
         break;
       case 'Keep the streak alive':
-        toast.success("Great job on your learning streak! Keep it up! 🔥");
+        toast.success(
+          <div className="flex items-center gap-2">
+            <Flame className="w-4 h-4 text-orange-500 animate-pulse shrink-0" />
+            <span>Great job on your learning streak! Keep it up!</span>
+          </div>
+        );
         break;
       case 'Start a quick learning session':
         navigate('/roadmap');
@@ -204,12 +209,22 @@ export const Dashboard = () => {
 
   // Handle community features
   const handleCommunity = () => {
-    toast.info("👥 Community features coming soon! Connect with other learners and share experiences.");
+    toast.info(
+      <div className="flex items-center gap-2">
+        <Users className="w-4 h-4 text-blue-500 shrink-0" />
+        <span>Community features coming soon! Connect with other learners and share experiences.</span>
+      </div>
+    );
   };
 
   // Handle bookmarks
   const handleBookmarks = () => {
-    toast.info("🔖 Bookmark feature coming soon! Save your favorite resources and track progress.");
+    toast.info(
+      <div className="flex items-center gap-2">
+        <Bookmark className="w-4 h-4 text-yellow-500 shrink-0" />
+        <span>Bookmark feature coming soon! Save your favorite resources and track progress.</span>
+      </div>
+    );
   };
 
   // Handle quick learning session

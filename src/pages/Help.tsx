@@ -29,6 +29,8 @@ import {
   MessageSquare,
   Phone,
   Clock,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -95,7 +97,12 @@ const Help = () => {
         });
         
         toast({
-          title: "Message Sent Successfully! ✅",
+          title: (
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+              <span>Message Sent Successfully!</span>
+            </div>
+          ),
           description: "Thank you for contacting us. We'll get back to you within 24-48 hours.",
         });
       } else {
@@ -119,12 +126,22 @@ const Help = () => {
       const response = await apiClient.publicRequest<{success: boolean, message: string}>('/email/test-connection');
       toast({
         title: "API Connection Test",
-        description: `✅ ${response.message}`,
+        description: (
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-green-600" />
+            <span>{response.message}</span>
+          </div>
+        ),
       });
     } catch (error: any) {
       toast({
         title: "API Connection Failed",
-        description: `❌ ${error.message}`,
+        description: (
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-destructive" />
+            <span>{error.message}</span>
+          </div>
+        ),
         variant: "destructive",
       });
     }
@@ -608,7 +625,7 @@ const Help = () => {
                       >
                         {isSubmitting ? (
                           <>
-                            <span className="animate-spin">⏳</span>
+                            <Loader2 className="w-4 h-4 animate-spin" />
                             Sending Message...
                           </>
                         ) : (
