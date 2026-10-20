@@ -13,6 +13,12 @@ import { useToast } from '@/components/ui/use-toast';
 export const MFAVerification: React.FC = () => {
   const { completeMFALogin, signOut, error, clearError, mfaToken } = useAuth();
 
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [totpCode, setTotpCode] = useState('');
+  const [recoveryCode, setRecoveryCode] = useState('');
+  const [activeTab, setActiveTab] = useState('totp');
+
   if (!mfaToken) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -20,12 +26,6 @@ export const MFAVerification: React.FC = () => {
       </div>
     );
   }
-  const { toast } = useToast();
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [totpCode, setTotpCode] = useState('');
-  const [recoveryCode, setRecoveryCode] = useState('');
-  const [activeTab, setActiveTab] = useState('totp');
 
   // Handle TOTP verification
   const handleTOTPVerification = async (): Promise<void> => {

@@ -24,6 +24,8 @@ dist-ssr
 *.sw?
 package-lock.json
 .env
+.env.*
+.env.production
 
 .security-backups/
 lighthouse-report.json
