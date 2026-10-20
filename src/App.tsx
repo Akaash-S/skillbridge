@@ -141,21 +141,24 @@ const App = () => (
                     </ProtectedRoute>
                   } />
                   
-                  <Route path="/test-features" element={
-                    <ProtectedRoute>
-                      <TestFeatures />
-                    </ProtectedRoute>
-                  } />
+                  {import.meta.env.DEV && (
+                    <>
+                      <Route path="/test-features" element={
+                        <ProtectedRoute>
+                          <TestFeatures />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/pdf-test" element={
+                        <ProtectedRoute>
+                          <PDFTest />
+                        </ProtectedRoute>
+                      } />
+                    </>
+                  )}
                   
                   <Route path="/showcase" element={
                     <ProtectedRoute>
                       <FeatureShowcase />
-                    </ProtectedRoute>
-                  } />
-                  
-                  <Route path="/pdf-test" element={
-                    <ProtectedRoute>
-                      <PDFTest />
                     </ProtectedRoute>
                   } />
                   
