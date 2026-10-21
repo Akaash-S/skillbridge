@@ -29,36 +29,82 @@ A modern, responsive, accessible Single Page Application (SPA) for the SkillBrid
 
 ## 📁 Project Structure
 
+Generated from repository files (`git ls-files`):
+
 ```
 frontend/
-├── public/                      # Static assets (logos, favicon, og-image.png)
+├── .github/workflows/
+│   └── frontend-ci.yml          # CI workflow (npm ci, lint, vitest, vite build)
+├── docs/                        # Architecture & documentation records
+│   ├── ACCESSIBILITY_FIX.md
+│   ├── COOKIE_AUTH_FRONTEND_CHANGES.md
+│   ├── SECURITY_FIXES_SUMMARY.md
+│   ├── test-api.html            # Standalone API test page
+│   └── test-fixes.md            # React context & Radix UI fix notes
+├── public/                      # Static web assets
+│   ├── favicon.ico
+│   ├── og-image.png             # Custom OpenGraph preview banner (1200x630)
+│   ├── robots.txt
+│   └── skillbridge-logo-dark.png
+├── scripts/
+│   └── generate_og_image.py     # Python script to render branded social card
 ├── src/
-│   ├── components/              # Reusable UI & business components
-│   │   ├── auth/                # Login, registration, and onboarding dialogs
-│   │   ├── dashboard/           # Readiness scorecards, progress bars & metrics
-│   │   ├── learning/            # Course cards, video player & resource lists
-│   │   ├── roadmap/             # Interactive milestone cards & skill nodes
-│   │   ├── skills/              # Skill catalog, proficiency sliders & filters
-│   │   └── ui/                  # Radix UI primitives with Tailwind styling
-│   ├── contexts/                # AuthContext & ThemeContext
-│   ├── hooks/                   # Custom React hooks (useAuth, useSkills, useRoadmap)
-│   ├── pages/                   # Application view routes (Dashboard, Roadmap, etc.)
-│   ├── services/                # TypeScript backend API clients
-│   │   ├── api.ts               # Axios / Fetch client with auth headers & cookies
-│   │   ├── auth.ts              # Firebase auth token & cookie sync
-│   │   ├── careerCompass.ts     # Career path recommendations
-│   │   ├── courseService.ts     # Curated courses and learning progress
-│   │   ├── learningAssistantService.ts # AI assistant interactions
-│   │   └── resumeService.ts     # Resume parsing and review
-│   └── test/                    # Automated Vitest test suites
-│       ├── auth.test.ts         # Token handling & session logic
-│       ├── security.test.ts     # Input sanitization & XSS protection
-│       └── skills.test.ts       # Client-side skill calculation & filtering
-├── docs/                        # Architectural records & fix summaries
-├── scripts/                     # Helper & diagnostic scripts
-├── index.html                   # HTML entry point with custom OpenGraph metadata
-├── tailwind.config.ts           # Design tokens, color palette & animations
-├── vite.config.ts               # Vite build & chunk configuration
+│   ├── assets/guide/            # Onboarding & walkthrough visual assets
+│   ├── components/              # React UI & domain components
+│   │   ├── AIAssistant/         # Real-time Groq/Llama interactive chat panel
+│   │   ├── auth/                # AuthRedirect, MFA verification, ProtectedRoute
+│   │   ├── gamification/        # Achievements, streaks, timeline, and XP cards
+│   │   ├── ui/                  # 37 Radix UI + Tailwind styled primitives
+│   │   ├── AdvancedAnalytics.tsx
+│   │   ├── AuthErrorHandler.tsx # COOP/popup blocker error handler
+│   │   ├── Certificate.tsx
+│   │   ├── CompletionMessage.tsx
+│   │   ├── CompletionMessage.test.tsx # Unit tests for completion modal (7 tests)
+│   │   ├── Layout.tsx
+│   │   ├── MFAHandler.tsx
+│   │   ├── RoleCard.tsx
+│   │   └── SkillChip.tsx
+│   ├── config/
+│   │   └── env.ts               # Runtime environment configuration & validation
+│   ├── context/
+│   │   ├── AppDataContext.tsx   # Global application state (skills, roles, roadmaps)
+│   │   └── AuthContext.tsx      # Firebase auth & session cookie synchronization
+│   ├── data/
+│   │   ├── fixedRoadmaps.ts     # Offline algorithmic template roadmaps
+│   │   └── mockData.ts          # TypeScript domain models & offline catalog fallback
+│   ├── hooks/
+│   │   ├── use-mobile.tsx       # Viewport breakpoint detection hook
+│   │   └── use-toast.ts         # Toast notifications hook
+│   ├── lib/
+│   │   ├── utils.ts             # Tailwind class merging & formatting utilities
+│   │   └── utils.test.ts        # Utilities unit test suite (8 tests)
+│   ├── pages/                   # Application view routes
+│   │   ├── auth/Login.tsx       # Authentication view
+│   │   ├── guide/               # Interactive guide pages (AddSkills, Roadmap, etc.)
+│   │   ├── Dashboard.tsx        # Career cockpit & skill progress overview
+│   │   ├── Roadmap.tsx          # Dynamic personalized learning path view
+│   │   ├── Roadmap.test.tsx     # Roadmap component integration test (2 tests)
+│   │   ├── Skills.tsx           # Skill inventory & proficiency selector
+│   │   └── Roles.tsx            # Target role search & gap analysis
+│   ├── services/                # Backend API clients
+│   │   ├── analyticsService.ts  # Learning analytics & progress tracking
+│   │   ├── apiClient.ts         # Centralized Axios client with withCredentials: true
+│   │   ├── assistantService.ts  # AI assistant endpoint client
+│   │   ├── auth.ts              # Firebase auth token & cookie sync client
+│   │   ├── auth.types.ts        # Auth data types & interfaces
+│   │   ├── certificateService.ts# Certificate generation & verification client
+│   │   └── gamificationService.ts# XP, streak, and achievement client
+│   ├── utils/
+│   │   ├── browserDiagnostics.ts# Diagnostic helper for auth popup/COOP blockers
+│   │   └── securityCleanup.ts   # Client sanitization helper
+│   ├── App.tsx                  # Main router & theme provider setup
+│   ├── index.css                # Global Tailwind CSS and design tokens
+│   └── main.tsx                 # React DOM root entry point
+├── eslint.config.js             # ESLint configuration
+├── index.html                   # HTML entry point with custom meta tags
+├── package.json                 # Project dependencies & scripts
+├── tailwind.config.ts           # Tailwind CSS configuration & theme tokens
+├── vite.config.ts               # Vite build configuration
 └── vitest.config.ts             # Vitest test runner configuration
 ```
 
@@ -66,7 +112,7 @@ frontend/
 
 ## 🧪 Automated Testing
 
-The frontend includes 17 automated unit and property-based tests running on Vitest:
+The frontend includes **17 automated tests** across 3 test files running on Vitest:
 
 ```bash
 # Run all tests once
@@ -76,10 +122,10 @@ npm run test
 npm run test:watch
 ```
 
-**Test Suite Coverage:**
-- `src/test/skills.test.ts` (6 passed): Validates skill filtering, search normalization, proficiency mapping, and gap analysis algorithms.
-- `src/test/auth.test.ts` (6 passed): Validates Firebase ID token extraction, cookie credentials forwarding (`withCredentials: true`), and unauthenticated redirection.
-- `src/test/security.test.ts` (5 passed): Validates URL sanitization, XSS payload escaping, and secure external link attributes (`rel="noopener noreferrer"`).
+**Verified Test Results (`npx vitest run`):**
+- `src/components/CompletionMessage.test.tsx` (7 passed): Validates completion celebration dialogs, badge rendering, event callbacks, and dismiss actions.
+- `src/lib/utils.test.ts` (8 passed): Validates Tailwind class mergers (`cn`), time estimations, skill level normalization, and string formatting.
+- `src/pages/Roadmap.test.tsx` (2 passed): Validates roadmap path rendering, active milestone card state, and route navigation.
 
 ---
 
